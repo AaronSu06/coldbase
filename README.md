@@ -1,190 +1,122 @@
 # Reach
 
-A Chrome Extension (MV3) + React web dashboard that auto-detects cold outreach emails from Gmail and manages them in a Simplify-style kanban board.
+Reach is a Chrome extension that lives in Gmail, with a web dashboard that helps you track follow-ups.
 
-**No backend.** `chrome.storage.local` is the source of truth, mirrored to `localStorage` via a scripting bridge. Solo use, demo environment.
+When you send outreach emails, Reach tracks those threads and surfaces them in a simple kanban flow (Sent, Replied, Interviewing, Offer, Ghosted).
 
----
+## What it does
 
-## Architecture
+- Runs as a Gmail-side widget while you use your inbox
+- Tracks outreach threads when you send emails
+- Displays tracked threads in a kanban-style dashboard
+- Lets you drag cards between statuses
+- Opens the original Gmail thread when you click a card
+- Generates a follow-up draft in the sidebar (Gemini-powered)
 
-```
-internet-backyard-take-home/
-├── shared/
-│   └── constants.js          # COLUMNS, STORAGE_KEY, SYNC_KEY (imported by both halves)
-├── extension/
-│   ├── manifest.json         # MV3 manifest — permissions gate
-│   ├── config.js             # GITIGNORED — fill in your credentials
-│   ├── config.js.template    # Copy → config.js
-│   ├── background.js         # Service worker: auth, Gmail scan, storage bridge
-│   ├── classifier.js         # Cold outreach detection + field extraction
-│   ├── storage.js            # chrome.storage.local + localStorage mirror
-│   ├── content.js            # Placeholder injected into mail.google.com
-│   └── gemini.js             # Reserved for future extension-side AI
-└── web/
-    ├── index.html
-    ├── vite.config.js        # @shared alias → ../shared
-    ├── tailwind.config.js
-    ├── postcss.config.js
-    ├── package.json
-    └── src/
-        ├── main.jsx
-        ├── index.css
-        ├── App.jsx
-        ├── hooks/
-        │   └── useOutreach.js
-        ├── lib/
-        │   ├── utils.js
-        │   ├── storage.js    # Reads/writes localStorage, same keys as extension
-        │   └── gemini.js     # Gemini API follow-up drafting
-        └── components/
-            ├── KanbanBoard.jsx
-            ├── KanbanColumn.jsx
-            ├── OutreachCard.jsx
-            ├── CompanyAvatar.jsx
-            ├── SearchBar.jsx
-            ├── Sidebar.jsx
-            └── EmptyState.jsx
-```
+## What you need
 
----
+- Node.js 18+
+- Google Chrome
+- A Google Cloud project with Gmail API enabled
+- A Gemini API key (only needed for follow-up drafting)
 
 ## Setup
 
-### 1. Prerequisites
+### 1) Install dependencies
 
-- Google Chrome (or Chromium)
-- Node.js 18+
-- A Google Cloud project with the Gmail API enabled
-- A Gemini API key (from [Google AI Studio](https://aistudio.google.com))
+In one terminal:
 
-### 2. Google OAuth Client ID
+```bash
+cd server
+npm install
+```
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials
-2. Create an **OAuth 2.0 Client ID** of type **Chrome Extension**
-3. Note your Extension ID from `chrome://extensions` (after loading unpacked in step 4 below)
-4. Add `https://<YOUR_EXTENSION_ID>.chromiumapp.org/` as an authorized redirect URI
+In another terminal:
 
-### 3. Configure the Extension
+```bash
+cd web
+npm install
+```
+
+### 2) Configure OAuth for the extension (Gmail access)
+
+1. Go to Google Cloud Console -> APIs & Services -> Credentials.
+2. Create an OAuth 2.0 Client ID for a Chrome Extension flow.
+3. Put that client ID in `extension/manifest.json` under `oauth2.client_id`.
+4. In OAuth consent settings, add your Gmail account as a test user.
+5. You will add the redirect URI after loading the extension (next section), because it includes your real extension ID.
+
+### 3) Configure extension local file
+
+Create `extension/config.js` from the template:
 
 ```bash
 cp extension/config.js.template extension/config.js
 ```
 
-Edit `extension/config.js`:
-```js
-export const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-export const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';  // unused in MVP — reserved
-```
+`config.js` is gitignored. Keep real keys out of git.
 
-> `config.js` is gitignored. Never commit real credentials.
-
-### 4. Load the Extension
+### 4) Load the extension in Chrome
 
 1. Open `chrome://extensions`
-2. Enable **Developer mode** (top-right toggle)
-3. Click **Load unpacked** → select the `extension/` folder
-4. Note the Extension ID shown on the card
-5. Add `https://<EXTENSION_ID>.chromiumapp.org/` to your GCP OAuth redirect URIs
-6. Add your Gmail address as a **test user** in the GCP OAuth consent screen
+2. Turn on **Developer mode**
+3. Click **Load unpacked** and select the `extension/` folder
+4. Copy the Extension ID shown in Chrome
+5. Back in Google Cloud OAuth settings, add this redirect URI:
 
-### 5. Configure the Web Dashboard
+`https://<EXTENSION_ID>.chromiumapp.org/`
+
+### 5) Configure web app env vars
+
+Create `web/.env.local`:
 
 ```bash
 cd web
-cp /dev/null .env.local   # create the file
+touch .env.local
 ```
 
-Edit `web/.env.local`:
-```
+Add:
+
+```bash
 VITE_GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-### 6. Run the Web Dashboard
+If you do not care about AI follow-up drafting, you can leave this empty and skip that feature.
+
+## Run locally
+
+Start the API server:
 
 ```bash
-cd web
-npm install
+cd server
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
+Start the web app:
 
----
-
-## Usage
-
-1. **Open the dashboard tab first** (localhost:5173), then open Gmail
-2. The extension scans automatically on install — cards appear in the dashboard when the storage event fires
-3. **Drag cards** between columns (Sent → Replied → Interviewing → Offer → Ghosted)
-4. **Click a card** → opens the Gmail thread in a new tab + opens the Sidebar
-5. **Draft Follow-up** in the Sidebar → Gemini generates a 3-4 sentence follow-up
-6. **Search** by company, contact name, or subject
-7. **Refresh** button → triggers a manual re-scan of Gmail
-
----
-
-## How Cold Outreach Detection Works
-
-`classifier.js` checks the email body for 2+ matches from:
-
-```
-internship, summer, winter, fall, co-op, full-time, part-time,
-opportunity, role, position, candidate, hiring, recruit
+```bash
+cd web
+npm run dev
 ```
 
-The 2-match threshold reduces false positives on personal or transactional emails.
+Then open `http://localhost:5173`.
 
----
+## How to use it
 
-## Data Flow
+1. Open the web dashboard first.
+2. Open Gmail in another tab.
+3. Send outreach emails as you normally would.
+4. Let Reach track those threads and surface them in the board.
+5. Move cards across columns as outreach progresses.
+6. Click a card to jump to the Gmail thread.
+7. Use "Draft Follow-up" in the sidebar if Gemini is configured.
 
-```
-Gmail API
-   ↓
-background.js (service worker)
-   ↓ chrome.storage.local
-storage.js ──→ mirrorToLocalStorage()
-                   ↓ chrome.scripting.executeScript into localhost:5173
-                   ↓ localStorage + window.dispatchEvent('storage')
-                   ↓
-              useOutreach.js (React hook)
-                   ↓
-              KanbanBoard → KanbanColumn → OutreachCard
-```
+## Quick notes
 
-Status changes on the web app write back to `localStorage` immediately and display optimistically. They do **not** write back to `chrome.storage.local` — the next re-scan from the extension will pick up any merged state.
-
----
-
-## End-to-End Verification
-
-1. `cd web && npm install && npm run dev` → confirm `localhost:5173` loads with an empty board
-2. Load extension unpacked at `chrome://extensions`
-3. Fill in `extension/config.js` with your OAuth Client ID
-4. Add extension ID to GCP redirect URIs; add your Gmail as a test user
-5. Add `VITE_GEMINI_API_KEY` to `web/.env.local`
-6. Open dashboard tab, then open Gmail
-7. Extension scans on install → cards appear (storage event fires)
-8. Confirm Clearbit logos load; initials fallback for unknown domains
-9. Type a company name in the search bar → cards filter in real-time
-10. Drag a card from "Sent" → "Replied" → "Interviewing" → confirm status persists on reload
-11. Click a card → Gmail thread opens in a new tab
-12. Click "Draft Follow-up" → Gemini draft appears in sidebar
-13. Click Refresh → extension re-scans; "Last synced" timestamp updates
-
----
-
-## Edge Cases
-
-| Case | Handler |
-|---|---|
-| Token expires mid-session | `background.js`: catch 401, clear token, re-auth |
-| OAuth denied / null redirect | Guard `if (!redirectUrl)` in `launchWebAuthFlow` callback |
-| Clearbit 404 | `CompanyAvatar`: `onError` → initials fallback |
-| Gemini API failure | `Sidebar`: catch + display error string |
-| Drag to non-column target | `handleDragEnd`: guard `COLUMNS.includes(over.id)` |
-| Zero records | Board-level `EmptyState context="board"` |
-| Search with zero results | `EmptyState context="search"` |
-| Web app closed during Gmail scan | `mirrorToLocalStorage`: tabs.length === 0, no-op |
-| Multi-part email body | `extractBody`: try `parts[text/plain]` first, fall back to `payload.body.data` |
+- Gmail permission is read-only (`gmail.readonly`).
+- Data is stored through the local API (`http://localhost:3001`).
+- If cards are not appearing, make sure:
+  - server is running,
+  - web app is running,
+  - extension is loaded,
+  - OAuth redirect URI includes your exact extension ID.
