@@ -1,8 +1,12 @@
-import { isColdOutreach, extractCompanyFromEmail, extractCompanyFromText, extractFirstName, isGenericDomain } from './classifier.js';
+import { isColdOutreach, countKeywordMatches, extractCompanyFromEmail, extractCompanyFromText, extractFirstName, isGenericDomain } from './classifier.js';
 import { classifyWithGemini } from './gemini.js';
 
 const GMAIL_API = 'https://www.googleapis.com/gmail/v1/users/me';
-const SERVER = 'http://localhost:3001/api';
+const RUNTIME_CONFIG = {
+  serverApiBase: 'http://localhost:3001/api',
+  dashboardUrl: 'http://localhost:5173',
+};
+const SERVER = RUNTIME_CONFIG.serverApiBase;
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -412,11 +416,21 @@ chrome.action.onClicked.addListener((tab) => {
   if (tab.url?.includes('mail.google.com')) {
     chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_SIDEBAR' });
   } else {
-    chrome.tabs.create({ url: 'http://localhost:5173' });
+    chrome.tabs.create({ url: RUNTIME_CONFIG.dashboardUrl });
   }
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.type === 'GET_RUNTIME_CONFIG') {
+    sendResponse({ ok: true, config: RUNTIME_CONFIG });
+    return;
+  }
+
+  if (message.type === 'KEYWORD_SCORE') {
+    sendResponse({ ok: true, score: countKeywordMatches(message.text || '') });
+    return;
+  }
+
   if (message.type === 'RESCAN') {
     console.log('[Reach] RESCAN message received from content script.');
     trackLatestSent(message.interactive ?? false)

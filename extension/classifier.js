@@ -9,7 +9,7 @@ export function isGenericDomain(emailAddress) {
   return GENERIC_DOMAINS.has(domain);
 }
 
-const FALLBACK_KEYWORD_GROUPS = [
+const KEYWORD_GROUPS = [
   { key: 'intern', variants: ['intern', 'interns', 'interned', 'interning', 'internship', 'internships'] },
   { key: 'coop', variants: ['coop'] },
   { key: 'fulltime', variants: ['fulltime'] },
@@ -74,10 +74,10 @@ function hasGroupMatch(tokenSet, variants) {
   return false;
 }
 
-function countFallbackKeywordGroups(text) {
+export function countKeywordMatches(text) {
   const tokens = new Set(tokenize(text));
   let count = 0;
-  for (const group of FALLBACK_KEYWORD_GROUPS) {
+  for (const group of KEYWORD_GROUPS) {
     if (hasGroupMatch(tokens, group.variants)) count++;
   }
   return count;
@@ -87,7 +87,7 @@ export function isColdOutreach(body) {
   // Gemini is the primary classifier; this is the fallback.
   // One strong job-related keyword (intern, apply, recruit, etc.) is sufficient
   // signal — requiring 2 caused casual coffee-chat / opportunity emails to be skipped.
-  return countFallbackKeywordGroups(body) >= 1;
+  return countKeywordMatches(body) >= 1;
 }
 
 export function extractCompanyFromEmail(emailAddress) {

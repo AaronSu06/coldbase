@@ -2,80 +2,22 @@
 // Runs as a classic script (no ES module imports allowed in content scripts).
 console.log('[Reach] Content script loaded on Gmail.');
 
-// ─── Keyword matching (mirrors classifier.js) ─────────────────────────────────
+// ─── Keyword score bridge (delegates to classifier.js in background) ─────────
 
-const AUTO_KEYWORD_GROUPS = [
-  { key: 'intern', variants: ['intern', 'interns', 'interned', 'interning', 'internship', 'internships'] },
-  { key: 'coop', variants: ['coop'] },
-  { key: 'fulltime', variants: ['fulltime'] },
-  { key: 'parttime', variants: ['parttime'] },
-  { key: 'candidate', variants: ['candidate', 'candidates'] },
-  { key: 'hiring', variants: ['hiring', 'hire', 'hired'] },
-  { key: 'recruit', variants: ['recruit', 'recruiter', 'recruiting', 'recruitment'] },
-  { key: 'apply', variants: ['apply', 'application', 'applications'] },
-  { key: 'resume', variants: ['resume', 'resumes', 'cv'] },
-];
-
-function normalizeText(text) {
-  return text.toLowerCase().replace(/[-_]/g, '').replace(/[^a-z0-9\s]/g, ' ');
+function normalizeHint(text) {
+  return (text || '').toLowerCase().replace(/[-_]/g, '').replace(/[^a-z0-9\s]/g, ' ');
 }
 
-function tokenize(text) {
-  return normalizeText(text).split(/\s+/).filter(Boolean);
-}
-
-function editDistanceWithinLimit(a, b, limit) {
-  if (Math.abs(a.length - b.length) > limit) return false;
-  if (a === b) return true;
-  if (limit === 0) return false;
-
-  const cols = b.length + 1;
-  let prev = Array.from({ length: cols }, (_, i) => i);
-  let curr = new Array(cols);
-
-  for (let i = 1; i <= a.length; i++) {
-    curr[0] = i;
-    let rowMin = curr[0];
-
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      curr[j] = Math.min(
-        prev[j] + 1,
-        curr[j - 1] + 1,
-        prev[j - 1] + cost
-      );
-      if (curr[j] < rowMin) rowMin = curr[j];
-    }
-
-    if (rowMin > limit) return false;
-    [prev, curr] = [curr, prev];
-  }
-
-  return prev[b.length] <= limit;
-}
-
-function tokenMatchesVariant(token, variant) {
-  if (token === variant) return true;
-  const limit = variant.length >= 9 ? 2 : variant.length >= 5 ? 1 : 0;
-  return editDistanceWithinLimit(token, variant, limit);
-}
-
-function hasGroupMatch(tokenSet, variants) {
-  for (const token of tokenSet) {
-    for (const variant of variants) {
-      if (tokenMatchesVariant(token, variant)) return true;
-    }
-  }
-  return false;
-}
-
-function countKeywordMatches(text) {
-  const tokens = new Set(tokenize(text));
-  let score = 0;
-  for (const group of AUTO_KEYWORD_GROUPS) {
-    if (hasGroupMatch(tokens, group.variants)) score++;
-  }
-  return score;
+function requestKeywordScore(text) {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage({ type: 'KEYWORD_SCORE', text }, (response) => {
+      if (chrome.runtime.lastError || !response?.ok || typeof response.score !== 'number') {
+        resolve(0);
+        return;
+      }
+      resolve(response.score);
+    });
+  });
 }
 
 // ─── Widget UI ─────────────────────────────────────────────────────────────────
@@ -83,6 +25,7 @@ function countKeywordMatches(text) {
 const editorWidgets = new WeakMap();
 const editorManualModes = new WeakMap(); // auto | force_track | force_skip
 const editorAutoScores = new WeakMap();  // heuristic score for auto mode
+const editorScoreSeq = new WeakMap();
 const liveEditors = new Set();       // parallel to editorWidgets for resize iteration
 let lastActiveEditor = null;
 let stylesInjected = false;
@@ -259,6 +202,7 @@ function updateWidget(editorEl, matchCount) {
       editorWidgets.delete(editorEl);
       editorManualModes.delete(editorEl);
       editorAutoScores.delete(editorEl);
+      editorScoreSeq.delete(editorEl);
       liveEditors.delete(editorEl);
     }
     return;
@@ -298,6 +242,7 @@ function attachToEditor(el) {
     editorWidgets.delete(el);
     editorManualModes.delete(el);
     editorAutoScores.delete(el);
+    editorScoreSeq.delete(el);
     liveEditors.delete(el);
   }
   observedEditors.add(el);
@@ -326,7 +271,13 @@ function attachToEditor(el) {
     const body = el.innerText || el.textContent || '';
     const combined = subject + ' ' + body;
 
-    updateWidget(el, countKeywordMatches(combined));
+    const seq = (editorScoreSeq.get(el) || 0) + 1;
+    editorScoreSeq.set(el, seq);
+    requestKeywordScore(combined).then((score) => {
+      if (editorScoreSeq.get(el) !== seq) return;
+      if (!document.body.contains(el)) return;
+      updateWidget(el, score);
+    });
   });
 }
 
@@ -412,8 +363,8 @@ function fireSendToast() {
       pendingScanPayload = {
         ts: Date.now(),
         overrideMode: manualMode === 'auto' ? null : manualMode,
-        subjectHint: normalizeText(meta.subject).slice(0, 120),
-        recipientsHint: normalizeText(meta.recipients).slice(0, 180)
+        subjectHint: normalizeHint(meta.subject).slice(0, 120),
+        recipientsHint: normalizeHint(meta.recipients).slice(0, 180)
       };
       // Reset per-message override after send so the next compose starts in auto.
       editorManualModes.set(lastActiveEditor, 'auto');

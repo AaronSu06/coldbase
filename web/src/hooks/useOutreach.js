@@ -28,67 +28,70 @@ export function useOutreach() {
   useEffect(() => {
     load();
 
-    function onVisibilityChange() {
-      if (document.visibilityState === 'visible') load();
-    }
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
     const poll = setInterval(load, 5 * 60_000); // safety-net only
 
     return () => {
-      document.removeEventListener('visibilitychange', onVisibilityChange);
       clearInterval(poll);
     };
   }, [load]);
 
+  const persistPatch = useCallback((threadId, patch, context) => {
+    patchOutreach(threadId, patch)
+      .catch(e => console.error(`[Reach] Failed to persist ${context}:`, e.message));
+  }, []);
+
+  const applyOptimisticMutation = useCallback((threadId, mutate, toPatch, context) => {
+    setRecords(prev => {
+      let patch = null;
+      const next = prev.map(r => {
+        if (r.threadId !== threadId) return r;
+        const updated = mutate(r);
+        patch = toPatch(updated);
+        return updated;
+      });
+      if (patch) persistPatch(threadId, patch, context);
+      return next;
+    });
+  }, [persistPatch]);
+
   const updateStatus = useCallback((threadId, newStatus) => {
     const normalizedStatus = normalizeStatus(newStatus);
-    setRecords(prev =>
-      prev.map(r => r.threadId === threadId ? { ...r, status: normalizedStatus } : r)
+    applyOptimisticMutation(
+      threadId,
+      (record) => ({ ...record, status: normalizedStatus }),
+      () => ({ status: normalizedStatus }),
+      'status update'
     );
-    patchOutreach(threadId, { status: normalizedStatus })
-      .catch(e => console.error('[Reach] Failed to persist status update:', e.message));
-  }, []);
+  }, [applyOptimisticMutation]);
 
   const toggleFavorite = useCallback((threadId) => {
-    setRecords(prev => {
-      const next = prev.map(r =>
-        r.threadId === threadId ? { ...r, favorite: !r.favorite } : r
-      );
-      const record = next.find(r => r.threadId === threadId);
-      if (record) {
-        patchOutreach(threadId, { favorite: record.favorite })
-          .catch(e => console.error('[Reach] Failed to persist favorite toggle:', e.message));
-      }
-      return next;
-    });
-  }, []);
+    applyOptimisticMutation(
+      threadId,
+      (record) => ({ ...record, favorite: !record.favorite }),
+      (updated) => ({ favorite: updated.favorite }),
+      'favorite toggle'
+    );
+  }, [applyOptimisticMutation]);
 
   const toggleArchived = useCallback((threadId) => {
-    setRecords(prev => {
-      const next = prev.map(r =>
-        r.threadId === threadId ? { ...r, archived: !r.archived } : r
-      );
-      const record = next.find(r => r.threadId === threadId);
-      if (record) {
-        patchOutreach(threadId, { archived: record.archived })
-          .catch(e => console.error('[Reach] Failed to persist archived toggle:', e.message));
-      }
-      return next;
-    });
-  }, []);
+    applyOptimisticMutation(
+      threadId,
+      (record) => ({ ...record, archived: !record.archived }),
+      (updated) => ({ archived: updated.archived }),
+      'archived toggle'
+    );
+  }, [applyOptimisticMutation]);
 
   const archiveAll = useCallback((ids) => {
     const idSet = new Set(ids);
     setRecords(prev => {
       const next = prev.map(r => idSet.has(r.threadId) ? { ...r, archived: true } : r);
       ids.forEach(id => {
-        patchOutreach(id, { archived: true })
-          .catch(e => console.error(`[Reach] Failed to persist archive for ${id}:`, e.message));
+        persistPatch(id, { archived: true }, `archive for ${id}`);
       });
       return next;
     });
-  }, []);
+  }, [persistPatch]);
 
   const updateRecord = useCallback((threadId, patch) => {
     let previousValues = null;

@@ -1,13 +1,29 @@
 // sidebar.js — injected into Gmail pages as a classic content script (no imports)
 
-const SERVER = 'http://localhost:3001/api';
 const ICON_URL = chrome.runtime.getURL('Reach.png');
+const DEFAULT_CONFIG = {
+  serverApiBase: 'http://localhost:3001/api',
+  dashboardUrl: 'http://localhost:5173',
+};
+let runtimeConfig = { ...DEFAULT_CONFIG };
 
 let host = null;
-let panel = null;
 let sentEl = null;
 let repliedEl = null;
 let rateEl = null;
+
+function fetchRuntimeConfig() {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (response) => {
+      if (chrome.runtime.lastError || !response?.ok || !response.config) {
+        resolve();
+        return;
+      }
+      runtimeConfig = { ...runtimeConfig, ...response.config };
+      resolve();
+    });
+  });
+}
 
 function buildSidebar() {
   host = document.createElement('div');
@@ -143,7 +159,7 @@ function buildSidebar() {
     }
   `;
 
-  panel = document.createElement('div');
+  const panel = document.createElement('div');
   panel.className = 'panel';
 
   panel.innerHTML = `
@@ -188,7 +204,7 @@ function buildSidebar() {
 
   shadow.querySelector('.close-btn').addEventListener('click', hideSidebar);
   shadow.querySelector('.open-btn').addEventListener('click', () => {
-    window.open('http://localhost:5173', '_blank');
+    window.open(runtimeConfig.dashboardUrl, '_blank');
   });
 
   document.documentElement.appendChild(host);
@@ -201,12 +217,12 @@ function hideSidebar() {
 function showSidebar() {
   if (!host) buildSidebar();
   host.style.display = '';
-  loadStats();
+  fetchRuntimeConfig().then(loadStats);
 }
 
 async function loadStats() {
   try {
-    const res = await fetch(`${SERVER}/outreach`);
+    const res = await fetch(`${runtimeConfig.serverApiBase}/outreach`);
     const records = await res.json();
 
     const sent = records.length;

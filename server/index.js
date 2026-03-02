@@ -20,16 +20,6 @@ app.get('/api/outreach', async (req, res) => {
   }
 });
 
-// GET /api/outreach/count — { count: N } for popup
-app.get('/api/outreach/count', async (req, res) => {
-  try {
-    const count = await prisma.outreach.count();
-    res.json({ count });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 // POST /api/outreach — create record; 409 if threadId already exists
 app.post('/api/outreach', async (req, res) => {
   try {
