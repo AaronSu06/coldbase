@@ -1,0 +1,19 @@
+node_modules/
+web/dist/
+web/.env.local
+extension/config.js
+.DS_Store
+
+# Secrets / env files
+.env
+.env.*
+!.env.example
+
+# Common key/cert files
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local config overrides
+**/config.local.js

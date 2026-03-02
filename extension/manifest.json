@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "Reach",
+  "version": "1.0.0",
+  "description": "Auto-detect cold outreach emails from Gmail and manage them in a kanban board.",
+  "permissions": [
+    "identity",
+    "storage",
+    "alarms",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://www.googleapis.com/*",
+    "http://localhost/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js", "sidebar.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["http://localhost/*"],
+      "js": ["relay.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "Reach.png",
+    "32": "Reach.png",
+    "48": "Reach.png",
+    "128": "Reach.png"
+  },
+  "action": {
+    "default_title": "Reach",
+    "default_icon": {
+      "16": "Reach.png",
+      "32": "Reach.png",
+      "48": "Reach.png",
+      "128": "Reach.png"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["Reach.png"],
+      "matches": ["https://mail.google.com/*"]
+    }
+  ],
+  "oauth2": {
+    "client_id": "530449760318-vhavp4r85uaino5mjdhi5nsrl28mbdph.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/gmail.readonly"]
+  }
+}

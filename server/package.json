@@ -1,0 +1,17 @@
+{
+  "name": "reach-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js",
+    "db:migrate": "prisma migrate dev",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5",
+    "cors": "^2",
+    "express": "^4",
+    "prisma": "^5"
+  }
+}

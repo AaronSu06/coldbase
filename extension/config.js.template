@@ -1,0 +1,4 @@
+// Copy this file to config.js and fill in your credentials.
+// config.js is gitignored — never commit real keys.
+export const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+export const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
