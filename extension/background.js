@@ -410,19 +410,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 });
 
-const EMAIL_HOSTS = new Set([
-  'mail.google.com',
-  'outlook.live.com',
-  'outlook.office.com',
-  'outlook.office365.com',
-]);
-
 chrome.action.onClicked.addListener((tab) => {
-  if (!tab.id || !tab.url) return;
-  let hostname;
-  try { hostname = new URL(tab.url).hostname; } catch { return; }
-  if (!EMAIL_HOSTS.has(hostname)) return; // not an email client — do nothing
-
+  if (!tab.id) return;
   chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => {
     const err = chrome.runtime.lastError;
     // "port closed" = message was received (panel toggled) — do nothing

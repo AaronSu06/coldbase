@@ -4,6 +4,14 @@ if (window.__reachLoaded) { throw new Error('[Reach] Already loaded — skipping
 window.__reachLoaded = true;
 console.log('[Reach] Content script loaded.');
 
+// Compose-window widgets only attach on known email client domains.
+const isEmailClient = new Set([
+  'mail.google.com',
+  'outlook.live.com',
+  'outlook.office.com',
+  'outlook.office365.com',
+]).has(location.hostname);
+
 // ─── Keyword score bridge (delegates to classifier.js in background) ─────────
 
 function normalizeHint(text) {
@@ -469,7 +477,7 @@ const domObserver = new MutationObserver((mutations) => {
   }
 
   if (shouldScanToast) scanForSendToast();
-  if (shouldScanEditors) scanForEditors();
+  if (shouldScanEditors && isEmailClient) scanForEditors();
 });
 
 domObserver.observe(document.body, {
@@ -483,7 +491,7 @@ domObserver.observe(document.body, {
 // Periodic fallback: catches any compose windows Gmail reveals through mechanisms
 // the MutationObserver misses (e.g. CSS transitions, shadow DOM changes).
 // attachToEditor is idempotent so repeated calls on attached editors are no-ops.
-setInterval(scanForEditors, 1500);
+if (isEmailClient) setInterval(scanForEditors, 1500);
 
 // Recompute position when the window is resized
 window.addEventListener('resize', () => {
@@ -500,7 +508,7 @@ window.addEventListener('resize', () => {
 });
 
 // In case a compose window is already open when the script loads
-scanForEditors();
+if (isEmailClient) scanForEditors();
 
 // Proactively warn if the extension context becomes invalidated while Gmail is
 // open (e.g. extension reloaded/updated). Checks every 5s after a 10s grace
