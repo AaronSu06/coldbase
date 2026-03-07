@@ -84,7 +84,6 @@ export function countKeywordMatches(text) {
 }
 
 export function isColdOutreach(body) {
-  // Gemini is the primary classifier; this is the fallback.
   // One strong job-related keyword (intern, apply, recruit, etc.) is sufficient
   // signal — requiring 2 caused casual coffee-chat / opportunity emails to be skipped.
   return countKeywordMatches(body) >= 1;
@@ -104,20 +103,66 @@ const SKIP_WORDS = new Set([
   'Position', 'Role', 'Job', 'Team'
 ]);
 
+// Match up to 3 consecutive capitalized words (e.g. "Jane Street Capital")
+const COMPANY_PATTERN = /[A-Z][A-Za-z0-9.]+(?:\s[A-Z][A-Za-z0-9.]+){0,2}/;
+
+function matchCompany(text, pattern) {
+  const m = text.match(pattern);
+  if (!m) return null;
+  const name = m[1];
+  return name && !SKIP_WORDS.has(name.split(' ')[0]) ? name : null;
+}
+
 export function extractCompanyFromText(subject, body) {
-  // "at OpenAI", "at Google" — most reliable pattern in cold outreach
-  const atMatch = body.match(/\bat\s+([A-Z][A-Za-z0-9.]+(?:\s[A-Z][A-Za-z0-9.]+)?)/);
-  if (atMatch && !SKIP_WORDS.has(atMatch[1])) return atMatch[1];
+  // "[Company Name]" bracket pattern in subject — highest confidence
+  const bracketMatch = subject.match(/\[([A-Z][A-Za-z0-9. ]+)\]/);
+  if (bracketMatch) {
+    const name = bracketMatch[1].trim();
+    if (!SKIP_WORDS.has(name.split(' ')[0])) return name;
+  }
+
+  // "at [Company]" in body
+  const atMatch = matchCompany(body, new RegExp(`\\bat\\s+(${COMPANY_PATTERN.source})`));
+  if (atMatch) return atMatch;
+
+  // "from [Company]" in body
+  const fromMatch = matchCompany(body, new RegExp(`\\bfrom\\s+(${COMPANY_PATTERN.source})`));
+  if (fromMatch) return fromMatch;
+
+  // "on behalf of [Company]" in body
+  const onBehalfMatch = matchCompany(body, new RegExp(`\\bon behalf of\\s+(${COMPANY_PATTERN.source})`));
+  if (onBehalfMatch) return onBehalfMatch;
 
   // "with [Company]" in body
-  const withMatch = body.match(/\bwith\s+([A-Z][A-Za-z0-9.]+(?:\s[A-Z][A-Za-z0-9.]+)?)/);
-  if (withMatch && !SKIP_WORDS.has(withMatch[1])) return withMatch[1];
+  const withMatch = matchCompany(body, new RegExp(`\\bwith\\s+(${COMPANY_PATTERN.source})`));
+  if (withMatch) return withMatch;
 
-  // "- Company" in subject (e.g. "Internship - Google Summer 2026" → "Google")
-  const subjectMatch = subject.match(/[-–]\s*([A-Z][A-Za-z0-9.]+)/);
-  if (subjectMatch && !SKIP_WORDS.has(subjectMatch[1])) return subjectMatch[1];
+  // "Company -" subject prefix (company name before dash)
+  const subjectPrefixMatch = subject.match(new RegExp(`^(${COMPANY_PATTERN.source})\\s*[-–]`));
+  if (subjectPrefixMatch) {
+    const name = subjectPrefixMatch[1];
+    if (!SKIP_WORDS.has(name.split(' ')[0])) return name;
+  }
+
+  // "- Company" in subject (e.g. "Internship - Google Summer 2026")
+  const subjectSuffixMatch = subject.match(/[-–]\s*([A-Z][A-Za-z0-9.]+)/);
+  if (subjectSuffixMatch && !SKIP_WORDS.has(subjectSuffixMatch[1])) return subjectSuffixMatch[1];
 
   return null;
+}
+
+export async function fetchClearbitCompany(domain) {
+  try {
+    const res = await fetch(
+      `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(domain)}`,
+      { signal: AbortSignal.timeout(2000) }
+    );
+    const data = await res.json();
+    const match = data.find(c => c.domain === domain || domain.endsWith(c.domain));
+    return match?.name || null;
+  } catch {
+    return null;
+  }
 }
 
 export function extractFirstName(toHeader) {

@@ -1,5 +1,4 @@
-import { isColdOutreach, countKeywordMatches, extractCompanyFromEmail, extractCompanyFromText, extractFirstName, isGenericDomain } from './classifier.js';
-import { classifyWithGemini } from './gemini.js';
+import { isColdOutreach, countKeywordMatches, extractCompanyFromEmail, extractCompanyFromText, fetchClearbitCompany, extractFirstName, isGenericDomain } from './classifier.js';
 
 const GMAIL_API = 'https://www.googleapis.com/gmail/v1/users/me';
 const RUNTIME_CONFIG = {
@@ -237,10 +236,8 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
     }
   }
 
-  console.log('[Reach] Running classification (Gemini, then keyword fallback)...');
-  const geminiResult = await classifyWithGemini(subject, body);
-  const keywordResult = isColdOutreach(subject + ' ' + body);
-  let isColdEmail = geminiResult !== null ? geminiResult.isColdOutreach : keywordResult;
+  console.log('[Reach] Running classification (keyword classifier)...');
+  let isColdEmail = isColdOutreach(subject + ' ' + body);
 
   if (manualOverride === 'force_track') {
     isColdEmail = true;
@@ -248,18 +245,20 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
     isColdEmail = false;
   }
 
-  console.log(`[Reach] Classification → gemini=${geminiResult?.isColdOutreach ?? null} | keyword=${keywordResult} | override=${manualOverride ?? 'none'} | final=${isColdEmail}`);
+  console.log(`[Reach] Classification → keyword=${isColdEmail} | override=${manualOverride ?? 'none'} | final=${isColdEmail}`);
 
   if (!isColdEmail) {
     console.log('[Reach] ⏭ Not classified as cold outreach — skipping.');
-    console.log('[Reach] Tip: if this was a cold email, check your Gemini key and email keywords.');
+    console.log('[Reach] Tip: if this was a cold email, check that your email contains job-related keywords.');
     return;
   }
 
   const domain = contactEmail.split('@')[1] || '';
-  const company = geminiResult?.company
-    || (isGenericDomain(contactEmail) ? extractCompanyFromText(subject, body) : null)
-    || extractCompanyFromEmail(contactEmail);
+  const company =
+    extractCompanyFromText(subject, body)
+    || (!isGenericDomain(contactEmail) ? await fetchClearbitCompany(domain) : null)
+    || (!isGenericDomain(contactEmail) ? extractCompanyFromEmail(contactEmail) : null)
+    || 'Unknown';
   const contactName = extractFirstName(toHeader);
   const dateHeader = extractHeader(fullMsg, 'Date');
   const sentDate = dateHeader ? new Date(dateHeader).toISOString() : new Date().toISOString();
@@ -280,8 +279,7 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
     latestActivity: sentDate
   };
 
-  const companySource = geminiResult?.company ? 'gemini' : 'domain';
-  console.log(`[Reach] POSTing record — company="${company}" (${companySource}) threadId="${fullMsg.threadId}"`);
+  console.log(`[Reach] POSTing record — company="${company}" threadId="${fullMsg.threadId}"`);
 
   try {
     const res = await fetch(`${SERVER}/outreach`, {
