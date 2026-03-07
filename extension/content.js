@@ -675,6 +675,12 @@ const PANEL_STYLES = `
   .btn-row { display: flex; gap: 8px; margin-top: 8px; }
   .btn-row .action-btn { flex: 1; }
   .autofill-note { font-size: 10px; color: #9ca3af; margin-top: 4px; font-style: italic; }
+  .result-status { font-size:9px; font-weight:700; padding:2px 5px; border-radius:10px;
+    flex-shrink:0; text-transform:uppercase; letter-spacing:0.04em; }
+  .result-status.verified    { background:#dcfce7; color:#16a34a; }
+  .result-status.unconfirmed { background:#fefce8; color:#ca8a04; }
+  .result-status.unreachable { background:#f3f4f6; color:#9ca3af; }
+  .result-source { font-size:9px; color:#9ca3af; flex-shrink:0; font-style:italic; }
 `;
 
 function getPanelHTML(iconUrl) {
@@ -727,18 +733,23 @@ function getPanelHTML(iconUrl) {
 
       <!-- Find Contacts -->
       <div class="tab-panel" id="cp-panel-find">
+        <div id="cp-company-avatar-row" style="display:none; align-items:center; gap:8px; margin-bottom:10px;">
+          <div id="cp-company-avatar" style="width:20px;height:20px;border-radius:4px;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;"></div>
+          <span id="cp-company-domain-hint" style="font-size:10px; color:#6b7280;"></span>
+        </div>
         <div class="form-group">
-          <label>Domain</label>
-          <input type="text" id="cp-domain" placeholder="stripe.com" />
+          <label>Company Name</label>
+          <input type="text" id="cp-company" placeholder="e.g. Stripe" />
         </div>
         <div class="form-group">
           <label>First Name</label>
-          <input type="text" id="cp-first-name" placeholder="Aaron" />
+          <input type="text" id="cp-first-name" placeholder="Optional" />
         </div>
         <div class="form-group">
           <label>Last Name</label>
-          <input type="text" id="cp-last-name" placeholder="Su" />
+          <input type="text" id="cp-last-name" placeholder="Optional" />
         </div>
+        <div id="cp-find-warning" style="font-size:11px;color:#dc2626;margin-bottom:6px;display:none"></div>
         <button class="action-btn" id="cp-find-btn">Find Emails</button>
         <div class="results-list" id="cp-results"></div>
       </div>
@@ -833,17 +844,76 @@ function setupOverviewTab(shadow, ctx, updateTrackToggle) {
   return loadOverviewData;
 }
 
-// Sets up the Find Contacts tab: domain/name form, Hunter.io lookup, copy buttons.
+// Sets up the Find Contacts tab: company/name form, pipeline lookup, copy buttons.
 function setupFindTab(shadow) {
+  // ── Company favicon / avatar (mirrors CompanyAvatar.jsx logic) ──────────────
+  var CP_AVATAR_COLORS = ['#6366f1','#8b5cf6','#14b8a6','#f59e0b','#f43f5e','#0ea5e9'];
+  function _cpAvatarColor(company) {
+    var h = company.split('').reduce(function(a, c) { return a * 31 + c.charCodeAt(0); }, 0);
+    return CP_AVATAR_COLORS[Math.abs(h) % CP_AVATAR_COLORS.length];
+  }
+  function _cpInferDomain(company) {
+    return company.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com';
+  }
+
+  var _cpAvatarTimer = null;
+  shadow.getElementById('cp-company').addEventListener('input', function() {
+    clearTimeout(_cpAvatarTimer);
+    var company = this.value.trim();
+    var avatarRow = shadow.getElementById('cp-company-avatar-row');
+    var avatarEl  = shadow.getElementById('cp-company-avatar');
+    var hintEl    = shadow.getElementById('cp-company-domain-hint');
+
+    if (!company) {
+      avatarRow.style.display = 'none';
+      return;
+    }
+
+    _cpAvatarTimer = setTimeout(function() {
+      var domain = _cpInferDomain(company);
+      hintEl.textContent = domain;
+
+      var img = document.createElement('img');
+      img.style.cssText = 'width:20px;height:20px;display:block;object-fit:contain;';
+      img.src = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=128';
+      img.onerror = function() {
+        // Fallback: colored initial avatar
+        avatarEl.innerHTML = '';
+        avatarEl.style.background = _cpAvatarColor(company);
+        avatarEl.textContent = company.charAt(0).toUpperCase();
+      };
+      img.onload = function() {
+        avatarEl.innerHTML = '';
+        avatarEl.style.background = 'transparent';
+        avatarEl.appendChild(img);
+      };
+
+      avatarRow.style.display = 'flex';
+    }, 350);
+  });
+
   shadow.getElementById('cp-find-btn').addEventListener('click', () => {
-    const domain    = shadow.getElementById('cp-domain').value.trim();
+    const company   = shadow.getElementById('cp-company').value.trim();
     const firstName = shadow.getElementById('cp-first-name').value.trim();
     const lastName  = shadow.getElementById('cp-last-name').value.trim();
     const resultsEl = shadow.getElementById('cp-results');
+    const warningEl = shadow.getElementById('cp-find-warning');
     const findBtn   = shadow.getElementById('cp-find-btn');
 
-    if (!domain) {
-      resultsEl.innerHTML = '<div class="status-msg">Enter a domain first.</div>';
+    warningEl.style.display = 'none';
+    warningEl.textContent = '';
+
+    if (!company) {
+      resultsEl.innerHTML = '<div class="status-msg">Enter a company name first.</div>';
+      return;
+    }
+
+    // Partial name validation: exactly one of firstName/lastName filled
+    const hasFirst = firstName.length > 0;
+    const hasLast  = lastName.length > 0;
+    if (hasFirst !== hasLast) {
+      warningEl.textContent = 'Please enter both first and last name, or leave both empty.';
+      warningEl.style.display = 'block';
       return;
     }
 
@@ -851,7 +921,7 @@ function setupFindTab(shadow) {
     findBtn.disabled = true;
     findBtn.textContent = 'Searching…';
 
-    chrome.runtime.sendMessage({ type: 'FIND_CONTACT', domain, firstName, lastName }, (res) => {
+    chrome.runtime.sendMessage({ type: 'FIND_CONTACT', company, firstName, lastName }, (res) => {
       findBtn.disabled = false;
       findBtn.textContent = 'Find Emails';
 
@@ -860,24 +930,27 @@ function setupFindTab(shadow) {
         return;
       }
 
-      const emails   = res?.ok ? (res.emails || []) : [];
-      const fallback = !res?.ok ? (res?.fallback || []) : [];
-
-      if (emails.length) {
-        resultsEl.innerHTML = emails.map((e, i) => `
-          <div class="result-row" data-idx="${i}">
-            <span class="result-email">${_cpEscapeHtml(e.value)}</span>
-            ${e.score ? `<span class="result-score">${e.score}%</span>` : ''}
-            <button class="copy-btn" data-email="${_cpEscapeHtml(e.value)}">Copy</button>
-          </div>`).join('');
-      } else if (fallback.length) {
-        resultsEl.innerHTML =
-          '<div class="status-msg" style="text-align:left;margin-bottom:8px;font-style:normal">No API key — common formats:</div>' +
-          fallback.map((e, i) => `
-            <div class="result-row" data-idx="${i}">
-              <span class="result-email">${_cpEscapeHtml(e)}</span>
-              <button class="copy-btn" data-email="${_cpEscapeHtml(e)}">Copy</button>
-            </div>`).join('');
+      if (res?.ok && res.results?.length) {
+        resultsEl.innerHTML = res.results.map((r, i) => {
+          const statusCls = r.status ? r.status.toLowerCase() : 'unconfirmed';
+          const sourceLabel = r.source ? r.source.replace('gemini-', '').replace('-', ' ') : '';
+          return `<div class="result-row" data-idx="${i}">
+            <span class="result-email">${_cpEscapeHtml(r.email)}</span>
+            <span class="result-status ${statusCls}">${_cpEscapeHtml(r.status)}</span>
+            <span class="result-score">${r.confidence}%</span>
+            <span class="result-source">${_cpEscapeHtml(sourceLabel)}</span>
+            <button class="copy-btn" data-email="${_cpEscapeHtml(r.email)}">Copy</button>
+          </div>`;
+        }).join('');
+      } else if (!res?.ok) {
+        const msgs = {
+          no_domain:     'Could not resolve a domain for this company.',
+          no_mx:         'No mail server found for this domain.',
+          no_candidates: 'No public emails found for this company.',
+          all_invalid:   'Unable to find email for this person/company.',
+        };
+        const msg = msgs[res?.reason] || 'Unable to find email for this person/company.';
+        resultsEl.innerHTML = `<div class="status-msg">${_cpEscapeHtml(msg)}</div>`;
       } else {
         resultsEl.innerHTML = '<div class="status-msg">No results found.</div>';
       }
@@ -957,7 +1030,7 @@ function setupDraftTab(shadow, ctx) {
         genBtn.textContent = 'Generate Draft ✨';
         const textarea = shadow.getElementById('cp-draft-output');
         if (chrome.runtime.lastError || !res?.ok) {
-          textarea.value = res?.error || 'Error — check your Gemini API key in the Reach popup.';
+          textarea.value = res?.error || 'Error — check that the Reach server is running.';
           return;
         }
         textarea.value = res.text;

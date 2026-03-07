@@ -6,6 +6,7 @@ const RUNTIME_CONFIG = {
   dashboardUrl: 'http://localhost:5173',
 };
 const SERVER = RUNTIME_CONFIG.serverApiBase;
+const REACH_SECRET = 'f824a42ea02d149b28f96141068bc71538e3321f18b2c4cc';
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -420,56 +421,6 @@ chrome.action.onClicked.addListener((tab) => {
   });
 });
 
-// ─── Email permutation fallback ───────────────────────────────────────────────
-
-function generateEmailPermutations(firstName, lastName, domain) {
-  if (!firstName || !domain) return [];
-  const f = firstName.toLowerCase().replace(/[^a-z]/g, '');
-  const l = (lastName || '').toLowerCase().replace(/[^a-z]/g, '');
-  const perms = [
-    `${f}@${domain}`,
-    `${f}.${l}@${domain}`,
-    `${f[0]}${l}@${domain}`,
-    `${f[0]}.${l}@${domain}`,
-  ];
-  return l ? perms : [perms[0]];
-}
-
-// ─── Gemini draft prompt builder ──────────────────────────────────────────────
-
-function buildDraftPrompt({ draftType, company, contactName, subject, bodySnippet, notes }) {
-  const who = contactName || 'the recruiter';
-  const co = company || 'the company';
-  const notesCtx = notes ? `\nExtra context: ${notes}` : '';
-  if (draftType === 'cold') {
-    return `You are helping Aaron, a CS student, write a cold outreach email for a software engineering internship.
-
-Company: ${co}
-Contact: ${who}
-Subject: ${subject || ''}${notesCtx}
-
-Write a short, personalized cold email (3–4 sentences). Casual but professional. Sign off as Aaron.
-Return ONLY the email body. No subject line, no preamble.`;
-  }
-  if (draftType === 'bump') {
-    return `You are helping Aaron write a brief follow-up to a cold outreach that got no reply.
-
-Company: ${co}
-Contact: ${who}
-Original subject: ${subject || ''}${bodySnippet ? `\nOriginal email excerpt: ${bodySnippet.slice(0, 200)}` : ''}${notesCtx}
-
-Write a short 2–3 sentence follow-up. Low pressure. Reference the original email naturally. Sign off as Aaron.
-Return ONLY the email body. No subject line, no preamble.`;
-  }
-  return `You are helping Aaron write a reply to a recruiter or contact.
-
-Company: ${co}
-Contact: ${who}
-Their message: ${bodySnippet || '(context not available)'}${notesCtx}
-
-Write a short, natural reply (2–4 sentences). Conversational. Sign off as Aaron.
-Return ONLY the email body. No subject line, no preamble.`;
-}
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_RUNTIME_CONFIG') {
@@ -535,69 +486,53 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  if (message.type === 'GET_KEYS') {
-    chrome.storage.local.get(['hunterKey', 'geminiKey'], (result) => {
-      sendResponse({ ok: true, hunterKey: result.hunterKey || '', geminiKey: result.geminiKey || '' });
-    });
-    return true;
-  }
-
-  if (message.type === 'SET_KEYS') {
-    chrome.storage.local.set({ hunterKey: message.hunterKey || '', geminiKey: message.geminiKey || '' }, () => {
-      sendResponse({ ok: true });
-    });
-    return true;
-  }
-
   if (message.type === 'FIND_CONTACT') {
-    chrome.storage.local.get(['hunterKey'], async (result) => {
-      const hunterKey = result.hunterKey;
-      if (hunterKey) {
-        try {
-          const url = `https://api.hunter.io/v2/email-finder?domain=${encodeURIComponent(message.domain)}&first_name=${encodeURIComponent(message.firstName || '')}&last_name=${encodeURIComponent(message.lastName || '')}&api_key=${hunterKey}`;
-          const res = await fetch(url);
-          const data = await res.json();
-          if (data.data?.email) {
-            sendResponse({ ok: true, emails: [{ value: data.data.email, score: data.data.score || 0 }] });
-            return;
-          }
-        } catch (e) {
-          console.warn('[Reach] Hunter.io fetch failed:', e.message);
-        }
+    (async () => {
+      try {
+        const res = await fetch(`${SERVER}/find-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-reach-secret': REACH_SECRET,
+          },
+          body: JSON.stringify({
+            company:   message.company,
+            firstName: message.firstName || '',
+            lastName:  message.lastName  || '',
+          }),
+        });
+        sendResponse(await res.json());
+      } catch (e) {
+        console.error('[Reach] /api/find-email fetch failed:', e.message);
+        sendResponse({ ok: false, reason: 'all_invalid' });
       }
-      const fallback = generateEmailPermutations(message.firstName, message.lastName, message.domain);
-      sendResponse({ ok: false, fallback });
-    });
+    })();
     return true;
   }
 
   if (message.type === 'DRAFT_EMAIL') {
-    chrome.storage.local.get(['geminiKey'], async (result) => {
-      const geminiKey = result.geminiKey;
-      if (!geminiKey) {
-        sendResponse({ ok: false, error: 'No Gemini API key configured. Add it in the Reach popup.' });
-        return;
-      }
+    (async () => {
       try {
-        const prompt = buildDraftPrompt(message);
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
-        const res = await fetch(endpoint, {
+        const res = await fetch(`${SERVER}/draft-email`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-reach-secret': REACH_SECRET,
+          },
+          body: JSON.stringify({
+            draftType:   message.draftType,
+            company:     message.company,
+            contactName: message.contactName,
+            notes:       message.notes,
+            subject:     message.subject,
+            bodySnippet: message.bodySnippet,
+          }),
         });
-        if (!res.ok) {
-          const body = await res.text();
-          sendResponse({ ok: false, error: `Gemini API error ${res.status}: ${body.slice(0, 120)}` });
-          return;
-        }
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-        sendResponse({ ok: true, text });
+        sendResponse(await res.json());
       } catch (e) {
         sendResponse({ ok: false, error: e.message });
       }
-    });
+    })();
     return true;
   }
 
