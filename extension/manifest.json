@@ -7,10 +7,11 @@
     "identity",
     "storage",
     "alarms",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
-    "https://mail.google.com/*",
+    "https://*.google.com/*",
     "https://www.googleapis.com/*",
     "http://localhost/*"
   ],
@@ -49,7 +50,7 @@
   "web_accessible_resources": [
     {
       "resources": ["Reach.png"],
-      "matches": ["https://mail.google.com/*"]
+      "matches": ["<all_urls>"]
     }
   ],
   "oauth2": {
