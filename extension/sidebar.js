@@ -220,25 +220,18 @@ function showSidebar() {
   fetchRuntimeConfig().then(loadStats);
 }
 
-async function loadStats() {
-  try {
-    const res = await fetch(`${runtimeConfig.serverApiBase}/outreach`);
-    const records = await res.json();
-
-    const sent = records.length;
-    const replied = records.filter(r =>
-      r.status === 'Replied' || r.status === 'Interviewing' || r.status === 'Offer'
-    ).length;
-    const rate = sent > 0 ? Math.round((replied / sent) * 100) + '%' : '—';
-
-    if (sentEl) sentEl.textContent = sent;
-    if (repliedEl) repliedEl.textContent = replied;
-    if (rateEl) rateEl.textContent = rate;
-  } catch {
-    if (sentEl) sentEl.textContent = '—';
-    if (repliedEl) repliedEl.textContent = '—';
-    if (rateEl) rateEl.textContent = '—';
-  }
+function loadStats() {
+  chrome.runtime.sendMessage({ type: 'GET_STATS' }, (response) => {
+    if (chrome.runtime.lastError || !response?.ok) {
+      if (sentEl) sentEl.textContent = '—';
+      if (repliedEl) repliedEl.textContent = '—';
+      if (rateEl) rateEl.textContent = '—';
+      return;
+    }
+    if (sentEl) sentEl.textContent = response.sent;
+    if (repliedEl) repliedEl.textContent = response.replied;
+    if (rateEl) rateEl.textContent = response.rate;
+  });
 }
 
 chrome.runtime.onMessage.addListener((message) => {

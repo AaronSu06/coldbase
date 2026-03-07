@@ -412,11 +412,15 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 });
 
-chrome.action.onClicked.addListener((tab) => {
-  if (tab.url?.includes('mail.google.com')) {
-    chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_SIDEBAR' });
-  } else {
-    chrome.tabs.create({ url: RUNTIME_CONFIG.dashboardUrl });
+chrome.action.onClicked.addListener(async (tab) => {
+  if (!tab.id) return;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['panel.js'],
+    });
+  } catch {
+    // Restricted page (chrome://, new tab, etc.) — nothing to do
   }
 });
 
@@ -424,6 +428,21 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_RUNTIME_CONFIG') {
     sendResponse({ ok: true, config: RUNTIME_CONFIG });
     return;
+  }
+
+  if (message.type === 'GET_STATS') {
+    fetch(`${RUNTIME_CONFIG.serverApiBase}/outreach`)
+      .then(r => r.json())
+      .then(records => {
+        const sent = records.length;
+        const replied = records.filter(r =>
+          r.status === 'Replied' || r.status === 'Interviewing' || r.status === 'Offer'
+        ).length;
+        const rate = sent > 0 ? Math.round((replied / sent) * 100) + '%' : '—';
+        sendResponse({ ok: true, sent, replied, rate });
+      })
+      .catch(() => sendResponse({ ok: false }));
+    return true; // keep message channel open for async response
   }
 
   if (message.type === 'KEYWORD_SCORE') {
