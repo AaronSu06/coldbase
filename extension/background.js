@@ -410,17 +410,86 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 });
 
-chrome.action.onClicked.addListener(async (tab) => {
-  if (!tab.id) return;
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['panel.js'],
-    });
-  } catch {
-    // Restricted page (chrome://, new tab, etc.) — nothing to do
-  }
+const EMAIL_HOSTS = new Set([
+  'mail.google.com',
+  'outlook.live.com',
+  'outlook.office.com',
+  'outlook.office365.com',
+]);
+
+chrome.action.onClicked.addListener((tab) => {
+  if (!tab.id || !tab.url) return;
+  let hostname;
+  try { hostname = new URL(tab.url).hostname; } catch { return; }
+  if (!EMAIL_HOSTS.has(hostname)) return; // not an email client — do nothing
+
+  chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => {
+    const err = chrome.runtime.lastError;
+    // "port closed" = message was received (panel toggled) — do nothing
+    // "Could not establish connection" = no content script — inject and retry
+    if (!err?.message?.includes('Could not establish connection')) return;
+    chrome.scripting.executeScript(
+      { target: { tabId: tab.id }, files: ['content.js'] },
+      () => {
+        if (chrome.runtime.lastError) return; // restricted page (chrome://, etc.)
+        chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => {
+          void chrome.runtime.lastError;
+        });
+      }
+    );
+  });
 });
+
+// ─── Email permutation fallback ───────────────────────────────────────────────
+
+function generateEmailPermutations(firstName, lastName, domain) {
+  if (!firstName || !domain) return [];
+  const f = firstName.toLowerCase().replace(/[^a-z]/g, '');
+  const l = (lastName || '').toLowerCase().replace(/[^a-z]/g, '');
+  const perms = [
+    `${f}@${domain}`,
+    `${f}.${l}@${domain}`,
+    `${f[0]}${l}@${domain}`,
+    `${f[0]}.${l}@${domain}`,
+  ];
+  return l ? perms : [perms[0]];
+}
+
+// ─── Gemini draft prompt builder ──────────────────────────────────────────────
+
+function buildDraftPrompt({ draftType, company, contactName, subject, bodySnippet, notes }) {
+  const who = contactName || 'the recruiter';
+  const co = company || 'the company';
+  const notesCtx = notes ? `\nExtra context: ${notes}` : '';
+  if (draftType === 'cold') {
+    return `You are helping Aaron, a CS student, write a cold outreach email for a software engineering internship.
+
+Company: ${co}
+Contact: ${who}
+Subject: ${subject || ''}${notesCtx}
+
+Write a short, personalized cold email (3–4 sentences). Casual but professional. Sign off as Aaron.
+Return ONLY the email body. No subject line, no preamble.`;
+  }
+  if (draftType === 'bump') {
+    return `You are helping Aaron write a brief follow-up to a cold outreach that got no reply.
+
+Company: ${co}
+Contact: ${who}
+Original subject: ${subject || ''}${bodySnippet ? `\nOriginal email excerpt: ${bodySnippet.slice(0, 200)}` : ''}${notesCtx}
+
+Write a short 2–3 sentence follow-up. Low pressure. Reference the original email naturally. Sign off as Aaron.
+Return ONLY the email body. No subject line, no preamble.`;
+  }
+  return `You are helping Aaron write a reply to a recruiter or contact.
+
+Company: ${co}
+Contact: ${who}
+Their message: ${bodySnippet || '(context not available)'}${notesCtx}
+
+Write a short, natural reply (2–4 sentences). Conversational. Sign off as Aaron.
+Return ONLY the email body. No subject line, no preamble.`;
+}
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_RUNTIME_CONFIG') {
@@ -468,6 +537,87 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.error('[Reach] ❌ RECHECK_REPLIES failed:', e.message);
         sendResponse({ ok: false, error: e.message });
       });
+    return true;
+  }
+
+  if (message.type === 'GET_RECENT') {
+    fetch(`${RUNTIME_CONFIG.serverApiBase}/outreach`)
+      .then(r => r.json())
+      .then(records => {
+        const recent = records.slice(0, 3).map(r => ({
+          company: r.company,
+          status: r.status,
+          sentDate: r.sentDate,
+        }));
+        sendResponse({ ok: true, recent });
+      })
+      .catch(() => sendResponse({ ok: false }));
+    return true;
+  }
+
+  if (message.type === 'GET_KEYS') {
+    chrome.storage.local.get(['hunterKey', 'geminiKey'], (result) => {
+      sendResponse({ ok: true, hunterKey: result.hunterKey || '', geminiKey: result.geminiKey || '' });
+    });
+    return true;
+  }
+
+  if (message.type === 'SET_KEYS') {
+    chrome.storage.local.set({ hunterKey: message.hunterKey || '', geminiKey: message.geminiKey || '' }, () => {
+      sendResponse({ ok: true });
+    });
+    return true;
+  }
+
+  if (message.type === 'FIND_CONTACT') {
+    chrome.storage.local.get(['hunterKey'], async (result) => {
+      const hunterKey = result.hunterKey;
+      if (hunterKey) {
+        try {
+          const url = `https://api.hunter.io/v2/email-finder?domain=${encodeURIComponent(message.domain)}&first_name=${encodeURIComponent(message.firstName || '')}&last_name=${encodeURIComponent(message.lastName || '')}&api_key=${hunterKey}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          if (data.data?.email) {
+            sendResponse({ ok: true, emails: [{ value: data.data.email, score: data.data.score || 0 }] });
+            return;
+          }
+        } catch (e) {
+          console.warn('[Reach] Hunter.io fetch failed:', e.message);
+        }
+      }
+      const fallback = generateEmailPermutations(message.firstName, message.lastName, message.domain);
+      sendResponse({ ok: false, fallback });
+    });
+    return true;
+  }
+
+  if (message.type === 'DRAFT_EMAIL') {
+    chrome.storage.local.get(['geminiKey'], async (result) => {
+      const geminiKey = result.geminiKey;
+      if (!geminiKey) {
+        sendResponse({ ok: false, error: 'No Gemini API key configured. Add it in the Reach popup.' });
+        return;
+      }
+      try {
+        const prompt = buildDraftPrompt(message);
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+        });
+        if (!res.ok) {
+          const body = await res.text();
+          sendResponse({ ok: false, error: `Gemini API error ${res.status}: ${body.slice(0, 120)}` });
+          return;
+        }
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        sendResponse({ ok: true, text });
+      } catch (e) {
+        sendResponse({ ok: false, error: e.message });
+      }
+    });
     return true;
   }
 

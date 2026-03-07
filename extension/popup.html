@@ -77,6 +77,7 @@
 
     .footer {
       padding: 14px 16px;
+      border-bottom: 1px solid #f3f4f6;
     }
     .open-btn {
       display: flex;
@@ -101,6 +102,65 @@
       width: 14px;
       height: 14px;
       flex-shrink: 0;
+    }
+
+    .settings {
+      padding: 14px 16px;
+    }
+    .settings-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .field {
+      margin-bottom: 8px;
+    }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+    .field input {
+      width: 100%;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      color: #0a0a0a;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 6px 8px;
+      outline: none;
+      transition: border-color 120ms ease;
+    }
+    .field input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
+    }
+    .save-btn {
+      width: 100%;
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 120ms ease;
+      margin-top: 4px;
+    }
+    .save-btn:hover { background: #e5e7eb; }
+    .save-status {
+      font-size: 11px;
+      color: #16a34a;
+      text-align: center;
+      margin-top: 6px;
+      min-height: 16px;
     }
   </style>
 </head>
