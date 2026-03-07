@@ -40,6 +40,19 @@ async function getFullMessage(token, messageId) {
   return apiFetch(`${GMAIL_API}/messages/${messageId}?format=full`, token);
 }
 
+// Retries an apiFetch call once after transparently re-acquiring a fresh token
+// if the first attempt returns TOKEN_EXPIRED (HTTP 401).
+async function apiFetchRetry(url, token) {
+  try {
+    return await apiFetch(url, token);
+  } catch (e) {
+    if (e.message !== 'TOKEN_EXPIRED') throw e;
+    console.warn('[Reach] Token expired — re-authing...');
+    const newToken = await getAuthToken(true);
+    return await apiFetch(url, newToken);
+  }
+}
+
 // ─── Parsing helpers ──────────────────────────────────────────────────────────
 
 function extractHeader(message, name) {
@@ -161,30 +174,15 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
 
   let messageList;
   try {
-    const data = await apiFetch(
+    const data = await apiFetchRetry(
       `${GMAIL_API}/messages?labelIds=SENT&maxResults=1`,
       token
     );
     messageList = data.messages || [];
     console.log(`[Reach] Fetched sent message list — ${messageList.length} message(s).`);
   } catch (e) {
-    if (e.message === 'TOKEN_EXPIRED') {
-      console.warn('[Reach] Token expired — re-authing...');
-      try {
-        token = await getAuthToken(true);
-        const data = await apiFetch(
-          `${GMAIL_API}/messages?labelIds=SENT&maxResults=1`,
-          token
-        );
-        messageList = data.messages || [];
-      } catch (retryErr) {
-        console.error('[Reach] ❌ Re-auth failed:', retryErr.message);
-        return;
-      }
-    } else {
-      console.error('[Reach] ❌ Failed to fetch sent messages:', e.message);
-      return;
-    }
+    console.error('[Reach] ❌ Failed to fetch sent messages:', e.message);
+    return;
   }
 
   if (!messageList.length) {
@@ -197,20 +195,13 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
 
   let fullMsg;
   try {
-    fullMsg = await getFullMessage(token, msgId);
+    fullMsg = await apiFetchRetry(
+      `${GMAIL_API}/messages/${msgId}?format=full`,
+      token
+    );
   } catch (e) {
-    if (e.message === 'TOKEN_EXPIRED') {
-      try {
-        token = await getAuthToken(true);
-        fullMsg = await getFullMessage(token, msgId);
-      } catch (retryErr) {
-        console.error('[Reach] ❌ Could not fetch full message after re-auth:', retryErr.message);
-        return;
-      }
-    } else {
-      console.error('[Reach] ❌ Could not fetch full message:', e.message);
-      return;
-    }
+    console.error('[Reach] ❌ Could not fetch full message:', e.message);
+    return;
   }
 
   const subject = extractHeader(fullMsg, 'Subject');

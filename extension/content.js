@@ -12,7 +12,7 @@ const isEmailClient = new Set([
   'outlook.office365.com',
 ]).has(location.hostname);
 
-// ─── Keyword score bridge (delegates to classifier.js in background) ─────────
+// ─── Utilities ────────────────────────────────────────────────────────────────
 
 function normalizeHint(text) {
   return (text || '').toLowerCase().replace(/[-_]/g, '').replace(/[^a-z0-9\s]/g, ' ');
@@ -30,38 +30,48 @@ function requestKeywordScore(text) {
   });
 }
 
-// ─── Widget UI ─────────────────────────────────────────────────────────────────
+function _cpEscapeHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
-const editorWidgets = new WeakMap();
+function _cpRelativeDate(isoString) {
+  try {
+    const diffMs = Date.now() - new Date(isoString).getTime();
+    const d = Math.floor(diffMs / 86400000);
+    if (d === 0) return 'today';
+    if (d === 1) return '1d ago';
+    if (d < 7) return `${d}d ago`;
+    const w = Math.floor(d / 7);
+    if (w === 1) return '1w ago';
+    if (w < 5) return `${w}w ago`;
+    return `${Math.floor(d / 30)}mo ago`;
+  } catch { return ''; }
+}
+
+// ─── Editor state ─────────────────────────────────────────────────────────────
+
+const editorWidgets    = new WeakMap();
 const editorManualModes = new WeakMap(); // auto | force_track | force_skip
-const editorAutoScores = new WeakMap();  // heuristic score for auto mode
+const editorAutoScores  = new WeakMap();
+const editorScoreSeq    = new WeakMap();
+const observedEditors   = new WeakSet();
+const liveEditors       = new Set();
 
-let savedTrackingDefault = 'auto';
-try {
-  chrome.storage.local.get('trackingDefault', (r) => {
-    if (r.trackingDefault) {
-      savedTrackingDefault = r.trackingDefault;
-      // Apply to any editors already open when the script loaded
-      for (const el of liveEditors) {
-        if ((editorManualModes.get(el) || 'auto') === 'auto') {
-          editorManualModes.set(el, savedTrackingDefault);
-          updateWidget(el, editorAutoScores.get(el) || 0);
-        }
-      }
-    }
-  });
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local' || !('trackingDefault' in changes)) return;
-    savedTrackingDefault = changes.trackingDefault.newValue || 'auto';
-    // Repaint the toggle in any already-open panel (if no per-compose override)
-    if (_composePanelHost?.style.display !== 'none') {
-      _composePanelSyncTrackMode?.();
-    }
-  });
-} catch (_) {}
-const editorScoreSeq = new WeakMap();
-const liveEditors = new Set();       // parallel to editorWidgets for resize iteration
-let lastActiveEditor = null;
+let lastActiveEditor      = null;
+let savedTrackingDefault  = 'auto';
+
+// Centralised cleanup for all per-editor state. Called whenever an editor is
+// detached from the DOM or re-attached from scratch.
+function clearEditorMaps(el) {
+  editorWidgets.delete(el);
+  editorManualModes.delete(el);
+  editorAutoScores.delete(el);
+  editorScoreSeq.delete(el);
+  liveEditors.delete(el);
+}
+
+// ─── Widget styles ────────────────────────────────────────────────────────────
+
 let stylesInjected = false;
 
 function injectStyles() {
@@ -110,6 +120,9 @@ function injectStyles() {
 
 const ICON_IMG = `<img class="oiq-icon" src="${chrome.runtime.getURL('Reach.png')}" alt="Reach" />`;
 
+// ─── Widget DOM helpers ───────────────────────────────────────────────────────
+
+// Returns the nearest compose dialog or document — used for form-field lookups.
 function getComposeContainer(editorEl) {
   return (
     editorEl.closest('[role="dialog"]') ||
@@ -135,14 +148,7 @@ function getComposeMetadata(editorEl) {
   };
 }
 
-function cycleManualMode(current) {
-  if (current === 'auto') return 'force_track';
-  if (current === 'force_track') return 'force_skip';
-  return 'auto';
-}
-
 // Detect if a neighboring extension widget occupies the default top-right position.
-// Returns the neighbor rect in viewport coords, or null if no neighbor.
 function detectNeighborRect(editorEl, widgetEl) {
   const editorRect = editorEl.getBoundingClientRect();
   const HALF = 14;
@@ -152,9 +158,9 @@ function detectNeighborRect(editorEl, widgetEl) {
 
   let neighborRect = null;
   const probeYs = [
-    editorRect.top + 8,   // new default center
-    editorRect.top + 14,  // slightly lower
-    editorRect.top + 4,   // slightly higher
+    editorRect.top + 8,
+    editorRect.top + 14,
+    editorRect.top + 4,
   ];
 
   for (const testY of probeYs) {
@@ -184,6 +190,8 @@ function placeWidget(editorEl, container, w) {
   w.style.right = rightPx + 'px';
 }
 
+// Widget container uses document.body as fallback (not document) because it
+// needs a DOM element for getBoundingClientRect and appendChild.
 function getOrCreateWidget(editorEl) {
   if (editorWidgets.has(editorEl)) return editorWidgets.get(editorEl);
   injectStyles();
@@ -204,14 +212,13 @@ function getOrCreateWidget(editorEl) {
     lastActiveEditor = editorEl;
     openComposePanel(editorEl);
   });
-  container.appendChild(w);   // inject INTO dialog, not document.body
+  container.appendChild(w);
   editorWidgets.set(editorEl, w);
   liveEditors.add(editorEl);
 
   placeWidget(editorEl, container, w);
 
-  // Other extensions may inject their widgets a few ms after ours.
-  // Re-probe at 300ms so neighbor is loaded — neighborTopY gives reliable vertical alignment.
+  // Re-probe at 300ms — other extensions may inject widgets a few ms after ours.
   setTimeout(() => {
     if (document.body.contains(w) && document.body.contains(editorEl)) {
       placeWidget(editorEl, container, w);
@@ -225,11 +232,7 @@ function updateWidget(editorEl, matchCount) {
   if (!document.body.contains(editorEl)) {
     if (editorWidgets.has(editorEl)) {
       editorWidgets.get(editorEl).remove();
-      editorWidgets.delete(editorEl);
-      editorManualModes.delete(editorEl);
-      editorAutoScores.delete(editorEl);
-      editorScoreSeq.delete(editorEl);
-      liveEditors.delete(editorEl);
+      clearEditorMaps(editorEl);
     }
     return;
   }
@@ -257,24 +260,17 @@ function updateWidget(editorEl, matchCount) {
 
 // ─── Compose window detection ─────────────────────────────────────────────────
 
-const observedEditors = new WeakSet();
-
 function attachToEditor(el) {
   if (observedEditors.has(el)) {
-    // If the widget was removed (dialog closed + recreated), re-attach
+    // Widget was removed (dialog closed + recreated) — re-attach cleanly.
     const existing = editorWidgets.get(el);
     if (existing && document.body.contains(existing)) return;
     observedEditors.delete(el);
-    editorWidgets.delete(el);
-    editorManualModes.delete(el);
-    editorAutoScores.delete(el);
-    editorScoreSeq.delete(el);
-    liveEditors.delete(el);
+    clearEditorMaps(el);
   }
   observedEditors.add(el);
   console.log('[Reach] Attached to compose editor.');
 
-  // Show the icon immediately when the compose window opens
   editorManualModes.set(el, savedTrackingDefault);
   editorAutoScores.set(el, 0);
   updateWidget(el, 0);
@@ -285,14 +281,10 @@ function attachToEditor(el) {
 
   el.addEventListener('input', () => {
     lastActiveEditor = el;
-    // Try to find the subject field in the nearest compose container first,
-    // then fall back to any visible subject box in the document.
     const container = getComposeContainer(el);
-
     const subjectEl =
       container.querySelector('input[name="subjectbox"]') ||
       document.querySelector('input[name="subjectbox"]');
-
     const subject = subjectEl ? subjectEl.value : '';
     const body = el.innerText || el.textContent || '';
     const combined = subject + ' ' + body;
@@ -307,13 +299,12 @@ function attachToEditor(el) {
   });
 }
 
-// Scan the current DOM for any open compose editors
+// Scan the current DOM for any open compose editors.
 function scanForEditors() {
-  // Gmail compose body element selector — covers new compose + inline reply
   const candidates = document.querySelectorAll(
-    'div[contenteditable="true"].Am,' +          // classic compose body
-    '[role="dialog"] div[contenteditable="true"],' + // compose in modal
-    'div[contenteditable="true"][aria-multiline="true"]' // reply inline
+    'div[contenteditable="true"].Am,' +
+    '[role="dialog"] div[contenteditable="true"],' +
+    'div[contenteditable="true"][aria-multiline="true"]'
   );
   candidates.forEach(attachToEditor);
 }
@@ -358,12 +349,10 @@ function showReloadBanner() {
   `;
   document.body.appendChild(banner);
   document.getElementById('reach-reload-btn').addEventListener('click', () => location.reload());
-  // Auto-dismiss after 30s
   setTimeout(() => banner.remove(), 30_000);
 }
 
 function fireSendToast() {
-  // Debounce: one scan per 10s to avoid duplicate triggers
   if (toastFired) return;
   toastFired = true;
   clearTimeout(toastCooldown);
@@ -376,12 +365,6 @@ function fireSendToast() {
       showReloadBanner();
       return;
     }
-    // Use chrome.storage.local.set instead of sendMessage.
-    // Reason: MV3 service workers use "type": "module" — when Chrome terminates
-    // the SW and sendMessage wakes it back up, the ES module import chain may not
-    // complete before the onMessage event fires, silently dropping the message.
-    // chrome.storage.onChanged does NOT have this race condition: Chrome waits
-    // for the SW to fully initialize before dispatching the storage event.
     let pendingScanPayload = { ts: Date.now(), overrideMode: null, subjectHint: '', recipientsHint: '' };
     if (lastActiveEditor && document.body.contains(lastActiveEditor)) {
       const manualMode = editorManualModes.get(lastActiveEditor) || 'auto';
@@ -392,7 +375,6 @@ function fireSendToast() {
         subjectHint: normalizeHint(meta.subject).slice(0, 120),
         recipientsHint: normalizeHint(meta.recipients).slice(0, 180)
       };
-      // Reset per-message override after send so the next compose starts in auto.
       editorManualModes.set(lastActiveEditor, 'auto');
       updateWidget(lastActiveEditor, editorAutoScores.get(lastActiveEditor) || 0);
     }
@@ -417,10 +399,6 @@ function checkForSendToast(node) {
   }
 }
 
-// Also scan the full notification area on any mutation — catches text inserted
-// into a pre-existing container (Gmail sometimes adds an empty toast then fills it).
-// We mark processed elements with data-reach-seen so the same toast node can
-// never re-trigger after the 10s debounce resets.
 function scanForSendToast() {
   const candidates = document.querySelectorAll(
     '[aria-live], [role="status"], [role="alert"], .bAq, .vh'
@@ -435,31 +413,22 @@ function scanForSendToast() {
   }
 }
 
-// Watch the DOM for compose windows being added dynamically.
-// Also watches attribute mutations so that saved drafts that Gmail shows by
-// toggling visibility/display/aria-hidden on pre-existing DOM nodes are caught.
+// ─── DOM observer + periodic scan + resize ───────────────────────────────────
+
 const domObserver = new MutationObserver((mutations) => {
   let shouldScanEditors = false;
   let shouldScanToast = false;
 
   for (const mutation of mutations) {
-    // characterData: text node changed — check parent element
     if (mutation.type === 'characterData') {
       const text = mutation.target.textContent || '';
-      if (text.includes('Message sent')) {
-        fireSendToast();
-      }
+      if (text.includes('Message sent')) fireSendToast();
       continue;
     }
 
     if (mutation.type === 'attributes') {
-      // Gmail shows saved-draft compose windows by mutating style/class/aria-hidden
-      // on an already-existing container. Trigger a scan whenever a compose-like
-      // ancestor becomes visible so the icon attaches immediately.
       const el = mutation.target;
-      if (el.querySelector?.('div[contenteditable="true"]')) {
-        shouldScanEditors = true;
-      }
+      if (el.querySelector?.('div[contenteditable="true"]')) shouldScanEditors = true;
       continue;
     }
 
@@ -488,12 +457,8 @@ domObserver.observe(document.body, {
   attributeFilter: ['style', 'class', 'aria-hidden', 'hidden'],
 });
 
-// Periodic fallback: catches any compose windows Gmail reveals through mechanisms
-// the MutationObserver misses (e.g. CSS transitions, shadow DOM changes).
-// attachToEditor is idempotent so repeated calls on attached editors are no-ops.
 if (isEmailClient) setInterval(scanForEditors, 1500);
 
-// Recompute position when the window is resized
 window.addEventListener('resize', () => {
   for (const editorEl of liveEditors) {
     if (!document.body.contains(editorEl)) continue;
@@ -507,283 +472,216 @@ window.addEventListener('resize', () => {
   }
 });
 
-// In case a compose window is already open when the script loads
 if (isEmailClient) scanForEditors();
 
-// Proactively warn if the extension context becomes invalidated while Gmail is
-// open (e.g. extension reloaded/updated). Checks every 5s after a 10s grace
-// period so it doesn't false-fire during initial script setup.
+// ─── Extension context health check ──────────────────────────────────────────
+
 setTimeout(() => {
   setInterval(() => {
     if (!chrome.runtime?.id) showReloadBanner();
   }, 5000);
 }, 10_000);
 
-// ─── Compose Panel (3-tab hub) ────────────────────────────────────────────────
+// ─── Compose panel ────────────────────────────────────────────────────────────
 
-let _composePanelHost = null;
-let _composePanelSetEditor = null;
-let _composePanelSyncTrackMode = null;
-let _composePanelCurrentEditor = null;
-
-function openComposePanel(editorEl) {
-  if (!_composePanelHost) {
-    const panel = buildComposePanel();
-    _composePanelHost = panel.host;
-    _composePanelSetEditor = panel.setEditor;
-    _composePanelSyncTrackMode = panel.syncTrackMode;
-    document.documentElement.appendChild(_composePanelHost);
+const PANEL_STYLES = `
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :host {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 2147483647;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    color: #0a0a0a;
   }
-
-  const alreadyVisible = _composePanelHost.style.display !== 'none';
-  const sameEditor = _composePanelCurrentEditor === editorEl;
-
-  if (alreadyVisible && sameEditor) {
-    _composePanelHost.style.display = 'none';
-    return;
+  .panel {
+    width: 320px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.14);
+    overflow: hidden;
+    animation: cp-slide-in 200ms cubic-bezier(0.34, 1.4, 0.64, 1);
   }
+  @keyframes cp-slide-in {
+    from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .header img { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
+  .header-text { display: flex; align-items: baseline; gap: 6px; flex: 1; }
+  .header h1 { font-size: 14px; font-weight: 700; color: #0a0a0a; letter-spacing: -0.02em; }
+  .tier-badge {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #9ca3af;
+    border: 1px solid #e5e7eb; border-radius: 4px; padding: 1px 5px;
+  }
+  .gear-btn {
+    background: none; border: none; cursor: pointer; color: #9ca3af;
+    font-size: 15px; line-height: 1; padding: 2px 4px; border-radius: 4px;
+    transition: color 120ms ease; flex-shrink: 0;
+  }
+  .gear-btn:hover { color: #374151; background: #f3f4f6; }
+  .close-btn {
+    background: none; border: none; cursor: pointer; color: #9ca3af;
+    font-size: 18px; line-height: 1; padding: 2px 4px; border-radius: 4px;
+    transition: color 120ms ease, background 120ms ease; flex-shrink: 0;
+  }
+  .close-btn:hover { color: #374151; background: #f3f4f6; }
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+  }
+  .tab {
+    flex: 1; padding: 8px 4px; background: none;
+    border: none; border-bottom: 2px solid transparent;
+    cursor: pointer; font-size: 11px; font-weight: 600; color: #6b7280;
+    letter-spacing: 0.01em; transition: color 120ms ease, border-color 120ms ease;
+    text-align: center;
+  }
+  .tab:hover { color: #374151; }
+  .tab.active { color: #4f46e5; border-bottom-color: #4f46e5; }
+  .tab-panel { display: none; padding: 14px; }
+  .tab-panel.active { display: block; }
+  .stats {
+    display: flex; margin-bottom: 14px;
+    border: 1px solid #f3f4f6; border-radius: 10px; overflow: hidden;
+  }
+  .stat { flex: 1; text-align: center; padding: 12px 8px; }
+  .stat + .stat { border-left: 1px solid #f3f4f6; }
+  .stat-value {
+    font-family: ui-monospace, 'Cascadia Code', monospace;
+    font-size: 22px; font-weight: 600; color: #4f46e5;
+    line-height: 1; letter-spacing: -0.02em;
+  }
+  .stat-label {
+    font-size: 9px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #9ca3af; margin-top: 4px;
+  }
+  .field-row {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 12px;
+  }
+  .field-label {
+    font-size: 11px; font-weight: 600; color: #374151;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  select, input, textarea {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 12px; color: #0a0a0a;
+    border: 1px solid #e5e7eb; border-radius: 6px;
+    padding: 5px 8px; background: #fff; outline: none;
+    transition: border-color 120ms ease;
+  }
+  select:focus, input:focus, textarea:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
+  }
+  .track-toggle {
+    display: flex; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;
+  }
+  .tt-btn {
+    flex: 1; border: none; border-right: 1px solid #e5e7eb; background: none;
+    padding: 5px 10px; font-size: 11px; font-weight: 600; color: #6b7280;
+    cursor: pointer; transition: background 120ms ease, color 120ms ease;
+  }
+  .tt-btn:last-child { border-right: none; }
+  .tt-btn.active-auto   { background: #4f46e5; color: #fff; }
+  .tt-btn.active-on     { background: #16a34a; color: #fff; }
+  .tt-btn.active-off    { background: #dc2626; color: #fff; }
+  .section-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 8px;
+  }
+  .recent-list { margin-bottom: 14px; }
+  .recent-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 0; border-bottom: 1px solid #f3f4f6; gap: 8px;
+  }
+  .recent-row:last-child { border-bottom: none; }
+  .recent-company {
+    font-size: 12px; font-weight: 500; color: #111827;
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .status-badge {
+    font-size: 10px; font-weight: 600; padding: 2px 6px;
+    border-radius: 20px; flex-shrink: 0;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .status-sent { background: #eff6ff; color: #3b82f6; }
+  .status-replied, .status-interviewing { background: #f0fdf4; color: #16a34a; }
+  .status-offer { background: #fefce8; color: #ca8a04; }
+  .status-ghosted { background: #fef2f2; color: #dc2626; }
+  .recent-date { font-size: 10px; color: #9ca3af; flex-shrink: 0; }
+  .open-btn, .action-btn {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    width: 100%; background: #4f46e5; color: #ffffff; border: none;
+    border-radius: 8px; padding: 9px 14px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    letter-spacing: -0.01em; transition: background 150ms ease;
+  }
+  .open-btn:hover, .action-btn:hover { background: #4338ca; }
+  .action-btn:disabled { background: #a5b4fc; cursor: not-allowed; }
+  .action-btn.secondary {
+    background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb;
+  }
+  .action-btn.secondary:hover { background: #e5e7eb; }
+  .form-group { margin-bottom: 10px; }
+  .form-group label {
+    display: block; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: #6b7280; margin-bottom: 4px;
+  }
+  .form-group input { width: 100%; }
+  .results-list { margin-top: 12px; }
+  .result-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 0; border-bottom: 1px solid #f3f4f6;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-email {
+    flex: 1; font-size: 12px; color: #111827;
+    font-family: ui-monospace, monospace;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .result-score { font-size: 10px; color: #9ca3af; flex-shrink: 0; }
+  .copy-btn {
+    background: #f3f4f6; border: none; border-radius: 4px;
+    padding: 3px 7px; cursor: pointer; font-size: 10px;
+    font-weight: 600; color: #374151; flex-shrink: 0;
+    transition: background 120ms ease;
+  }
+  .copy-btn:hover { background: #e5e7eb; }
+  .copy-btn.copied { background: #dcfce7; color: #16a34a; }
+  .status-msg {
+    font-size: 11px; color: #6b7280; text-align: center;
+    padding: 8px 0; font-style: italic;
+  }
+  .draft-textarea {
+    width: 100%; height: 130px; resize: vertical;
+    font-size: 12px; line-height: 1.5; padding: 8px;
+    border-radius: 6px; margin-top: 10px;
+    font-family: system-ui, -apple-system, sans-serif; color: #111827;
+  }
+  .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+  .btn-row .action-btn { flex: 1; }
+  .autofill-note { font-size: 10px; color: #9ca3af; margin-top: 4px; font-style: italic; }
+`;
 
-  _composePanelCurrentEditor = editorEl;
-  _composePanelSetEditor(editorEl);
-  _composePanelHost.style.display = '';
-}
-
-function _cpEscapeHtml(str) {
-  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function _cpRelativeDate(isoString) {
-  try {
-    const diffMs = Date.now() - new Date(isoString).getTime();
-    const d = Math.floor(diffMs / 86400000);
-    if (d === 0) return 'today';
-    if (d === 1) return '1d ago';
-    if (d < 7) return `${d}d ago`;
-    const w = Math.floor(d / 7);
-    if (w === 1) return '1w ago';
-    if (w < 5) return `${w}w ago`;
-    return `${Math.floor(d / 30)}mo ago`;
-  } catch { return ''; }
-}
-
-function buildComposePanel() {
-  const ICON_URL = chrome.runtime.getURL('Reach.png');
-  const host = document.createElement('div');
-  host.id = 'reach-compose-panel-host';
-  host.style.display = 'none'; // openComposePanel shows it; keeps alreadyVisible logic correct
-  const shadow = host.attachShadow({ mode: 'closed' });
-
-  // Gmail intercepts keydown/keyup/keypress at the document level.
-  // Block propagation in capture phase so Shadow DOM inputs work.
-  ['keydown', 'keyup', 'keypress'].forEach(type =>
-    host.addEventListener(type, e => e.stopPropagation(), true)
-  );
-
-  let currentEditorEl = null;
-
-  shadow.innerHTML = `
-    <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      :host {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        z-index: 2147483647;
-        font-family: system-ui, -apple-system, sans-serif;
-        font-size: 13px;
-        color: #0a0a0a;
-      }
-      .panel {
-        width: 320px;
-        background: #ffffff;
-        border-radius: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.14);
-        overflow: hidden;
-        animation: cp-slide-in 200ms cubic-bezier(0.34, 1.4, 0.64, 1);
-      }
-      @keyframes cp-slide-in {
-        from { opacity: 0; transform: translateY(-8px) scale(0.97); }
-        to   { opacity: 1; transform: translateY(0) scale(1); }
-      }
-      .header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 14px;
-        background: #f9fafb;
-        border-bottom: 1px solid #e5e7eb;
-      }
-      .header img { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
-      .header-text { display: flex; align-items: baseline; gap: 6px; flex: 1; }
-      .header h1 { font-size: 14px; font-weight: 700; color: #0a0a0a; letter-spacing: -0.02em; }
-      .tier-badge {
-        font-size: 9px; font-weight: 700; text-transform: uppercase;
-        letter-spacing: 0.08em; color: #9ca3af;
-        border: 1px solid #e5e7eb; border-radius: 4px; padding: 1px 5px;
-      }
-      .gear-btn {
-        background: none; border: none; cursor: pointer; color: #9ca3af;
-        font-size: 15px; line-height: 1; padding: 2px 4px; border-radius: 4px;
-        transition: color 120ms ease; flex-shrink: 0;
-      }
-      .gear-btn:hover { color: #374151; background: #f3f4f6; }
-      .close-btn {
-        background: none; border: none; cursor: pointer; color: #9ca3af;
-        font-size: 18px; line-height: 1; padding: 2px 4px; border-radius: 4px;
-        transition: color 120ms ease, background 120ms ease; flex-shrink: 0;
-      }
-      .close-btn:hover { color: #374151; background: #f3f4f6; }
-      .tabs {
-        display: flex;
-        border-bottom: 1px solid #e5e7eb;
-        background: #f9fafb;
-      }
-      .tab {
-        flex: 1; padding: 8px 4px; background: none;
-        border: none; border-bottom: 2px solid transparent;
-        cursor: pointer; font-size: 11px; font-weight: 600; color: #6b7280;
-        letter-spacing: 0.01em; transition: color 120ms ease, border-color 120ms ease;
-        text-align: center;
-      }
-      .tab:hover { color: #374151; }
-      .tab.active { color: #4f46e5; border-bottom-color: #4f46e5; }
-      .tab-panel { display: none; padding: 14px; }
-      .tab-panel.active { display: block; }
-
-      /* Overview */
-      .stats {
-        display: flex; margin-bottom: 14px;
-        border: 1px solid #f3f4f6; border-radius: 10px; overflow: hidden;
-      }
-      .stat { flex: 1; text-align: center; padding: 12px 8px; }
-      .stat + .stat { border-left: 1px solid #f3f4f6; }
-      .stat-value {
-        font-family: ui-monospace, 'Cascadia Code', monospace;
-        font-size: 22px; font-weight: 600; color: #4f46e5;
-        line-height: 1; letter-spacing: -0.02em;
-      }
-      .stat-label {
-        font-size: 9px; font-weight: 600; text-transform: uppercase;
-        letter-spacing: 0.08em; color: #9ca3af; margin-top: 4px;
-      }
-      .field-row {
-        display: flex; align-items: center;
-        justify-content: space-between; margin-bottom: 12px;
-      }
-      .field-label {
-        font-size: 11px; font-weight: 600; color: #374151;
-        text-transform: uppercase; letter-spacing: 0.06em;
-      }
-      select, input, textarea {
-        font-family: system-ui, -apple-system, sans-serif;
-        font-size: 12px; color: #0a0a0a;
-        border: 1px solid #e5e7eb; border-radius: 6px;
-        padding: 5px 8px; background: #fff; outline: none;
-        transition: border-color 120ms ease;
-      }
-      select:focus, input:focus, textarea:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
-      }
-      .track-toggle {
-        display: flex; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;
-      }
-      .tt-btn {
-        flex: 1; border: none; border-right: 1px solid #e5e7eb; background: none;
-        padding: 5px 10px; font-size: 11px; font-weight: 600; color: #6b7280;
-        cursor: pointer; transition: background 120ms ease, color 120ms ease;
-      }
-      .tt-btn:last-child { border-right: none; }
-      .tt-btn.active-auto   { background: #4f46e5; color: #fff; }
-      .tt-btn.active-on     { background: #16a34a; color: #fff; }
-      .tt-btn.active-off    { background: #dc2626; color: #fff; }
-      .section-title {
-        font-size: 10px; font-weight: 700; text-transform: uppercase;
-        letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 8px;
-      }
-      .recent-list { margin-bottom: 14px; }
-      .recent-row {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 6px 0; border-bottom: 1px solid #f3f4f6; gap: 8px;
-      }
-      .recent-row:last-child { border-bottom: none; }
-      .recent-company {
-        font-size: 12px; font-weight: 500; color: #111827;
-        flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-      .status-badge {
-        font-size: 10px; font-weight: 600; padding: 2px 6px;
-        border-radius: 20px; flex-shrink: 0;
-        text-transform: uppercase; letter-spacing: 0.04em;
-      }
-      .status-sent { background: #eff6ff; color: #3b82f6; }
-      .status-replied, .status-interviewing { background: #f0fdf4; color: #16a34a; }
-      .status-offer { background: #fefce8; color: #ca8a04; }
-      .status-ghosted { background: #fef2f2; color: #dc2626; }
-      .recent-date { font-size: 10px; color: #9ca3af; flex-shrink: 0; }
-      .open-btn, .action-btn {
-        display: flex; align-items: center; justify-content: center; gap: 6px;
-        width: 100%; background: #4f46e5; color: #ffffff; border: none;
-        border-radius: 8px; padding: 9px 14px;
-        font-family: system-ui, -apple-system, sans-serif;
-        font-size: 12px; font-weight: 600; cursor: pointer;
-        letter-spacing: -0.01em; transition: background 150ms ease;
-      }
-      .open-btn:hover, .action-btn:hover { background: #4338ca; }
-      .action-btn:disabled { background: #a5b4fc; cursor: not-allowed; }
-      .action-btn.secondary {
-        background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb;
-      }
-      .action-btn.secondary:hover { background: #e5e7eb; }
-
-      /* Find Contacts */
-      .form-group { margin-bottom: 10px; }
-      .form-group label {
-        display: block; font-size: 10px; font-weight: 700;
-        text-transform: uppercase; letter-spacing: 0.06em;
-        color: #6b7280; margin-bottom: 4px;
-      }
-      .form-group input { width: 100%; }
-      .results-list { margin-top: 12px; }
-      .result-row {
-        display: flex; align-items: center; gap: 8px;
-        padding: 7px 0; border-bottom: 1px solid #f3f4f6;
-      }
-      .result-row:last-child { border-bottom: none; }
-      .result-email {
-        flex: 1; font-size: 12px; color: #111827;
-        font-family: ui-monospace, monospace;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-      .result-score { font-size: 10px; color: #9ca3af; flex-shrink: 0; }
-      .copy-btn {
-        background: #f3f4f6; border: none; border-radius: 4px;
-        padding: 3px 7px; cursor: pointer; font-size: 10px;
-        font-weight: 600; color: #374151; flex-shrink: 0;
-        transition: background 120ms ease;
-      }
-      .copy-btn:hover { background: #e5e7eb; }
-      .copy-btn.copied { background: #dcfce7; color: #16a34a; }
-      .status-msg {
-        font-size: 11px; color: #6b7280; text-align: center;
-        padding: 8px 0; font-style: italic;
-      }
-
-      /* Draft AI */
-      .draft-textarea {
-        width: 100%; height: 130px; resize: vertical;
-        font-size: 12px; line-height: 1.5; padding: 8px;
-        border-radius: 6px; margin-top: 10px;
-        font-family: system-ui, -apple-system, sans-serif; color: #111827;
-      }
-      .btn-row { display: flex; gap: 8px; margin-top: 8px; }
-      .btn-row .action-btn { flex: 1; }
-      .autofill-note { font-size: 10px; color: #9ca3af; margin-top: 4px; font-style: italic; }
-    </style>
-
+function getPanelHTML(iconUrl) {
+  return `
     <div class="panel">
       <div class="header">
-        <img src="${ICON_URL}" alt="Reach" />
+        <img src="${iconUrl}" alt="Reach" />
         <div class="header-text">
           <h1>Reach</h1>
           <span class="tier-badge" id="cp-tier">Free</span>
@@ -851,58 +749,42 @@ function buildComposePanel() {
           Open a compose window to use Draft AI.
         </div>
         <div id="cp-draft-form" style="display:none">
-        <div class="form-group">
-          <label>Type</label>
-          <select id="cp-draft-type" style="width:100%">
-            <option value="cold">Cold Outreach</option>
-            <option value="bump">Follow-up</option>
-            <option value="reply">Reply</option>
-          </select>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="cp-draft-type" style="width:100%">
+              <option value="cold">Cold Outreach</option>
+              <option value="bump">Follow-up</option>
+              <option value="reply">Reply</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Company</label>
+            <input type="text" id="cp-draft-company" placeholder="e.g. Stripe" />
+          </div>
+          <div class="form-group">
+            <label>Contact Name</label>
+            <input type="text" id="cp-draft-contact" placeholder="e.g. Hiring Team" />
+          </div>
+          <div class="form-group">
+            <label>Notes (optional)</label>
+            <input type="text" id="cp-draft-notes" placeholder="Any extra context…" />
+          </div>
+          <p class="autofill-note" id="cp-autofill-note"></p>
+          <button class="action-btn" id="cp-generate-btn">Generate Draft ✨</button>
+          <textarea class="draft-textarea" id="cp-draft-output" placeholder="Generated draft will appear here…"></textarea>
+          <div class="btn-row">
+            <button class="action-btn secondary" id="cp-copy-draft">Copy</button>
+            <button class="action-btn" id="cp-insert-draft">Insert ↓</button>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Company</label>
-          <input type="text" id="cp-draft-company" placeholder="e.g. Stripe" />
-        </div>
-        <div class="form-group">
-          <label>Contact Name</label>
-          <input type="text" id="cp-draft-contact" placeholder="e.g. Hiring Team" />
-        </div>
-        <div class="form-group">
-          <label>Notes (optional)</label>
-          <input type="text" id="cp-draft-notes" placeholder="Any extra context…" />
-        </div>
-        <p class="autofill-note" id="cp-autofill-note"></p>
-        <button class="action-btn" id="cp-generate-btn">Generate Draft ✨</button>
-        <textarea class="draft-textarea" id="cp-draft-output" placeholder="Generated draft will appear here…"></textarea>
-        <div class="btn-row">
-          <button class="action-btn secondary" id="cp-copy-draft">Copy</button>
-          <button class="action-btn" id="cp-insert-draft">Insert ↓</button>
-        </div>
-        </div> <!-- #cp-draft-form -->
       </div>
     </div>
   `;
+}
 
-  // ── Close ──
-  shadow.querySelector('.close-btn').addEventListener('click', () => {
-    host.style.display = 'none';
-  });
-
-  // ── Tabs ──
-  const tabs = shadow.querySelectorAll('.tab');
-  const panels = shadow.querySelectorAll('.tab-panel');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      panels.forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      shadow.getElementById(`cp-panel-${tab.dataset.tab}`).classList.add('active');
-      if (tab.dataset.tab === 'overview') loadOverviewData();
-      if (tab.dataset.tab === 'draft') prefillDraftTab();
-    });
-  });
-
-  // ── Overview: stats + recent ──
+// Sets up the Overview tab: stats, recent list, tracking toggle, dashboard button.
+// Returns loadOverviewData so buildComposePanel can call it on tab switch.
+function setupOverviewTab(shadow, ctx, updateTrackToggle) {
   function loadOverviewData() {
     chrome.runtime.sendMessage({ type: 'GET_STATS' }, (res) => {
       if (chrome.runtime.lastError || !res?.ok) return;
@@ -927,22 +809,13 @@ function buildComposePanel() {
     });
   }
 
-  // ── Overview: tracking 3-pill toggle ──
-  const trackBtns = shadow.querySelectorAll('.tt-btn');
-
-  function updateTrackToggle(mode) {
-    trackBtns.forEach(b => b.classList.remove('active-auto', 'active-on', 'active-off'));
-    const classMap = { auto: 'active-auto', force_track: 'active-on', force_skip: 'active-off' };
-    const btn = shadow.querySelector(`.tt-btn[data-mode="${mode}"]`);
-    if (btn) btn.classList.add(classMap[mode]);
-  }
-
-  trackBtns.forEach(btn => {
+  // Tracking toggle
+  shadow.querySelectorAll('.tt-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;
-      if (currentEditorEl) {
-        editorManualModes.set(currentEditorEl, mode);
-        updateWidget(currentEditorEl, editorAutoScores.get(currentEditorEl) || 0);
+      if (ctx.currentEditorEl) {
+        editorManualModes.set(ctx.currentEditorEl, mode);
+        updateWidget(ctx.currentEditorEl, editorAutoScores.get(ctx.currentEditorEl) || 0);
       }
       updateTrackToggle(mode);
       savedTrackingDefault = mode;
@@ -950,23 +823,24 @@ function buildComposePanel() {
     });
   });
 
-  // ── Overview: open dashboard + gear btn ──
+  // Dashboard + gear buttons — fetched once at panel creation time.
   chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (res) => {
     const dashUrl = res?.config?.dashboardUrl ?? 'http://localhost:5173';
-    shadow.getElementById('cp-open-dash').addEventListener('click', () => {
-      window.open(dashUrl, '_blank');
-    });
-    shadow.getElementById('cp-gear-btn').addEventListener('click', () => {
-      window.open(dashUrl, '_blank');
-    });
+    shadow.getElementById('cp-open-dash').addEventListener('click', () => window.open(dashUrl, '_blank'));
+    shadow.getElementById('cp-gear-btn').addEventListener('click', () => window.open(dashUrl, '_blank'));
   });
 
-  // ── Find Contacts ──
+  return loadOverviewData;
+}
+
+// Sets up the Find Contacts tab: domain/name form, Hunter.io lookup, copy buttons.
+function setupFindTab(shadow) {
   shadow.getElementById('cp-find-btn').addEventListener('click', () => {
-    const domain = shadow.getElementById('cp-domain').value.trim();
+    const domain    = shadow.getElementById('cp-domain').value.trim();
     const firstName = shadow.getElementById('cp-first-name').value.trim();
-    const lastName = shadow.getElementById('cp-last-name').value.trim();
+    const lastName  = shadow.getElementById('cp-last-name').value.trim();
     const resultsEl = shadow.getElementById('cp-results');
+    const findBtn   = shadow.getElementById('cp-find-btn');
 
     if (!domain) {
       resultsEl.innerHTML = '<div class="status-msg">Enter a domain first.</div>';
@@ -974,7 +848,6 @@ function buildComposePanel() {
     }
 
     resultsEl.innerHTML = '<div class="status-msg">Searching…</div>';
-    const findBtn = shadow.getElementById('cp-find-btn');
     findBtn.disabled = true;
     findBtn.textContent = 'Searching…';
 
@@ -987,7 +860,7 @@ function buildComposePanel() {
         return;
       }
 
-      const emails = res?.ok ? (res.emails || []) : [];
+      const emails   = res?.ok ? (res.emails || []) : [];
       const fallback = !res?.ok ? (res?.fallback || []) : [];
 
       if (emails.length) {
@@ -1023,31 +896,31 @@ function buildComposePanel() {
       });
     });
   });
+}
 
-  // ── Draft AI: pre-fill from compose ──
+// Sets up the Draft AI tab: type/company/contact/notes form, generate, copy, insert.
+// Returns prefillDraftTab so buildComposePanel can call it when the tab is activated.
+function setupDraftTab(shadow, ctx) {
   function prefillDraftTab() {
-    shadow.getElementById('cp-draft-empty').style.display = currentEditorEl ? 'none' : '';
-    shadow.getElementById('cp-draft-form').style.display = currentEditorEl ? '' : 'none';
-    if (!currentEditorEl) return;
-    const container =
-      currentEditorEl.closest('[role="dialog"]') ||
-      currentEditorEl.closest('.nH.if') ||
-      currentEditorEl.closest('form') ||
-      document;
+    shadow.getElementById('cp-draft-empty').style.display = ctx.currentEditorEl ? 'none' : '';
+    shadow.getElementById('cp-draft-form').style.display  = ctx.currentEditorEl ? '' : 'none';
+    if (!ctx.currentEditorEl) return;
+
+    const container = getComposeContainer(ctx.currentEditorEl);
     const subjectEl =
       container.querySelector('input[name="subjectbox"]') ||
       document.querySelector('input[name="subjectbox"]');
-    const subject = (subjectEl?.value || '').trim();
-    const toEls = Array.from(container.querySelectorAll('[email]'));
+    const subject    = (subjectEl?.value || '').trim();
+    const toEls      = Array.from(container.querySelectorAll('[email]'));
     const firstEmail = toEls[0]?.getAttribute('email') || '';
-    const domain = firstEmail.split('@')[1] || '';
-    const rawName = (toEls[0]?.textContent || '').trim().split(' ')[0];
+    const domain     = firstEmail.split('@')[1] || '';
+    const rawName    = (toEls[0]?.textContent || '').trim().split(' ')[0];
     const contactName = rawName && rawName !== firstEmail ? rawName : '';
-    const company = domain
+    const company    = domain
       ? domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1)
       : '';
 
-    if (company) shadow.getElementById('cp-draft-company').value = company;
+    if (company)     shadow.getElementById('cp-draft-company').value = company;
     if (contactName) shadow.getElementById('cp-draft-contact').value = contactName;
 
     const note = shadow.getElementById('cp-autofill-note');
@@ -1056,28 +929,24 @@ function buildComposePanel() {
       : '';
   }
 
-  // ── Draft AI: generate ──
+  // Generate button
   shadow.getElementById('cp-generate-btn').addEventListener('click', () => {
-    const draftType = shadow.getElementById('cp-draft-type').value;
-    const company = shadow.getElementById('cp-draft-company').value.trim();
+    const draftType   = shadow.getElementById('cp-draft-type').value;
+    const company     = shadow.getElementById('cp-draft-company').value.trim();
     const contactName = shadow.getElementById('cp-draft-contact').value.trim();
-    const notes = shadow.getElementById('cp-draft-notes').value.trim();
+    const notes       = shadow.getElementById('cp-draft-notes').value.trim();
+    const genBtn      = shadow.getElementById('cp-generate-btn');
 
     let subject = '', bodySnippet = '';
-    if (currentEditorEl) {
-      const container =
-        currentEditorEl.closest('[role="dialog"]') ||
-        currentEditorEl.closest('.nH.if') ||
-        currentEditorEl.closest('form') ||
-        document;
+    if (ctx.currentEditorEl) {
+      const container = getComposeContainer(ctx.currentEditorEl);
       const subjectEl =
         container.querySelector('input[name="subjectbox"]') ||
         document.querySelector('input[name="subjectbox"]');
-      subject = (subjectEl?.value || '').trim();
-      bodySnippet = (currentEditorEl.innerText || '').trim().slice(0, 300);
+      subject     = (subjectEl?.value || '').trim();
+      bodySnippet = (ctx.currentEditorEl.innerText || '').trim().slice(0, 300);
     }
 
-    const genBtn = shadow.getElementById('cp-generate-btn');
     genBtn.disabled = true;
     genBtn.textContent = 'Generating…';
 
@@ -1096,49 +965,167 @@ function buildComposePanel() {
     );
   });
 
-  // ── Draft AI: copy ──
+  // Copy button
   shadow.getElementById('cp-copy-draft').addEventListener('click', () => {
     const text = shadow.getElementById('cp-draft-output').value;
     if (!text) return;
+    const btn = shadow.getElementById('cp-copy-draft');
     navigator.clipboard.writeText(text).then(() => {
-      const btn = shadow.getElementById('cp-copy-draft');
       btn.textContent = 'Copied!';
       setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
     });
   });
 
-  // ── Draft AI: insert into compose ──
+  // Insert into compose button
   shadow.getElementById('cp-insert-draft').addEventListener('click', () => {
     const text = shadow.getElementById('cp-draft-output').value;
-    if (!text || !currentEditorEl) return;
-    currentEditorEl.focus();
+    if (!text || !ctx.currentEditorEl) return;
+    ctx.currentEditorEl.focus();
     document.execCommand('selectAll', false, null);
     document.execCommand('insertText', false, text);
-    currentEditorEl.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    ctx.currentEditorEl.dispatchEvent(new InputEvent('input', { bubbles: true }));
   });
 
-  // ── setEditor: update context when panel is (re-)opened for a compose ──
+  return prefillDraftTab;
+}
+
+function buildComposePanel() {
+  const ICON_URL = chrome.runtime.getURL('Reach.png');
+  const host = document.createElement('div');
+  host.id = 'reach-compose-panel-host';
+  host.style.display = 'none';
+  const shadow = host.attachShadow({ mode: 'closed' });
+
+  // Gmail intercepts keydown/keyup/keypress — block propagation so shadow inputs work.
+  ['keydown', 'keyup', 'keypress'].forEach(type =>
+    host.addEventListener(type, e => e.stopPropagation(), true)
+  );
+
+  shadow.innerHTML = `<style>${PANEL_STYLES}</style>${getPanelHTML(ICON_URL)}`;
+
+  // Shared mutable context — all tab setup functions read/write ctx.currentEditorEl.
+  const ctx = { currentEditorEl: null };
+
+  // Shared toggle updater used by Overview tab setup and setEditor/syncTrackMode.
+  const trackBtns = shadow.querySelectorAll('.tt-btn');
+  function updateTrackToggle(mode) {
+    trackBtns.forEach(b => b.classList.remove('active-auto', 'active-on', 'active-off'));
+    const classMap = { auto: 'active-auto', force_track: 'active-on', force_skip: 'active-off' };
+    const btn = shadow.querySelector(`.tt-btn[data-mode="${mode}"]`);
+    if (btn) btn.classList.add(classMap[mode]);
+  }
+
+  // Wire up tabs.
+  const tabs         = shadow.querySelectorAll('.tab');
+  const panels       = shadow.querySelectorAll('.tab-panel');
+  const loadOverviewData = setupOverviewTab(shadow, ctx, updateTrackToggle);
+  const prefillDraftTab  = setupDraftTab(shadow, ctx);
+  setupFindTab(shadow);
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      shadow.getElementById(`cp-panel-${tab.dataset.tab}`).classList.add('active');
+      if (tab.dataset.tab === 'overview') loadOverviewData();
+      if (tab.dataset.tab === 'draft')    prefillDraftTab();
+    });
+  });
+
+  // Close button
+  shadow.querySelector('.close-btn').addEventListener('click', () => {
+    host.style.display = 'none';
+  });
+
+  // Update ctx + UI when the panel is opened for a (possibly different) editor.
   function setEditor(editorEl) {
-    currentEditorEl = editorEl;
-    updateTrackToggle(editorEl ? (editorManualModes.get(editorEl) || savedTrackingDefault) : savedTrackingDefault);
+    ctx.currentEditorEl = editorEl;
+    updateTrackToggle(
+      editorEl ? (editorManualModes.get(editorEl) || savedTrackingDefault) : savedTrackingDefault
+    );
     shadow.getElementById('cp-draft-empty').style.display = editorEl ? 'none' : '';
-    shadow.getElementById('cp-draft-form').style.display = editorEl ? '' : 'none';
+    shadow.getElementById('cp-draft-form').style.display  = editorEl ? '' : 'none';
     loadOverviewData();
-    // Re-fill Draft AI tab if it's already active
     if (shadow.querySelector('.tab[data-tab="draft"]').classList.contains('active')) {
       prefillDraftTab();
     }
   }
 
+  // Sync toggle when tracking default changes in storage (no editor switch).
   function syncTrackMode() {
-    const mode = (currentEditorEl && editorManualModes.get(currentEditorEl)) || savedTrackingDefault;
+    const mode = (ctx.currentEditorEl && editorManualModes.get(ctx.currentEditorEl)) || savedTrackingDefault;
     updateTrackToggle(mode);
   }
 
+  loadOverviewData();
   return { host, setEditor, syncTrackMode };
 }
 
-// ── Toolbar icon → open panel (shares same context as widget) ──────────────────
+// ─── Panel state + open ───────────────────────────────────────────────────────
+
+let _composePanelHost           = null;
+let _composePanelSetEditor      = null;
+let _composePanelSyncTrackMode  = null;
+let _composePanelCurrentEditor  = null;
+
+function openComposePanel(editorEl) {
+  if (!_composePanelHost) {
+    const panel = buildComposePanel();
+    _composePanelHost          = panel.host;
+    _composePanelSetEditor     = panel.setEditor;
+    _composePanelSyncTrackMode = panel.syncTrackMode;
+    document.documentElement.appendChild(_composePanelHost);
+  }
+
+  const alreadyVisible = _composePanelHost.style.display !== 'none';
+  const sameEditor     = _composePanelCurrentEditor === editorEl;
+
+  if (alreadyVisible && sameEditor) {
+    _composePanelHost.style.display = 'none';
+    return;
+  }
+
+  _composePanelCurrentEditor = editorEl;
+  _composePanelSetEditor(editorEl);
+  _composePanelHost.style.display = '';
+}
+
+// ─── Storage listener init ────────────────────────────────────────────────────
+// Deferred to ensure all module-level state (liveEditors, updateWidget, etc.)
+// is fully declared before listeners can fire.
+
+function initStorageListeners() {
+  try {
+    chrome.storage.local.get('trackingDefault', (r) => {
+      if (r.trackingDefault) {
+        savedTrackingDefault = r.trackingDefault;
+        for (const el of liveEditors) {
+          if ((editorManualModes.get(el) || 'auto') === 'auto') {
+            editorManualModes.set(el, savedTrackingDefault);
+            updateWidget(el, editorAutoScores.get(el) || 0);
+          }
+        }
+      }
+    });
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !('trackingDefault' in changes)) return;
+      savedTrackingDefault = changes.trackingDefault.newValue || 'auto';
+      if (_composePanelHost?.style.display !== 'none') {
+        _composePanelSyncTrackMode?.();
+      }
+    });
+  } catch (_) {}
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+
+initStorageListeners();
+
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === 'OPEN_PANEL') openComposePanel(lastActiveEditor);
+  if (msg.type !== 'OPEN_PANEL') return;
+  const editor = lastActiveEditor && document.body.contains(lastActiveEditor)
+    ? lastActiveEditor
+    : null;
+  openComposePanel(editor);
 });
