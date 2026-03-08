@@ -524,13 +524,15 @@ const PANEL_STYLES = `
   }
   .gear-btn {
     background: none; border: none; cursor: pointer; color: #9ca3af;
-    font-size: 15px; line-height: 1; padding: 2px 4px; border-radius: 4px;
-    transition: color 120ms ease; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 3px; border-radius: 4px;
+    transition: color 120ms ease, background 120ms ease; flex-shrink: 0;
   }
   .gear-btn:hover { color: #374151; background: #f3f4f6; }
   .close-btn {
     background: none; border: none; cursor: pointer; color: #9ca3af;
-    font-size: 18px; line-height: 1; padding: 2px 4px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 3px; border-radius: 4px;
     transition: color 120ms ease, background 120ms ease; flex-shrink: 0;
   }
   .close-btn:hover { color: #374151; background: #f3f4f6; }
@@ -612,13 +614,15 @@ const PANEL_STYLES = `
   }
   .status-badge {
     font-size: 10px; font-weight: 600; padding: 2px 6px;
-    border-radius: 20px; flex-shrink: 0;
+    border-radius: 6px; flex-shrink: 0;
     text-transform: uppercase; letter-spacing: 0.04em;
   }
-  .status-sent { background: #eff6ff; color: #3b82f6; }
-  .status-replied, .status-interviewing { background: #f0fdf4; color: #16a34a; }
-  .status-offer { background: #fefce8; color: #ca8a04; }
-  .status-ghosted { background: #fef2f2; color: #dc2626; }
+  .status-sent        { background: #eff6ff; color: #3b82f6; }
+  .status-replied,
+  .status-applied     { background: #f5f3ff; color: #8b5cf6; }
+  .status-interviewing{ background: #fffbeb; color: #f59e0b; }
+  .status-offer       { background: #ecfdf5; color: #10b981; }
+  .status-ghosted     { background: #fef2f2; color: #ef4444; }
   .recent-date { font-size: 10px; color: #9ca3af; flex-shrink: 0; }
   .open-btn, .action-btn {
     display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -762,8 +766,17 @@ function getPanelHTML(iconUrl) {
           <h1>Reach</h1>
           <span class="tier-badge" id="cp-tier">Free</span>
         </div>
-        <button class="gear-btn" id="cp-gear-btn" title="Dashboard">⚙</button>
-        <button class="close-btn" aria-label="Close">&times;</button>
+        <button class="gear-btn" id="cp-gear-btn" title="Dashboard">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+        <button class="close-btn" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
       </div>
 
       <div class="tabs">
