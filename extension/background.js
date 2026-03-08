@@ -288,6 +288,17 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
     } else {
       const saved = await res.json();
       console.log(`[Reach] ✅ Tracked! id=${saved.id} company="${company}" subject="${subject}"`);
+      if (pendingScan?.trackingId) {
+        try {
+          await fetch(`${SERVER}/track`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trackingId: pendingScan.trackingId, threadId: fullMsg.threadId })
+          });
+        } catch (e) {
+          console.warn('[Reach] Could not register tracking pixel:', e.message);
+        }
+      }
     }
   } catch (e) {
     console.error('[Reach] ❌ Could not reach server (is it running on :3001?):', e.message);

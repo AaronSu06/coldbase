@@ -5,6 +5,8 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import { findEmails } from './emailFinder.js';
 
+const PIXEL_GIF = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+
 const app = express();
 const prisma = new PrismaClient();
 
@@ -20,6 +22,70 @@ function requireSecret(req, res, next) {
   }
   next();
 }
+
+// GET /track/:trackingId — 1x1 tracking pixel
+app.get('/track/:trackingId', async (req, res) => {
+  const trackingId = req.params.trackingId.replace(/\.gif$/, '');
+  try {
+    const pixel = await prisma.trackingPixel.findUnique({ where: { trackingId } });
+    if (pixel && Date.now() - pixel.createdAt.getTime() > 5000) {
+      await prisma.openEvent.create({
+        data: { trackingId, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null }
+      });
+      await prisma.outreach.update({
+        where: { threadId: pixel.threadId },
+        data: { isOpened: true, openCount: { increment: 1 }, lastOpenedAt: new Date() }
+      }).catch(() => {});
+    }
+  } catch (e) {
+    // Non-fatal
+  }
+  res.setHeader('Content-Type', 'image/gif');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.send(PIXEL_GIF);
+});
+
+// POST /api/track — register a tracking pixel
+app.post('/api/track', async (req, res) => {
+  const { trackingId, threadId } = req.body;
+  try {
+    await prisma.trackingPixel.create({ data: { trackingId, threadId } });
+  } catch (e) {
+    if (e.code === 'P2002') return res.status(200).json({ ok: true });
+    return res.status(500).json({ error: e.message });
+  }
+  res.status(201).json({ ok: true });
+});
+
+// GET /api/insights/best-time — aggregated send/reply data by hour
+app.get('/api/insights/best-time', async (req, res) => {
+  try {
+    const total = await prisma.outreach.count();
+    const replied = await prisma.outreach.count({ where: { repliedAt: { not: null } } });
+    if (total < 20 || replied < 5) {
+      return res.json({ insufficient: true, sent: total, replied });
+    }
+    const rows = await prisma.$queryRaw`
+      SELECT
+        CAST(strftime('%H', sentDate) AS INTEGER) AS hour,
+        COUNT(*) AS sent_count,
+        SUM(CASE WHEN repliedAt IS NOT NULL THEN 1 ELSE 0 END) AS replied_count
+      FROM Outreach
+      WHERE archived = 0
+      GROUP BY hour
+      ORDER BY hour
+    `;
+    const data = rows.map(r => ({
+      hour: Number(r.hour),
+      sentCount: Number(r.sent_count),
+      repliedCount: Number(r.replied_count),
+      replyRate: Number(r.sent_count) > 0 ? Number(r.replied_count) / Number(r.sent_count) : 0,
+    }));
+    res.json({ insufficient: false, data, sent: total, replied });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // GET /api/outreach — list all records ordered by sentDate desc
 app.get('/api/outreach', async (req, res) => {

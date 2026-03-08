@@ -57,6 +57,9 @@ jobs:
       - name: Validate Prisma schema
         run: npx prisma validate
 
+      - name: Check migrations are up to date
+        run: npx prisma migrate diff --from-migrations ./prisma/migrations --to-schema-datamodel ./prisma/schema.prisma --shadow-database-url "file:./shadow.db" --exit-code || (echo "Unapplied schema changes detected — run prisma migrate dev" && exit 1)
+
   extension-package:
     name: Package extension
     runs-on: ubuntu-latest
@@ -90,8 +93,19 @@ jobs:
         with:
           name: reach-extension
 
+      - name: Download web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: web-dist
+
+      - name: Zip web dist
+        run: zip -r reach-web.zip web-dist
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: reach-extension.zip
+          files: |
+            reach-extension.zip
+            reach-web.zip
           generate_release_notes: true

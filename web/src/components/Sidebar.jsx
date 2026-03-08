@@ -313,6 +313,11 @@ export default function Sidebar({
                   <span className="bg-accent-light text-accent px-2 py-0.5 rounded-md font-medium font-mono text-[11px]">
                     {`${record.messageCount || 1} ${(record.messageCount || 1) === 1 ? 'msg' : 'msgs'}`}
                   </span>
+                  {record.isOpened && (
+                    <span className="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[11px] font-medium">
+                      👁 {record.openCount}x opened
+                    </span>
+                  )}
                 </div>
 
                 {/* Subject */}

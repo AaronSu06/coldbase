@@ -17,3 +17,5 @@ export const patchOutreach = (threadId, patch) =>
 
 export const deleteOutreach = (threadId) =>
   fetch(`${BASE}/outreach/${threadId}`, { method: 'DELETE' });
+
+export const fetchBestTime = () => fetch(`${BASE}/insights/best-time`).then(r => r.json());

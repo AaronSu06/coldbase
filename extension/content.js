@@ -59,6 +59,36 @@ const liveEditors       = new Set();
 
 let lastActiveEditor      = null;
 let savedTrackingDefault  = 'auto';
+let pendingTrackingId     = null;
+
+function generateTrackingId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+}
+
+function injectTrackingPixel(editorEl, trackingId) {
+  const img = document.createElement('img');
+  img.src = 'http://localhost:3001/track/' + trackingId + '.gif';
+  img.width = 1; img.height = 1;
+  img.style.cssText = 'display:block;width:1px;height:1px;opacity:0;position:absolute;pointer-events:none;';
+  img.alt = '';
+  editorEl.appendChild(img);
+}
+
+function watchSendButton(editorEl) {
+  const container = editorEl.closest('form') || editorEl.closest('[role="dialog"]') || document.body;
+  container.addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-tooltip*="Send"], [aria-label*="Send"]');
+    if (!btn) return;
+    if (editorEl.dataset.reachTracking) return;
+    const manualMode = editorManualModes.get(editorEl) || 'auto';
+    if (manualMode === 'force_skip') return;
+    const trackingId = generateTrackingId();
+    editorEl.dataset.reachTracking = trackingId;
+    injectTrackingPixel(editorEl, trackingId);
+    pendingTrackingId = trackingId;
+  }, true);
+}
 
 // Centralised cleanup for all per-editor state. Called whenever an editor is
 // detached from the DOM or re-attached from scratch.
@@ -274,6 +304,7 @@ function attachToEditor(el) {
   editorManualModes.set(el, savedTrackingDefault);
   editorAutoScores.set(el, 0);
   updateWidget(el, 0);
+  watchSendButton(el);
 
   el.addEventListener('focus', () => {
     lastActiveEditor = el;
@@ -365,7 +396,7 @@ function fireSendToast() {
       showReloadBanner();
       return;
     }
-    let pendingScanPayload = { ts: Date.now(), overrideMode: null, subjectHint: '', recipientsHint: '' };
+    let pendingScanPayload = { ts: Date.now(), overrideMode: null, subjectHint: '', recipientsHint: '', trackingId: pendingTrackingId };
     if (lastActiveEditor && document.body.contains(lastActiveEditor)) {
       const manualMode = editorManualModes.get(lastActiveEditor) || 'auto';
       const meta = getComposeMetadata(lastActiveEditor);
@@ -373,11 +404,13 @@ function fireSendToast() {
         ts: Date.now(),
         overrideMode: manualMode === 'auto' ? null : manualMode,
         subjectHint: normalizeHint(meta.subject).slice(0, 120),
-        recipientsHint: normalizeHint(meta.recipients).slice(0, 180)
+        recipientsHint: normalizeHint(meta.recipients).slice(0, 180),
+        trackingId: pendingTrackingId
       };
       editorManualModes.set(lastActiveEditor, 'auto');
       updateWidget(lastActiveEditor, editorAutoScores.get(lastActiveEditor) || 0);
     }
+    pendingTrackingId = null;
 
     chrome.storage.local.set({ outreachiq_pending_scan: pendingScanPayload }, () => {
       if (chrome.runtime.lastError) {

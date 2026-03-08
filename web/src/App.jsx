@@ -4,6 +4,7 @@ import KanbanBoard from './components/KanbanBoard';
 import SearchBar from './components/SearchBar';
 import Sidebar from './components/Sidebar';
 import EmptyState from './components/EmptyState';
+import InsightsPanel from './components/InsightsPanel';
 import HeartIcon from './components/icons/HeartIcon';
 import { COLUMNS } from '@shared/constants';
 import { STATUS_COLORS, formatShortDate } from './lib/utils';
@@ -234,7 +235,7 @@ export default function App() {
         {/* Tabs + stat strip */}
         <nav className="flex mt-4 items-end justify-between">
           <div className="flex gap-6">
-            {['Active', 'Archived'].map(tab => (
+            {['Active', 'Archived', 'Insights'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -261,7 +262,7 @@ export default function App() {
       </header>
 
       {/* ── Toolbar ─────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-200 px-8 py-2.5 flex items-center justify-between flex-shrink-0 gap-4">
+      {activeTab !== 'Insights' && <div className="bg-white border-b border-gray-200 px-8 py-2.5 flex items-center justify-between flex-shrink-0 gap-4">
         {/* Left: filters */}
         <div className="flex items-center gap-2">
           <SearchBar query={query} onSearch={setQuery} />
@@ -376,12 +377,14 @@ export default function App() {
             {isRefreshing ? 'Syncing…' : 'Refresh'}
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* ── Main content ────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-hidden">
-          {showEmptySearch ? (
+          {activeTab === 'Insights' ? (
+            <InsightsPanel />
+          ) : showEmptySearch ? (
             <div className="flex items-center justify-center h-full">
               <EmptyState context="search" query={query} />
             </div>
