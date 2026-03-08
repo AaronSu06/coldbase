@@ -3,6 +3,9 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import CompanyAvatar from './CompanyAvatar';
 import HeartIcon from './icons/HeartIcon';
+import BellIcon from './icons/BellIcon';
+import ChatIcon from './icons/ChatIcon';
+import EyeIcon from './icons/EyeIcon';
 import { getDaysSince, STATUS_COLORS } from '../lib/utils';
 
 function EnvelopeIcon() {
@@ -30,14 +33,6 @@ function ClockIcon() {
   );
 }
 
-function EyeIcon({ className }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
-      <path d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  );
-}
 
 function OutreachCard({ record, onCardClick, onToggleFavorite }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -104,26 +99,28 @@ function OutreachCard({ record, onCardClick, onToggleFavorite }) {
           const color = days >= 4 ? 'text-red-500' : days >= 2 ? 'text-yellow-500' : 'text-gray-400';
           return <p className={`font-mono text-[11px] ${color}`}>{label}</p>;
         })()}
-        <div className="flex items-center gap-1 ml-auto">
-          {getDaysSince(record.sentDate) >= 3 && (
-            <span className="font-mono text-[11px] bg-orange-50 text-orange-500 px-1.5 py-0.5 rounded">
-              follow up
-            </span>
-          )}
-          {(record.messageCount || 1) > 1 && (
-            <span className="font-mono text-[11px] bg-accent-light text-accent px-1.5 py-0.5 rounded">
-              {record.messageCount} msgs
-            </span>
-          )}
-          {record.isOpened && (
-            <span
-              title={`Opened ${record.openCount}x${record.lastOpenedAt ? ` — last ${new Date(record.lastOpenedAt).toLocaleDateString()}` : ''}`}
-              className="flex items-center gap-0.5 text-indigo-400"
-            >
-              <EyeIcon className="w-3 h-3" />
-              {record.openCount > 1 && <span className="font-mono text-[10px]">{record.openCount}</span>}
-            </span>
-          )}
+        <div className="flex items-center gap-1.5 ml-auto">
+          {[
+            getDaysSince(record.sentDate) >= 3 && (
+              <span key="bell" title="Follow up recommended" className="text-orange-400">
+                <BellIcon className="w-3.5 h-3.5" />
+              </span>
+            ),
+            (record.messageCount || 1) > 1 && (
+              <span key="msgs" title={`${record.messageCount} messages`} className="flex items-center gap-0.5 text-violet-400">
+                <ChatIcon className="w-3.5 h-3.5" />
+                <span className="font-mono text-[10px]">{record.messageCount}</span>
+              </span>
+            ),
+            <span key="eye" title={record.isOpened ? `Opened ${record.openCount}x${record.lastOpenedAt ? ` — last ${new Date(record.lastOpenedAt).toLocaleDateString()}` : ''}` : 'Not opened yet'} className={`flex items-center gap-0.5 ${record.isOpened ? 'text-emerald-500' : 'text-gray-300'}`}>
+              <EyeIcon className="w-3.5 h-3.5" />
+              {record.isOpened && record.openCount > 1 && <span className="font-mono text-[10px]">{record.openCount}</span>}
+            </span>,
+          ].filter(Boolean).reduce((acc, el, i) => {
+            if (i > 0) acc.push(<span key={`sep-${i}`} className="text-gray-200 text-[10px] select-none">|</span>);
+            acc.push(el);
+            return acc;
+          }, [])}
         </div>
       </div>
     </div>

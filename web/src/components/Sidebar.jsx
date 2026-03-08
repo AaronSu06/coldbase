@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import CompanyAvatar from './CompanyAvatar';
 import HeartIcon from './icons/HeartIcon';
+import BellIcon from './icons/BellIcon';
+import ChatIcon from './icons/ChatIcon';
+import EyeIcon from './icons/EyeIcon';
 import { getRecommendedAction, draftBump, draftReply, draftInterviewFollowUp } from '../lib/gemini';
 import { getDaysSince, formatShortDate } from '../lib/utils';
 
@@ -305,20 +308,34 @@ export default function Sidebar({
               {/* Left — Email Thread */}
               <div className="flex flex-col overflow-y-auto p-5 gap-4">
                 {/* Metadata row */}
-                <div className="flex items-center gap-2 flex-wrap text-xs text-gray-500">
+                {/* Row 1: date */}
+                <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>{formatShortDate(record.sentDate)}</span>
                   <span className="text-gray-300">·</span>
                   <span>{getDaysSince(record.sentDate)}d ago</span>
-                  <span className="text-gray-300">·</span>
-                  <span className="bg-accent-light text-accent px-2 py-0.5 rounded-md font-medium font-mono text-[11px]">
-                    {`${record.messageCount || 1} ${(record.messageCount || 1) === 1 ? 'msg' : 'msgs'}`}
-                  </span>
-                  {record.isOpened && (
-                    <span className="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[11px] font-medium">
-                      👁 {record.openCount}x opened
-                    </span>
-                  )}
                 </div>
+
+                {/* Row 2: status badges */}
+                {(getDaysSince(record.sentDate) >= 3 || (record.messageCount || 1) > 1 || true) && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {getDaysSince(record.sentDate) >= 3 && (
+                      <span className="flex items-center gap-1 bg-orange-50 text-orange-500 px-2 py-0.5 rounded-md text-[11px] font-medium">
+                        <BellIcon className="w-3 h-3" />
+                        Needs follow up
+                      </span>
+                    )}
+                    {(record.messageCount || 1) > 1 && (
+                      <span className="flex items-center gap-1 bg-violet-50 text-violet-500 px-2 py-0.5 rounded-md text-[11px] font-medium">
+                        <ChatIcon className="w-3 h-3" />
+                        {record.messageCount} msgs
+                      </span>
+                    )}
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${record.isOpened ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'}`}>
+                      <EyeIcon className="w-3 h-3" />
+                      {record.isOpened ? `${record.openCount}x opened` : 'Not opened'}
+                    </span>
+                  </div>
+                )}
 
                 {/* Subject */}
                 <h3 className="font-semibold text-sm text-gray-900 leading-snug">{record.subject}</h3>
