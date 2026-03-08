@@ -486,6 +486,22 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === 'SUGGEST_DOMAINS') {
+    (async () => {
+      try {
+        const res = await fetch(`${SERVER}/suggest-domains`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-reach-secret': REACH_SECRET },
+          body: JSON.stringify({ company: message.company }),
+        });
+        sendResponse(await res.json());
+      } catch (e) {
+        sendResponse({ ok: false, domains: [] });
+      }
+    })();
+    return true;
+  }
+
   if (message.type === 'FIND_CONTACT') {
     (async () => {
       try {
@@ -499,6 +515,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             company:   message.company,
             firstName: message.firstName || '',
             lastName:  message.lastName  || '',
+            domain:    message.domain    || undefined,
           }),
         });
         sendResponse(await res.json());

@@ -500,7 +500,6 @@ const PANEL_STYLES = `
     background: #ffffff;
     border-radius: 16px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.14);
-    overflow: hidden;
     animation: cp-slide-in 200ms cubic-bezier(0.34, 1.4, 0.64, 1);
   }
   @keyframes cp-slide-in {
@@ -681,6 +680,77 @@ const PANEL_STYLES = `
   .result-status.unconfirmed { background:#fefce8; color:#ca8a04; }
   .result-status.unreachable { background:#f3f4f6; color:#9ca3af; }
   .result-source { font-size:9px; color:#9ca3af; flex-shrink:0; font-style:italic; }
+
+/* ── Search box ─────────────────────────────── */
+.cp-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 10px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.cp-search-box:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
+}
+.cp-search-favicon {
+  width: 18px; height: 18px; flex-shrink: 0;
+  margin-left: 8px; border-radius: 3px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: #fff; background: transparent;
+}
+.cp-search-favicon img { width: 18px; height: 18px; display: block; object-fit: contain; }
+.cp-search-input {
+  flex: 1; min-width: 0;
+  border: none !important; box-shadow: none !important;
+  border-radius: 0 !important; background: transparent !important;
+  padding: 6px 4px 6px 6px; font-size: 12px; color: #0a0a0a; outline: none;
+}
+.cp-search-input:focus { border: none !important; box-shadow: none !important; }
+.cp-search-clear {
+  flex-shrink: 0; background: none; border: none; cursor: pointer;
+  color: #9ca3af; font-size: 16px; line-height: 1; padding: 0 8px;
+  transition: color 120ms ease; align-self: stretch;
+  display: flex; align-items: center;
+}
+.cp-search-clear:hover { color: #374151; }
+
+/* ── Domain dropdown ────────────────────────── */
+.cp-domain-dropdown {
+  position: absolute;
+  top: calc(100% + 4px); left: -1.5px; right: -1.5px;
+  background: #fff; border: 1.5px solid #e5e7eb; border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 10; overflow: hidden; max-height: 220px; overflow-y: auto;
+}
+.cp-domain-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; cursor: pointer;
+  border-bottom: 1px solid #f3f4f6; transition: background 100ms ease;
+}
+.cp-domain-row:last-child { border-bottom: none; }
+.cp-domain-row:hover { background: #f5f3ff; }
+.cp-domain-favicon {
+  width: 18px; height: 18px; flex-shrink: 0; border-radius: 3px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: #fff; background: transparent;
+}
+.cp-domain-favicon img { width: 18px; height: 18px; display: block; object-fit: contain; }
+.cp-domain-name {
+  flex: 1; font-size: 12px; font-weight: 500; color: #111827;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.cp-domain-tld { font-size: 11px; color: #9ca3af; font-family: ui-monospace, monospace; flex-shrink: 0; }
+.cp-domain-mx {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  color: #16a34a; background: #f0fdf4; border-radius: 4px; padding: 1px 5px; flex-shrink: 0;
+}
+.cp-dropdown-status {
+  font-size: 11px; color: #9ca3af; text-align: center; padding: 10px 0; font-style: italic;
+}
 `;
 
 function getPanelHTML(iconUrl) {
@@ -733,13 +803,18 @@ function getPanelHTML(iconUrl) {
 
       <!-- Find Contacts -->
       <div class="tab-panel" id="cp-panel-find">
-        <div id="cp-company-avatar-row" style="display:none; align-items:center; gap:8px; margin-bottom:10px;">
-          <div id="cp-company-avatar" style="width:20px;height:20px;border-radius:4px;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;"></div>
-          <span id="cp-company-domain-hint" style="font-size:10px; color:#6b7280;"></span>
-        </div>
-        <div class="form-group">
-          <label>Company Name</label>
-          <input type="text" id="cp-company" placeholder="e.g. Stripe" />
+        <div class="cp-search-box" id="cp-search-box">
+          <div class="cp-search-favicon" id="cp-search-favicon"></div>
+          <input
+            type="text"
+            class="cp-search-input"
+            id="cp-company"
+            placeholder="Enter a domain or company name…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="cp-search-clear" id="cp-search-clear" aria-label="Clear" style="display:none">&times;</button>
+          <div class="cp-domain-dropdown" id="cp-domain-dropdown" style="display:none"></div>
         </div>
         <div class="form-group">
           <label>First Name</label>
@@ -844,126 +919,209 @@ function setupOverviewTab(shadow, ctx, updateTrackToggle) {
   return loadOverviewData;
 }
 
-// Sets up the Find Contacts tab: company/name form, pipeline lookup, copy buttons.
+// Sets up the Find Contacts tab: search bar, domain dropdown, email finder.
 function setupFindTab(shadow) {
-  // ── Company favicon / avatar (mirrors CompanyAvatar.jsx logic) ──────────────
   var CP_AVATAR_COLORS = ['#6366f1','#8b5cf6','#14b8a6','#f59e0b','#f43f5e','#0ea5e9'];
-  function _cpAvatarColor(company) {
-    var h = company.split('').reduce(function(a, c) { return a * 31 + c.charCodeAt(0); }, 0);
+  function _cpAvatarColor(s) {
+    var h = s.split('').reduce(function(a, c) { return a * 31 + c.charCodeAt(0); }, 0);
     return CP_AVATAR_COLORS[Math.abs(h) % CP_AVATAR_COLORS.length];
   }
-  function _cpInferDomain(company) {
-    return company.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com';
+  function _cpTitleCase(str) {
+    return str.replace(/\b\w/g, function(c) { return c.toUpperCase(); });
   }
 
-  var _cpAvatarTimer = null;
-  shadow.getElementById('cp-company').addEventListener('input', function() {
-    clearTimeout(_cpAvatarTimer);
-    var company = this.value.trim();
-    var avatarRow = shadow.getElementById('cp-company-avatar-row');
-    var avatarEl  = shadow.getElementById('cp-company-avatar');
-    var hintEl    = shadow.getElementById('cp-company-domain-hint');
+  // State
+  var _cpSelectedDomain = null;
+  var _cpDebounceTimer  = null;
+  var _cpLastQuery      = '';
 
-    if (!company) {
-      avatarRow.style.display = 'none';
-      return;
-    }
+  // Refs
+  var searchInput   = shadow.getElementById('cp-company');
+  var searchFavicon = shadow.getElementById('cp-search-favicon');
+  var clearBtn      = shadow.getElementById('cp-search-clear');
+  var dropdown      = shadow.getElementById('cp-domain-dropdown');
 
-    _cpAvatarTimer = setTimeout(function() {
-      var domain = _cpInferDomain(company);
-      hintEl.textContent = domain;
+  // Set favicon img in a slot element; fallback to colored initial on error
+  function _cpSetFavicon(el, domain, label) {
+    var img = document.createElement('img');
+    img.src = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=64';
+    img.onerror = function() {
+      el.innerHTML = '';
+      el.style.background = _cpAvatarColor(label || domain);
+      el.textContent = (label || domain).charAt(0).toUpperCase();
+    };
+    img.onload = function() {
+      el.innerHTML = '';
+      el.style.background = 'transparent';
+      el.appendChild(img);
+    };
+  }
 
-      var img = document.createElement('img');
-      img.style.cssText = 'width:20px;height:20px;display:block;object-fit:contain;';
-      img.src = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=128';
-      img.onerror = function() {
-        // Fallback: colored initial avatar
-        avatarEl.innerHTML = '';
-        avatarEl.style.background = _cpAvatarColor(company);
-        avatarEl.textContent = company.charAt(0).toUpperCase();
-      };
-      img.onload = function() {
-        avatarEl.innerHTML = '';
-        avatarEl.style.background = 'transparent';
-        avatarEl.appendChild(img);
-      };
+  function _cpHideDropdown() {
+    dropdown.style.display = 'none';
+    dropdown.innerHTML = '';
+  }
 
-      avatarRow.style.display = 'flex';
+  function _cpShowDropdown(domains, query) {
+    if (!domains || !domains.length) { _cpHideDropdown(); return; }
+    dropdown.innerHTML = '';
+    domains.forEach(function(item) {
+      var row = document.createElement('div');
+      row.className = 'cp-domain-row';
+
+      var favEl = document.createElement('div');
+      favEl.className = 'cp-domain-favicon';
+      _cpSetFavicon(favEl, item.domain, query);
+      row.appendChild(favEl);
+
+      var nameEl = document.createElement('span');
+      nameEl.className = 'cp-domain-name';
+      nameEl.textContent = _cpTitleCase(item.domain.replace(/\.[^.]+$/, ''));
+      row.appendChild(nameEl);
+
+      var tldEl = document.createElement('span');
+      tldEl.className = 'cp-domain-tld';
+      tldEl.textContent = item.domain;
+      row.appendChild(tldEl);
+
+      if (item.hasMX) {
+        var mxEl = document.createElement('span');
+        mxEl.className = 'cp-domain-mx';
+        mxEl.textContent = 'MX';
+        row.appendChild(mxEl);
+      }
+
+      row.addEventListener('click', function() { _cpSelectDomain(item.domain, query); });
+      dropdown.appendChild(row);
+    });
+    dropdown.style.display = 'block';
+  }
+
+  function _cpSelectDomain(domain, company) {
+    _cpSelectedDomain = domain;
+    searchInput.value = domain;
+    clearBtn.style.display = '';
+    _cpHideDropdown();
+    _cpSetFavicon(searchFavicon, domain, company);
+  }
+
+  function _cpResetSelection() {
+    _cpSelectedDomain = null;
+    searchFavicon.innerHTML = '';
+    searchFavicon.style.background = 'transparent';
+  }
+
+  function _cpTriggerSuggest(query) {
+    _cpLastQuery = query;
+    clearTimeout(_cpDebounceTimer);
+    if (query.length < 2) { _cpHideDropdown(); return; }
+    dropdown.innerHTML = '<div class="cp-dropdown-status">Searching\u2026</div>';
+    dropdown.style.display = 'block';
+    _cpDebounceTimer = setTimeout(function() {
+      chrome.runtime.sendMessage({ type: 'SUGGEST_DOMAINS', company: query }, function(res) {
+        if (query !== _cpLastQuery) return; // stale
+        if (chrome.runtime.lastError || !res || !res.ok) { _cpHideDropdown(); return; }
+        _cpShowDropdown(res.domains, query);
+      });
     }, 350);
+  }
+
+  searchInput.addEventListener('input', function() {
+    var val = this.value.trim();
+    clearBtn.style.display = val ? '' : 'none';
+    _cpResetSelection();
+    _cpTriggerSuggest(val);
   });
 
-  shadow.getElementById('cp-find-btn').addEventListener('click', () => {
-    const company   = shadow.getElementById('cp-company').value.trim();
-    const firstName = shadow.getElementById('cp-first-name').value.trim();
-    const lastName  = shadow.getElementById('cp-last-name').value.trim();
-    const resultsEl = shadow.getElementById('cp-results');
-    const warningEl = shadow.getElementById('cp-find-warning');
-    const findBtn   = shadow.getElementById('cp-find-btn');
+  clearBtn.addEventListener('click', function() {
+    searchInput.value = '';
+    clearBtn.style.display = 'none';
+    _cpResetSelection();
+    _cpHideDropdown();
+    searchInput.focus();
+  });
 
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') _cpHideDropdown();
+  });
+
+  // Dismiss dropdown on click outside (within shadow DOM)
+  shadow.addEventListener('click', function(e) {
+    var box = shadow.getElementById('cp-search-box');
+    if (box && !box.contains(e.target)) _cpHideDropdown();
+  }, true);
+
+  // Find Emails button
+  shadow.getElementById('cp-find-btn').addEventListener('click', function() {
+    var company   = searchInput.value.trim();
+    var firstName = shadow.getElementById('cp-first-name').value.trim();
+    var lastName  = shadow.getElementById('cp-last-name').value.trim();
+    var resultsEl = shadow.getElementById('cp-results');
+    var warningEl = shadow.getElementById('cp-find-warning');
+    var findBtn   = shadow.getElementById('cp-find-btn');
+
+    _cpHideDropdown();
     warningEl.style.display = 'none';
-    warningEl.textContent = '';
+    warningEl.textContent   = '';
 
     if (!company) {
-      resultsEl.innerHTML = '<div class="status-msg">Enter a company name first.</div>';
+      resultsEl.innerHTML = '<div class="status-msg">Enter a company name or domain first.</div>';
       return;
     }
-
-    // Partial name validation: exactly one of firstName/lastName filled
-    const hasFirst = firstName.length > 0;
-    const hasLast  = lastName.length > 0;
+    var hasFirst = firstName.length > 0;
+    var hasLast  = lastName.length > 0;
     if (hasFirst !== hasLast) {
-      warningEl.textContent = 'Please enter both first and last name, or leave both empty.';
+      warningEl.textContent   = 'Please enter both first and last name, or leave both empty.';
       warningEl.style.display = 'block';
       return;
     }
 
-    resultsEl.innerHTML = '<div class="status-msg">Searching…</div>';
-    findBtn.disabled = true;
-    findBtn.textContent = 'Searching…';
+    resultsEl.innerHTML = '<div class="status-msg">Searching\u2026</div>';
+    findBtn.disabled    = true;
+    findBtn.textContent = 'Searching\u2026';
 
-    chrome.runtime.sendMessage({ type: 'FIND_CONTACT', company, firstName, lastName }, (res) => {
-      findBtn.disabled = false;
+    var msg = { type: 'FIND_CONTACT', company: company, firstName: firstName, lastName: lastName };
+    if (_cpSelectedDomain) msg.domain = _cpSelectedDomain;
+
+    chrome.runtime.sendMessage(msg, function(res) {
+      findBtn.disabled    = false;
       findBtn.textContent = 'Find Emails';
-
       if (chrome.runtime.lastError) {
-        resultsEl.innerHTML = '<div class="status-msg">Error — check extension console.</div>';
+        resultsEl.innerHTML = '<div class="status-msg">Error \u2014 check extension console.</div>';
         return;
       }
-
-      if (res?.ok && res.results?.length) {
-        resultsEl.innerHTML = res.results.map((r, i) => {
-          const statusCls = r.status ? r.status.toLowerCase() : 'unconfirmed';
-          const sourceLabel = r.source ? r.source.replace('gemini-', '').replace('-', ' ') : '';
-          return `<div class="result-row" data-idx="${i}">
-            <span class="result-email">${_cpEscapeHtml(r.email)}</span>
-            <span class="result-status ${statusCls}">${_cpEscapeHtml(r.status)}</span>
-            <span class="result-score">${r.confidence}%</span>
-            <span class="result-source">${_cpEscapeHtml(sourceLabel)}</span>
-            <button class="copy-btn" data-email="${_cpEscapeHtml(r.email)}">Copy</button>
-          </div>`;
+      if (res && res.ok && res.results && res.results.length) {
+        resultsEl.innerHTML = res.results.map(function(r, i) {
+          var sc = r.status ? r.status.toLowerCase() : 'unconfirmed';
+          var sl = r.source ? r.source.replace('gemini-', '').replace('-', ' ') : '';
+          return '<div class="result-row" data-idx="' + i + '">'
+            + '<span class="result-email">'  + _cpEscapeHtml(r.email)  + '</span>'
+            + '<span class="result-status ' + sc + '">' + _cpEscapeHtml(r.status) + '</span>'
+            + '<span class="result-score">'  + r.confidence + '%</span>'
+            + '<span class="result-source">' + _cpEscapeHtml(sl) + '</span>'
+            + '<button class="copy-btn" data-email="' + _cpEscapeHtml(r.email) + '">Copy</button>'
+            + '</div>';
         }).join('');
-      } else if (!res?.ok) {
-        const msgs = {
+      } else if (!res || !res.ok) {
+        var msgs = {
           no_domain:     'Could not resolve a domain for this company.',
           no_mx:         'No mail server found for this domain.',
           no_candidates: 'No public emails found for this company.',
           all_invalid:   'Unable to find email for this person/company.',
         };
-        const msg = msgs[res?.reason] || 'Unable to find email for this person/company.';
-        resultsEl.innerHTML = `<div class="status-msg">${_cpEscapeHtml(msg)}</div>`;
+        resultsEl.innerHTML = '<div class="status-msg">'
+          + _cpEscapeHtml(msgs[res && res.reason] || 'Unable to find email.') + '</div>';
       } else {
         resultsEl.innerHTML = '<div class="status-msg">No results found.</div>';
       }
-
-      resultsEl.querySelectorAll('.copy-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          navigator.clipboard.writeText(btn.dataset.email).then(() => {
-            btn.textContent = 'Copied!';
-            btn.classList.add('copied');
-            setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-          }).catch(() => {
+      resultsEl.querySelectorAll('.copy-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          navigator.clipboard.writeText(btn.dataset.email).then(function() {
+            btn.textContent = 'Copied!'; btn.classList.add('copied');
+            setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+          }).catch(function() {
             btn.textContent = 'Failed';
-            setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+            setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
           });
         });
       });

@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import dns from 'dns';
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
@@ -75,14 +76,45 @@ app.delete('/api/outreach/:threadId', async (req, res) => {
 });
 
 app.post('/api/find-email', requireSecret, async (req, res) => {
-  const { company, firstName, lastName } = req.body;
+  const { company, firstName, lastName, domain } = req.body;
   if (!company) return res.status(400).json({ ok: false, reason: 'no_domain' });
   try {
-    res.json(await findEmails({ company, firstName, lastName }));
+    res.json(await findEmails({ company, firstName, lastName, domain }));
   } catch (e) {
     console.error('[Reach] /api/find-email error:', e.message);
     res.status(500).json({ ok: false, reason: 'all_invalid' });
   }
+});
+
+app.post('/api/suggest-domains', requireSecret, async (req, res) => {
+  const { company } = req.body;
+  if (!company) return res.status(400).json({ ok: false });
+
+  const slug = company.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!slug) return res.status(400).json({ ok: false });
+
+  const TLDS = ['.com', '.io', '.ai', '.co', '.net', '.org', '.app', '.dev', '.so', '.gg'];
+  const results = await Promise.allSettled(
+    TLDS.map(tld => slug + tld).map(async (domain) => {
+      const [mx, a] = await Promise.allSettled([
+        dns.promises.resolveMx(domain),
+        dns.promises.resolve4(domain),
+      ]);
+      return {
+        domain,
+        hasMX: mx.status === 'fulfilled' && mx.value.length > 0,
+        hasA:  a.status  === 'fulfilled' && a.value.length  > 0,
+      };
+    })
+  );
+
+  const domains = results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value)
+    .filter(d => d.hasMX || d.hasA)
+    .sort((a, b) => (b.hasMX - a.hasMX) || (b.hasA - a.hasA));
+
+  res.json({ ok: true, domains });
 });
 
 // ─── Draft prompt builder ─────────────────────────────────────────────────────
