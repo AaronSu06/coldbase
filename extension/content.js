@@ -941,6 +941,11 @@ function setupFindTab(shadow) {
   var clearBtn      = shadow.getElementById('cp-search-clear');
   var dropdown      = shadow.getElementById('cp-domain-dropdown');
 
+  // Show placeholder icon by default
+  var _cpPlaceholderImg = document.createElement('img');
+  _cpPlaceholderImg.src = chrome.runtime.getURL('Placeholder.png');
+  searchFavicon.appendChild(_cpPlaceholderImg);
+
   // Set favicon img in a slot element; fallback to colored initial on error
   function _cpSetFavicon(el, domain, label) {
     var img = document.createElement('img');
@@ -1009,6 +1014,7 @@ function setupFindTab(shadow) {
     _cpSelectedDomain = null;
     searchFavicon.innerHTML = '';
     searchFavicon.style.background = 'transparent';
+    searchFavicon.appendChild(_cpPlaceholderImg);
   }
 
   function _cpTriggerSuggest(query) {

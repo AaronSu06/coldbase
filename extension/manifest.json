@@ -53,7 +53,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["Reach.png"],
+      "resources": ["Reach.png", "Placeholder.png"],
       "matches": ["<all_urls>"]
     }
   ],
