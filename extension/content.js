@@ -602,7 +602,7 @@ const PANEL_STYLES = `
     font-size: 10px; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 8px;
   }
-  .recent-list { margin-bottom: 14px; }
+  .recent-list { margin-bottom: 14px; max-height: 102px; overflow-y: auto; }
   .recent-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 6px 0; border-bottom: 1px solid #f3f4f6; gap: 8px;
