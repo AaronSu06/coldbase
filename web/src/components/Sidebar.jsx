@@ -4,10 +4,50 @@ import HeartIcon from './icons/HeartIcon';
 import BellIcon from './icons/BellIcon';
 import ChatIcon from './icons/ChatIcon';
 import EyeIcon from './icons/EyeIcon';
-import { getRecommendedAction, draftBump, draftReply, draftInterviewFollowUp } from '../lib/gemini';
+import { generateConversationFeedback } from '../lib/gemini';
 import { getDaysSince, formatShortDate } from '../lib/utils';
 
 const STEPPER_STEPS = ['Sent', 'Replied', 'Interviewing', 'Offer'];
+
+const IS_PAID_USER = false;
+
+const TIPS = {
+  Sent:         ["Personalize your follow-up if no reply within 5 days. Mention something specific from their work.", "Keep the subject line identical in your follow-up so it threads correctly."],
+  Replied:      ["Keep your reply concise. Confirm next steps clearly.", "Respond within 24 hours to maintain momentum."],
+  Interviewing: ["Send a thank-you follow-up within 24 hours of your interview.", "Reference a specific topic from the conversation to show genuine interest."],
+  Offer:        ["Don't accept on the spot. Ask for time to review and compare.", "It's appropriate to negotiate — research market rate for the role first."],
+  Ghosted:      ["Wait at least 7 days before a second follow-up. One bump max.", "Keep the follow-up to 1-2 sentences — no explanation or apology needed."],
+};
+
+function seedHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function generateFakeFeedback(seed) {
+  const h = seedHash(seed || 'default');
+  const pick = (arr, offset = 0) => arr[(h + offset) % arr.length];
+
+  const openings  = ["Your subject line was", "The opening hook was", "Your initial message was", "The subject line felt", "Your cold email was"];
+  const o_adj     = ["specific and compelling", "clear and direct", "strong and well-targeted", "concise and relevant", "personable and confident"];
+  const o_follow  = ["which likely helped your open rate.", "making a strong first impression.", "which shows good research.", "and set the right tone.", "standing out from generic outreach."];
+
+  const improve   = ["However, the second paragraph", "The middle section", "Your closing line", "The follow-up ask", "One area to tighten up"];
+  const i_issue   = ["came across as slightly generic.", "could be more specific to their work.", "felt a bit formulaic.", "didn't differentiate you enough.", "lacked a concrete next step."];
+  const i_detail  = ["Avoid phrases like \"passionate about\" without evidence.", "Reference something specific from their recent work.", "Tie your experience directly to their team's focus.", "Make the ask smaller and easier to say yes to.", "Swap filler sentences for one concrete proof point."];
+
+  const tones     = ["The overall tone is professional and appropriately confident.", "Tone is warm but could be slightly more direct.", "The tone reads well — conversational without being too casual.", "Tone is polished; consider adding a touch more personality.", "Comes across as genuine, which is your strongest asset here."];
+
+  const nexts     = ["Given the current status, a short personalized bump in 5–7 days would be appropriate.", "Consider referencing a specific project or article from their team in your follow-up.", "A brief reply reaffirming your interest and availability would be a natural next move.", "Reach out to a second contact at the same company to broaden your touchpoints.", "Wait a few more days then send a one-line check-in — keep it light."];
+
+  return [
+    `1. What you did well: ${pick(openings, 0)} ${pick(o_adj, 1)}, ${pick(o_follow, 2)}`,
+    `\n2. What to improve: ${pick(improve, 3)} ${pick(i_issue, 4)} ${pick(i_detail, 5)}`,
+    `\n3. Tone: ${pick(tones, 6)}`,
+    `\n4. Next move: ${pick(nexts, 7)}`,
+  ].join('');
+}
 
 function decodeHtmlEntities(value) {
   if (!value || typeof document === 'undefined') return value || '';
@@ -18,10 +58,6 @@ function decodeHtmlEntities(value) {
 
 function stripQuote(text) {
   if (!text) return text;
-  // Remove any email reply-quote block. Handles the two universal formats:
-  //   Gmail / Apple Mail: "On [date] [name] wrote: ..."
-  //   Outlook / corporate: "-----Original Message----- ..."
-  // Neither the date nor sender are hardcoded — only the structural markers.
   return text
     .replace(/\s+On\s+\S[\s\S]*?\bwrote:[\s\S]*/i, '')
     .replace(/\s*-{3,}[\s\S]*?-{3,}[\s\S]*/i, '')
@@ -34,7 +70,6 @@ function parseThread(record) {
     const fallback = decodeHtmlEntities(record?.body || record?.subject || '').trim();
     return fallback ? [{ from: '', text: fallback, fromMe: true }] : [];
   }
-  // Multi-message format: "[OUT] Name: text\n\n[IN] Name: text"
   if (raw.includes('\n\n')) {
     const hasMarkers = raw.includes('[OUT]') || raw.includes('[IN]');
     const parts = raw.split('\n\n').map((part, idx) => {
@@ -42,7 +77,6 @@ function parseThread(record) {
       const fromContact = part.startsWith('[IN] ');
       const clean = part.replace(/^\[(OUT|IN)\] /, '');
       const colonIdx = clean.indexOf(': ');
-      // Without markers fall back to position: first message = me, rest = contact
       const resolvedFromMe = hasMarkers ? (fromMe || !fromContact) : (idx === 0);
       if (colonIdx > 0 && colonIdx < 60) {
         return {
@@ -118,11 +152,23 @@ function GeminiIcon() {
   );
 }
 
-const ACTION_CONFIG = {
-  'bump':               { label: 'Draft Bump Email',          hint: 'No reply detected', fn: draftBump,               tip: 'Bumps should be sent only 3–5 business days after your initial email.' },
-  'reply':              { label: 'Draft Reply',               hint: 'Reply received',    fn: draftReply,              tip: 'Reply promptly — responding within 24 hours keeps momentum going.' },
-  'interview-followup': { label: 'Draft Interview Follow-up', hint: 'Interview stage',   fn: draftInterviewFollowUp,  tip: 'Send a thank-you follow-up within 24 hours of your interview.' },
-};
+function ChevronIcon({ open }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -138,30 +184,39 @@ export default function Sidebar({
   const isOpen = !!record;
 
   const [notes, setNotes] = useState('');
-  const [aiSuggestion, setAiSuggestion] = useState('');
-  const [draft, setDraft] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const latestRef = useRef({ notes: '', aiSuggestion: '', draft: '', record: null });
+  const [nextActionDate, setNextActionDate] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [conversationExpanded, setConversationExpanded] = useState(true);
+  const [showFullThread, setShowFullThread] = useState(false);
+  const [tipsExpanded, setTipsExpanded] = useState(true);
+  const [feedback, setFeedback] = useState('');
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(null);
+  const latestRef = useRef({ notes: '', record: null });
 
   // Reset local state when switching to a different record
   useEffect(() => {
     if (record) {
       setNotes(record.notes || '');
-      setAiSuggestion(record.aiSuggestion || '');
-      setDraft(record.draft || '');
-      setError(null);
+      setFeedback('');
+      setFeedbackError(null);
+      setConversationExpanded(true);
+      setShowFullThread(false);
+      setShowDatePicker(false);
+      setNextActionDate(
+        record.nextActionDate
+          ? new Date(record.nextActionDate).toISOString().split('T')[0]
+          : ''
+      );
     }
   }, [record?.threadId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keep latestRef in sync for the flush-on-close effect below
   useEffect(() => {
-    latestRef.current = { notes, aiSuggestion, draft, record };
+    latestRef.current = { notes, record };
   });
 
   // Auto-save notes 800ms after the user stops typing.
-  // Uses latestRef at fire-time to avoid stale closure issues.
   useEffect(() => {
     if (!record) return;
     if (notes === (record.notes || '')) return;
@@ -172,46 +227,46 @@ export default function Sidebar({
     return () => clearTimeout(timer);
   }, [notes]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-save draft 800ms after the user stops typing.
+  // Auto-save nextActionDate 800ms after change.
   useEffect(() => {
     if (!record) return;
-    if (draft === (record.draft || '')) return;
+    const stored = record.nextActionDate
+      ? new Date(record.nextActionDate).toISOString().split('T')[0]
+      : '';
+    if (nextActionDate === stored) return;
     const timer = setTimeout(() => {
-      const { draft: d, record: r } = latestRef.current;
-      if (r && d !== (r.draft || '')) onUpdateRecord(r.threadId, { draft: d });
+      const { record: r } = latestRef.current;
+      if (!r) return;
+      const iso = nextActionDate
+        ? new Date(nextActionDate + 'T12:00:00.000Z').toISOString()
+        : null;
+      onUpdateRecord(r.threadId, { nextActionDate: iso });
     }, 800);
     return () => clearTimeout(timer);
-  }, [draft]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [nextActionDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Flush unsaved notes/suggestion/draft when the sidebar closes or switches to a different record.
-  // onBlur doesn't fire on unmount, so this is the safety net.
+  // Flush unsaved notes when the sidebar closes or switches to a different record.
   useEffect(() => {
     return () => {
-      const { notes, aiSuggestion, draft, record } = latestRef.current;
+      const { notes, record } = latestRef.current;
       if (!record) return;
       if (notes !== (record.notes || '')) onUpdateRecord(record.threadId, { notes });
-      if (aiSuggestion !== (record.aiSuggestion || '')) onUpdateRecord(record.threadId, { aiSuggestion });
-      if (draft !== (record.draft || '')) onUpdateRecord(record.threadId, { draft });
     };
   }, [record?.threadId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleDraft = useCallback(async () => {
+  const handleFeedback = useCallback(async () => {
     if (!record) return;
-    setLoading(true);
-    setError(null);
+    setFeedbackLoading(true);
+    setFeedbackError(null);
     try {
-      const action = getRecommendedAction(record);
-      const fn = ACTION_CONFIG[action].fn;
-      const generated = await fn(record);
-      setAiSuggestion(generated);
-      setDraft(generated);
-      onUpdateRecord(record.threadId, { aiSuggestion: generated, draft: generated });
+      const result = await generateConversationFeedback(record);
+      setFeedback(result);
     } catch (err) {
-      setError(err?.message || 'Failed to generate draft. Check your Gemini API key.');
+      setFeedbackError(err?.message || 'Failed to generate feedback.');
     } finally {
-      setLoading(false);
+      setFeedbackLoading(false);
     }
-  }, [record, onUpdateRecord]);
+  }, [record]);
 
   const handleDelete = useCallback(() => {
     if (!record) return;
@@ -305,114 +360,175 @@ export default function Sidebar({
             {/* ── Body: two-column grid ────────────────────────── */}
             <div className="grid grid-cols-2 divide-x divide-gray-200 flex-1 overflow-hidden">
 
-              {/* Left — Email Thread */}
-              <div className="flex flex-col overflow-y-auto p-5 gap-4">
-                {/* Metadata row */}
-                {/* Row 1: date */}
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>{formatShortDate(record.sentDate)}</span>
-                  <span className="text-gray-300">·</span>
-                  <span>{getDaysSince(record.sentDate)}d ago</span>
-                </div>
+              {/* Left — scrollable content */}
+              <div className="flex flex-col overflow-hidden">
+                {/* SCROLLABLE: subject + conversation + AI feedback */}
+                <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+                  <h3 className="font-semibold text-sm text-gray-900 leading-snug">{record.subject}</h3>
 
-                {/* Row 2: status badges */}
-                {(getDaysSince(record.sentDate) >= 3 || (record.messageCount || 1) > 1 || true) && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {getDaysSince(record.sentDate) >= 3 && (
-                      <span className="flex items-center gap-1 bg-orange-50 text-orange-500 px-2 py-0.5 rounded-md text-[11px] font-medium">
-                        <BellIcon className="w-3 h-3" />
-                        Needs follow up
-                      </span>
-                    )}
-                    {(record.messageCount || 1) > 1 && (
-                      <span className="flex items-center gap-1 bg-violet-50 text-violet-500 px-2 py-0.5 rounded-md text-[11px] font-medium">
-                        <ChatIcon className="w-3 h-3" />
-                        {record.messageCount} msgs
-                      </span>
-                    )}
-                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${record.isOpened ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'}`}>
-                      <EyeIcon className="w-3 h-3" />
-                      {record.isOpened ? `${record.openCount}x opened` : 'Not opened'}
-                    </span>
+                  {/* Date + badges */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <span>{formatShortDate(record.sentDate)}</span>
+                      <span className="text-gray-300">·</span>
+                      <span>{getDaysSince(record.sentDate)}d ago</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-nowrap">
+                      {getDaysSince(record.sentDate) >= 3 && (
+                        <span className="flex items-center gap-1 bg-orange-50 text-orange-500 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap">
+                          <BellIcon className="w-3 h-3" /> Follow up
+                        </span>
+                      )}
+                      {!(isGhosted && !record.isOpened) && (
+                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap ${record.isOpened ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'}`}>
+                          <EyeIcon className="w-3 h-3" />
+                          {record.isOpened ? `${Math.min(record.openCount, 3)}${record.openCount > 3 ? '+' : 'x'} opens` : 'Not opened'}
+                        </span>
+                      )}
+                      {(record.messageCount || 1) > 1 && (
+                        <span className="flex items-center gap-1 bg-violet-50 text-violet-500 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap">
+                          <ChatIcon className="w-3 h-3" /> {Math.min(record.messageCount, 3)}{record.messageCount > 3 ? '+' : ''} msgs
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
 
-                {/* Subject */}
-                <h3 className="font-semibold text-sm text-gray-900 leading-snug">{record.subject}</h3>
+                  {gmailUrl && (
+                    <a href={gmailUrl} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover font-medium w-fit">
+                      Open in Gmail <ExternalLinkIcon />
+                    </a>
+                  )}
 
-                {/* Gmail link */}
-                {gmailUrl && (
-                  <a
-                    href={gmailUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover font-medium w-fit"
-                  >
-                    Open in Gmail
-                    <ExternalLinkIcon />
-                  </a>
-                )}
+                  {/* Collapsible Conversation History */}
+                  <div>
+                    <button onClick={() => setConversationExpanded(v => !v)}
+                      className="flex items-center justify-between w-full mb-2 group">
+                      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em]">Conversation</p>
+                      <span className="text-gray-400 group-hover:text-gray-600 transition-colors">
+                        <ChevronIcon open={conversationExpanded} />
+                      </span>
+                    </button>
 
-                {/* Thread preview */}
-                <div className="flex-1 overflow-y-auto min-h-0">
-                  {(() => {
-                    const messages = parseThread(record);
-                    if (messages.length === 0) {
-                      return (
-                        <p className="text-xs text-gray-400 italic">No email preview available.</p>
-                      );
-                    }
-                    return (
-                      <div className="flex flex-col gap-3">
-                        {messages.map((msg, i) => {
-                          const isMe = msg.fromMe;
-                          return (
-                            <div key={i} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                              {msg.from && (
-                                <p className={`text-[10px] font-semibold uppercase tracking-wider mb-1 px-1 ${
-                                  isMe ? 'text-indigo-400' : 'text-gray-400'
-                                }`}>
-                                  {msg.from}
-                                </p>
-                              )}
-                              <div className="relative" style={{ maxWidth: '85%' }}>
-                                <div className={`px-3 py-2 ${
-                                  isMe
-                                    ? 'bg-indigo-500 text-white rounded-2xl rounded-br-sm'
-                                    : 'bg-gray-100 text-gray-800 rounded-2xl rounded-bl-sm'
-                                }`}>
-                                  <p className="text-xs leading-relaxed">{msg.text}</p>
-                                </div>
-                                {/* Tail — clip-path triangle at the bottom corner */}
-                                <div style={{
-                                  position: 'absolute',
-                                  bottom: 0,
-                                  ...(isMe ? { right: -9 } : { left: -9 }),
-                                  width: 10,
-                                  height: 12,
-                                  background: isMe ? '#6366f1' : '#f3f4f6',
-                                  clipPath: isMe
-                                    ? 'polygon(0 0, 0 100%, 100% 100%)'
-                                    : 'polygon(100% 0, 100% 100%, 0 100%)',
-                                }} />
-                              </div>
+                    {conversationExpanded ? (
+                      (() => {
+                        const messages = parseThread(record);
+                        if (messages.length === 0) {
+                          return <p className="text-xs text-gray-400 italic">No messages in this thread yet.</p>;
+                        }
+                        const visibleMsgs = showFullThread ? messages : messages.slice(-2);
+                        return (
+                          <div className="flex flex-col gap-2">
+                            {!showFullThread && messages.length > 2 && (
+                              <button onClick={() => setShowFullThread(true)}
+                                className="text-xs text-accent hover:text-accent-hover font-medium self-start">
+                                Show full thread ({messages.length} messages)
+                              </button>
+                            )}
+                            <div className={`flex flex-col gap-3 overflow-x-hidden ${showFullThread ? 'overflow-y-auto max-h-72' : ''}`}>
+                              {visibleMsgs.map((msg, i) => {
+                                const isMe = msg.fromMe;
+                                return (
+                                  <div key={i} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                    {msg.from && (
+                                      <p className={`text-[10px] font-semibold uppercase tracking-wider mb-1 px-1 ${
+                                        isMe ? 'text-indigo-400' : 'text-gray-400'
+                                      }`}>
+                                        {msg.from}
+                                      </p>
+                                    )}
+                                    <div className="relative" style={{ maxWidth: '85%' }}>
+                                      <div className={`px-3 py-2 ${
+                                        isMe
+                                          ? 'bg-indigo-500 text-white rounded-2xl rounded-br-sm'
+                                          : 'bg-gray-100 text-gray-800 rounded-2xl rounded-bl-sm'
+                                      }`}>
+                                        <p className="text-xs leading-relaxed">{msg.text}</p>
+                                      </div>
+                                      <div style={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        ...(isMe ? { right: -9 } : { left: -9 }),
+                                        width: 10,
+                                        height: 12,
+                                        background: isMe ? '#6366f1' : '#f3f4f6',
+                                        clipPath: isMe
+                                          ? 'polygon(0 0, 0 100%, 100% 100%)'
+                                          : 'polygon(100% 0, 100% 100%, 0 100%)',
+                                      }} />
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
-                          );
-                        })}
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      (() => {
+                        const messages = parseThread(record);
+                        const lastDate = record.repliedAt || record.sentDate;
+                        return (
+                          <p className="text-xs text-gray-400">
+                            {messages.length} message{messages.length !== 1 ? 's' : ''} · last on {formatShortDate(lastDate)}
+                          </p>
+                        );
+                      })()
+                    )}
+                  </div>
+
+                  {/* AI Conversation Feedback */}
+                  <div>
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em] mb-2">
+                      Conversation Feedback
+                    </p>
+
+                    {IS_PAID_USER ? (
+                      <div>
+                        {!feedback && !feedbackLoading && (
+                          <button onClick={handleFeedback} disabled={feedbackLoading}
+                            className="w-full flex items-center justify-center gap-1.5 bg-[#4f46e5] text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-[#4338ca] disabled:opacity-50 transition-colors">
+                            <GeminiIcon />
+                            ✦ Generate Feedback
+                          </button>
+                        )}
+                        {feedbackLoading && <p className="text-xs text-gray-400 italic">Generating feedback...</p>}
+                        {feedbackError && <p className="text-red-500 text-xs mt-1">{feedbackError}</p>}
+                        {feedback && (
+                          <div className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 rounded-lg p-3 border border-gray-100">
+                            {feedback}
+                          </div>
+                        )}
                       </div>
-                    );
-                  })()}
+                    ) : (
+                      <div className="relative rounded-lg overflow-hidden">
+                        {/* Blurred fake feedback */}
+                        <div aria-hidden="true" className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap p-3 bg-gray-50 border border-gray-100 rounded-lg select-none"
+                          style={{ filter: 'blur(5px)', userSelect: 'none' }}>
+                          {generateFakeFeedback(record.threadId)}
+                        </div>
+                        {/* Gradient fade at bottom */}
+                        <div className="absolute bottom-0 left-0 right-0 h-16 rounded-b-lg pointer-events-none"
+                          style={{ background: 'linear-gradient(to bottom, transparent, rgba(249,250,251,0.95))' }} />
+                        {/* CTA overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <button className="flex items-center gap-1.5 bg-[#4f46e5] text-white text-[12px] font-semibold px-4 py-2 rounded-full shadow-lg hover:bg-[#4338ca] transition-colors">
+                            ✦ View Personalized Feedback
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Right — Status + Notes + AI */}
+              {/* Right — Metadata + Status + Next Action + Notes + Tips */}
               <div className="flex flex-col overflow-y-auto p-5 gap-6">
 
                 {/* ── Status Stepper ── */}
                 <div>
                   <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em] mb-2">Status</p>
                   <div className="relative">
-                    {/* Vertical track behind all circles */}
                     <div className="absolute left-[10px] top-3 bottom-3 w-px bg-gray-200" />
 
                     {[...STEPPER_STEPS, 'Ghosted'].map((step, i) => {
@@ -456,6 +572,33 @@ export default function Sidebar({
                   </div>
                 </div>
 
+                {/* ── Follow-up Reminder (Next Action Date) ── */}
+                <div>
+                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em] mb-2">
+                    Follow-up Reminder
+                  </p>
+                  {nextActionDate ? (
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setShowDatePicker(v => !v)}
+                        className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 text-[12px] font-medium px-3 py-1 rounded-full hover:bg-indigo-100 transition-colors">
+                        Follow up by {formatShortDate(nextActionDate + 'T12:00:00.000Z')}
+                      </button>
+                      <button onClick={() => { setNextActionDate(''); setShowDatePicker(false); }}
+                        className="text-gray-400 hover:text-gray-600 transition-colors" title="Clear reminder">
+                        <CloseIcon />
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400">Set a reminder</p>
+                  )}
+                  {(!nextActionDate || showDatePicker) && (
+                    <input type="date" value={nextActionDate}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={e => { setNextActionDate(e.target.value); setShowDatePicker(false); }}
+                      className="mt-2 text-[12px] font-mono px-3 py-1.5 border border-gray-200 rounded-md text-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-full" />
+                  )}
+                </div>
+
                 {/* ── Notes ── */}
                 <div>
                   <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em] mb-2">Notes</p>
@@ -468,50 +611,27 @@ export default function Sidebar({
                   />
                 </div>
 
-                {/* ── AI Draft Follow-up ── */}
+                {/* ── Tips ── */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em]">AI Suggestions</p>
-                    <span className="text-[11px] text-gray-400">{ACTION_CONFIG[getRecommendedAction(record)].hint}</span>
-                  </div>
-                  <button
-                    onClick={handleDraft}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center gap-1.5 bg-[#4f46e5] text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-[#4338ca] disabled:opacity-50 transition-colors"
-                  >
-                    <GeminiIcon />
-                    {loading ? 'Generating...' : ACTION_CONFIG[getRecommendedAction(record)].label}
-                  </button>
-                  <div className="flex items-start gap-1.5 mt-2">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-px">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="7" x2="12" y2="13" />
-                      <line x1="12" y1="17" x2="12" y2="17" strokeWidth="2.5" />
-                    </svg>
-                    <p className="text-[11px] text-gray-400 leading-relaxed">
-                      {ACTION_CONFIG[getRecommendedAction(record)].tip}
-                    </p>
-                  </div>
-                  {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
-                  {draft && (
-                    <div className="mt-3">
-                      <textarea
-                        value={draft}
-                        onChange={e => setDraft(e.target.value)}
-                        onBlur={() => onUpdateRecord(record.threadId, { draft })}
-                        className="w-full h-32 text-sm text-gray-700 border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-accent/30"
-                      />
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(draft);
-                          setCopied(true);
-                          setTimeout(() => setCopied(false), 2000);
-                        }}
-                        className={`mt-1.5 text-xs font-medium transition-colors duration-150 ${copied ? 'text-green-600' : 'text-accent hover:text-accent-hover'}`}
-                      >
-                        {copied ? '✓ Copied!' : 'Copy to clipboard'}
-                      </button>
+                  <button onClick={() => setTipsExpanded(v => !v)}
+                    className="flex items-center justify-between w-full mb-2 group">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em]">Tips</p>
+                      <span className="text-[11px] text-gray-300">{record.status} stage</span>
                     </div>
+                    <span className="text-gray-400 group-hover:text-gray-600 transition-colors">
+                      <ChevronIcon open={tipsExpanded} />
+                    </span>
+                  </button>
+                  {tipsExpanded && (
+                    <ul className="flex flex-col gap-2">
+                      {(TIPS[record.status] || TIPS['Sent']).map((tip, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-300 flex-shrink-0" />
+                          <p className="text-[12px] text-gray-600 leading-relaxed">{tip}</p>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
 

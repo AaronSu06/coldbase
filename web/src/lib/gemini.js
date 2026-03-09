@@ -87,3 +87,27 @@ Return ONLY the email text. No preamble, commentary, or explanation.`;
 
   return callGemini(prompt);
 }
+
+export async function generateConversationFeedback(record) {
+  const notesCtx = record.notes ? `\nCandidate notes: ${record.notes}` : '';
+  const threadCtx = record.snippet
+    ? `\nConversation (format: [OUT] = sent by candidate, [IN] = received):\n${record.snippet.slice(0, 1200)}`
+    : '';
+  const prompt = `You are an expert career coach reviewing a job outreach email thread for Aaron, a second-year CS student at Queen's University.
+
+Context:
+- Company: ${record.company}
+- Contact: ${record.contactName || 'the recruiter'}
+- Subject: ${record.subject}
+- Status: ${record.status}
+- Days since sent: ${getDaysSince(record.sentDate)}${threadCtx}${notesCtx}
+
+Provide concise, specific feedback in four labeled sections:
+1. What Aaron did well (1-2 sentences)
+2. What to improve (1-2 sentences, specific)
+3. Tone assessment (1 sentence)
+4. Suggested next move given the current status (1-2 sentences)
+
+Be direct and actionable. No filler phrases.`;
+  return callGemini(prompt);
+}
