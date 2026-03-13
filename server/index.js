@@ -2,6 +2,7 @@ import 'dotenv/config';
 import dns from 'dns';
 import express from 'express';
 import cors from 'cors';
+import { rateLimit } from 'express-rate-limit';
 import { PrismaClient } from '@prisma/client';
 import { findEmails } from './emailFinder.js';
 
@@ -10,18 +11,47 @@ const PIXEL_GIF = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAA
 const app = express();
 const prisma = new PrismaClient();
 
-app.use(cors());
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['http://localhost:5173'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, server-to-server) and chrome-extension:// origins
+    if (!origin || origin.startsWith('chrome-extension://') || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS: origin not allowed'));
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // ─── Secret validation middleware ─────────────────────────────────────────────
 
 function requireSecret(req, res, next) {
   const secret = process.env.REACH_SECRET;
-  if (secret && req.headers['x-reach-secret'] !== secret) {
-    return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  if (!secret) {
+    return res.status(500).json({ error: 'Server misconfigured: REACH_SECRET not set' });
+  }
+  if (req.headers['x-reach-secret'] !== secret) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'Missing or invalid x-reach-secret header' });
   }
   next();
 }
+
+app.use('/api', requireSecret);
+
+// ─── Rate limiter for expensive AI/DNS endpoints ───────────────────────────────
+
+const expensiveRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests' },
+});
 
 // GET /track/:trackingId — 1x1 tracking pixel
 app.get('/track/:trackingId', async (req, res) => {
@@ -141,7 +171,7 @@ app.delete('/api/outreach/:threadId', async (req, res) => {
   }
 });
 
-app.post('/api/find-email', requireSecret, async (req, res) => {
+app.post('/api/find-email', expensiveRateLimit, async (req, res) => {
   const { company, firstName, lastName, domain } = req.body;
   if (!company) return res.status(400).json({ ok: false, reason: 'no_domain' });
   try {
@@ -152,7 +182,7 @@ app.post('/api/find-email', requireSecret, async (req, res) => {
   }
 });
 
-app.post('/api/suggest-domains', requireSecret, async (req, res) => {
+app.post('/api/suggest-domains', expensiveRateLimit, async (req, res) => {
   const { company } = req.body;
   if (!company) return res.status(400).json({ ok: false });
 
@@ -219,7 +249,7 @@ Write a short, natural reply (2–4 sentences). Conversational. Sign off as Aaro
 Return ONLY the email body. No subject line, no preamble.`;
 }
 
-app.post('/api/draft-email', requireSecret, async (req, res) => {
+app.post('/api/draft-email', expensiveRateLimit, async (req, res) => {
   const geminiKey = process.env.GEMINI_KEY;
   if (!geminiKey) {
     return res.status(500).json({ ok: false, error: 'Gemini API key not configured on server.' });
