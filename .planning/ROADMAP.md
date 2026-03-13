@@ -29,7 +29,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Server rejects requests from unlisted origins with CORS 403; `ALLOWED_ORIGINS` env var controls the allowlist
   3. Repeated calls to `/api/find-email`, `/api/draft-email`, and `/api/suggest-domains` are rate-limited and return 429 after threshold
   4. Any protected endpoint called without a valid REACH_SECRET returns 401, not 200 or 5xx
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Extension config: remove hardcoded secrets from extension source, wire config.js, add generate-secret script (SEC-01)
+- [ ] 01-02-PLAN.md — Server security: replace wildcard CORS, add rate limiting, harden requireSecret middleware (SEC-02, SEC-03, SEC-04)
 
 ### Phase 2: Database and Quick Fixes
 **Goal**: SQLite schema enforces data integrity via indices and foreign key constraints; dev.db files cannot be accidentally committed; company name bracket extraction returns correct values
@@ -83,7 +87,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security Hardening | 0/TBD | Not started | - |
+| 1. Security Hardening | 0/2 | In progress | - |
 | 2. Database and Quick Fixes | 0/TBD | Not started | - |
 | 3. Server Restructure | 0/TBD | Not started | - |
 | 4. Extension Refactor | 0/TBD | Not started | - |
