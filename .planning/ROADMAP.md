@@ -44,7 +44,11 @@ Plans:
   2. Deleting a `TrackingPixel` cascades to its `OpenEvent` records; no orphaned events remain
   3. Running `git status` after setup shows no `dev.db` files tracked; `.gitignore` blocks them
   4. Subject `[Stripe] Internship` extracts company name `Stripe` (no trailing bracket)
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Schema hardening + gitignore: add @@index directives, FK cascade, *.db gitignore rule (DB-01, DB-02, DB-03)
+- [ ] 02-02-PLAN.md — Bug fix: TDD bracket extraction in classifier.js (BUG-01)
 
 ### Phase 3: Server Restructure
 **Goal**: Express server is decomposed into domain route files; all POST/PATCH endpoints validate input with Zod; errors propagate through a global handler with consistent shape; GET /api/outreach supports pagination; SMTP probes run in parallel
@@ -88,7 +92,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Security Hardening | 1/2 | In Progress|  |
-| 2. Database and Quick Fixes | 0/TBD | Not started | - |
+| 2. Database and Quick Fixes | 0/2 | Not started | - |
 | 3. Server Restructure | 0/TBD | Not started | - |
 | 4. Extension Refactor | 0/TBD | Not started | - |
 | 5. Test Coverage | 0/TBD | Not started | - |
