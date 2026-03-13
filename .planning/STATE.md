@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-03-13T18:26:10.364Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-13T18:29:06.683Z"
 last_activity: 2026-03-13 — Plan 01-01 complete; REACH_SECRET and localhost URLs removed from extension and web
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
   percent: 5
 ---
 
@@ -51,6 +51,7 @@ Progress: [█░░░░░░░░░] 5%
 
 *Updated after each plan completion*
 | Phase 01-security-hardening P01 | 8min | 2 tasks | 7 files |
+| Phase 01-security-hardening P02 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,9 @@ Recent decisions affecting current work:
 - 01-01: Kept GET_RUNTIME_CONFIG message type to match existing callers in panel.js, sidebar.js, popup.js
 - 01-01: DEFAULT_CONFIG fallback in panel.js/sidebar.js is acceptable (localhost defaults, not secrets)
 - 01-01: web/.env gitignored via .env.* rule; web/.env.example committed as template
+- [Phase 01-02]: chrome-extension:// origins checked via startsWith() in code, not listed literally in ALLOWED_ORIGINS
+- [Phase 01-02]: requireSecret returns 500 when REACH_SECRET env var absent (server misconfiguration), 401 on mismatch
+- [Phase 01-02]: requireSecret applied globally via app.use('/api', requireSecret) before route definitions to prevent future routes missing auth
 
 ### Pending Todos
 
@@ -78,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T02:51:00Z
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-security-hardening/01-01-SUMMARY.md
+Last session: 2026-03-13T18:29:06.681Z
+Stopped at: Completed 01-02-PLAN.md
+Resume file: None
