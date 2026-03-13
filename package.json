@@ -1,0 +1,7 @@
+{
+  "name": "reach",
+  "private": true,
+  "scripts": {
+    "generate-secret": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+  }
+}
