@@ -1,12 +1,8 @@
 import { isColdOutreach, countKeywordMatches, extractCompanyFromEmail, extractCompanyFromText, fetchClearbitCompany, extractFirstName, isGenericDomain } from './classifier.js';
+import { SERVER_URL, DASH_URL, REACH_SECRET } from './config.js';
 
 const GMAIL_API = 'https://www.googleapis.com/gmail/v1/users/me';
-const RUNTIME_CONFIG = {
-  serverApiBase: 'http://localhost:3001/api',
-  dashboardUrl: 'http://localhost:5173',
-};
-const SERVER = RUNTIME_CONFIG.serverApiBase;
-const REACH_SECRET = 'f824a42ea02d149b28f96141068bc71538e3321f18b2c4cc';
+const SERVER = SERVER_URL;
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -435,12 +431,12 @@ chrome.action.onClicked.addListener((tab) => {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_RUNTIME_CONFIG') {
-    sendResponse({ ok: true, config: RUNTIME_CONFIG });
+    sendResponse({ ok: true, config: { serverApiBase: SERVER_URL, dashboardUrl: DASH_URL } });
     return;
   }
 
   if (message.type === 'GET_STATS') {
-    fetch(`${RUNTIME_CONFIG.serverApiBase}/outreach`)
+    fetch(`${SERVER_URL}/outreach`)
       .then(r => r.json())
       .then(records => {
         const sent = records.length;
@@ -483,7 +479,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
   if (message.type === 'GET_RECENT') {
-    fetch(`${RUNTIME_CONFIG.serverApiBase}/outreach`)
+    fetch(`${SERVER_URL}/outreach`)
       .then(r => r.json())
       .then(records => {
         const recent = records.slice(0, 3).map(r => ({
