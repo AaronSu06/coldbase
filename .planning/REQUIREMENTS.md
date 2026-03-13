@@ -84,32 +84,32 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SERV-01 | Phase TBD | Pending |
-| SERV-02 | Phase TBD | Pending |
-| SERV-03 | Phase TBD | Pending |
-| SEC-01 | Phase TBD | Pending |
-| SEC-02 | Phase TBD | Pending |
-| SEC-03 | Phase TBD | Pending |
-| SEC-04 | Phase TBD | Pending |
-| EXT-01 | Phase TBD | Pending |
-| EXT-02 | Phase TBD | Pending |
-| EXT-03 | Phase TBD | Pending |
-| EXT-04 | Phase TBD | Pending |
-| TEST-01 | Phase TBD | Pending |
-| TEST-02 | Phase TBD | Pending |
-| TEST-03 | Phase TBD | Pending |
-| PERF-01 | Phase TBD | Pending |
-| PERF-02 | Phase TBD | Pending |
-| DB-01 | Phase TBD | Pending |
-| DB-02 | Phase TBD | Pending |
-| DB-03 | Phase TBD | Pending |
-| BUG-01 | Phase TBD | Pending |
+| SEC-01 | Phase 1 | Pending |
+| SEC-02 | Phase 1 | Pending |
+| SEC-03 | Phase 1 | Pending |
+| SEC-04 | Phase 1 | Pending |
+| DB-01 | Phase 2 | Pending |
+| DB-02 | Phase 2 | Pending |
+| DB-03 | Phase 2 | Pending |
+| BUG-01 | Phase 2 | Pending |
+| SERV-01 | Phase 3 | Pending |
+| SERV-02 | Phase 3 | Pending |
+| SERV-03 | Phase 3 | Pending |
+| PERF-01 | Phase 3 | Pending |
+| PERF-02 | Phase 3 | Pending |
+| EXT-01 | Phase 4 | Pending |
+| EXT-02 | Phase 4 | Pending |
+| EXT-03 | Phase 4 | Pending |
+| EXT-04 | Phase 4 | Pending |
+| TEST-01 | Phase 5 | Pending |
+| TEST-02 | Phase 5 | Pending |
+| TEST-03 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 20 total
-- Mapped to phases: 0
-- Unmapped: 20 (traceability filled by roadmap)
+- Mapped to phases: 20
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-12 after initial definition*
+*Last updated: 2026-03-12 — traceability filled by roadmap*
