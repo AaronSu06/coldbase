@@ -60,7 +60,12 @@ Plans:
   3. All unhandled route errors propagate via `next(err)` and resolve to the same `{ error, message, statusCode }` shape
   4. `GET /api/outreach?limit=20&offset=40` returns the correct page slice and a `total` count field
   5. Email finder requests complete measurably faster because SMTP probes run concurrently via `Promise.allSettled()`
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Foundation + outreach/tracking routes: lib/prisma.js singleton, routes/outreach.js (pagination + Zod), routes/tracking.js (SERV-01, SERV-02, SERV-03, PERF-01)
+- [ ] 03-02-PLAN.md — Email/analytics routes + SMTP parallelization: routes/email.js, routes/analytics.js, emailFinder.js parallel probes (SERV-01, SERV-02, SERV-03, PERF-02)
+- [ ] 03-03-PLAN.md — Wire index.js orchestrator + hook update: index.js mounting + global error handler, useOutreach.js response shape (SERV-01, SERV-03, PERF-01)
 
 ### Phase 4: Extension Refactor
 **Goal**: background.js and content.js are split into focused single-responsibility modules; a structured logging module replaces raw console.log calls; silent catch blocks are replaced with explicit error handling
@@ -93,6 +98,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Security Hardening | 1/2 | In Progress|  |
 | 2. Database and Quick Fixes | 0/2 | Not started | - |
-| 3. Server Restructure | 0/TBD | Not started | - |
+| 3. Server Restructure | 0/3 | Not started | - |
 | 4. Extension Refactor | 0/TBD | Not started | - |
 | 5. Test Coverage | 0/TBD | Not started | - |
