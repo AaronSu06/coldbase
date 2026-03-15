@@ -21,7 +21,7 @@ export function useOutreach() {
 
   const load = useCallback(() => {
     fetchOutreach()
-      .then(data => setRecords(normalizeRecords(data)))
+      .then(({ data }) => setRecords(normalizeRecords(data)))
       .catch(e => console.error('[Reach] Failed to fetch records:', e.message));
   }, []);
 
