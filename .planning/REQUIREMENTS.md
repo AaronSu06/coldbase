@@ -7,9 +7,9 @@
 
 ### Server Structure
 
-- [ ] **SERV-01**: Server routes decomposed into separate files by domain — `routes/outreach.js`, `routes/tracking.js`, `routes/email.js`, `routes/analytics.js`; `index.js` becomes mounting orchestrator
-- [ ] **SERV-02**: Zod validation middleware applied to all POST and PATCH endpoints with consistent 400 response on invalid input
-- [ ] **SERV-03**: Global error handler middleware added; all route errors propagate via `next(err)`; consistent error response shape `{ error, message, statusCode }` across all routes
+- [x] **SERV-01**: Server routes decomposed into separate files by domain — `routes/outreach.js`, `routes/tracking.js`, `routes/email.js`, `routes/analytics.js`; `index.js` becomes mounting orchestrator
+- [x] **SERV-02**: Zod validation middleware applied to all POST and PATCH endpoints with consistent 400 response on invalid input
+- [x] **SERV-03**: Global error handler middleware added; all route errors propagate via `next(err)`; consistent error response shape `{ error, message, statusCode }` across all routes
 
 ### Security
 
@@ -33,7 +33,7 @@
 
 ### Performance
 
-- [ ] **PERF-01**: `GET /api/outreach` supports `limit` and `offset` query params; response includes `total` count; default limit of 100 records
+- [x] **PERF-01**: `GET /api/outreach` supports `limit` and `offset` query params; response includes `total` count; default limit of 100 records
 - [ ] **PERF-02**: SMTP email verification probes in `emailFinder.js` run in parallel using `Promise.allSettled()`; sequential blocking eliminated
 
 ### Database
@@ -92,10 +92,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DB-02 | Phase 2 | Pending |
 | DB-03 | Phase 2 | Pending |
 | BUG-01 | Phase 2 | Pending |
-| SERV-01 | Phase 3 | Pending |
-| SERV-02 | Phase 3 | Pending |
-| SERV-03 | Phase 3 | Pending |
-| PERF-01 | Phase 3 | Pending |
+| SERV-01 | Phase 3 | Complete |
+| SERV-02 | Phase 3 | Complete |
+| SERV-03 | Phase 3 | Complete |
+| PERF-01 | Phase 3 | Complete |
 | PERF-02 | Phase 3 | Pending |
 | EXT-01 | Phase 4 | Pending |
 | EXT-02 | Phase 4 | Pending |

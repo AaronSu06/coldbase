@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-15T21:18:15.280Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-15T21:52:39.781Z"
 last_activity: 2026-03-13 — Plan 01-01 complete; REACH_SECRET and localhost URLs removed from extension and web
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 2
+  total_plans: 7
+  completed_plans: 3
   percent: 5
 ---
 
@@ -52,6 +52,7 @@ Progress: [█░░░░░░░░░] 5%
 *Updated after each plan completion*
 | Phase 01-security-hardening P01 | 8min | 2 tasks | 7 files |
 | Phase 01-security-hardening P02 | 2min | 2 tasks | 4 files |
+| Phase 03-server-restructure P01 | 8 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,10 @@ Recent decisions affecting current work:
 - [Phase 01-02]: chrome-extension:// origins checked via startsWith() in code, not listed literally in ALLOWED_ORIGINS
 - [Phase 01-02]: requireSecret returns 500 when REACH_SECRET env var absent (server misconfiguration), 401 on mismatch
 - [Phase 01-02]: requireSecret applied globally via app.use('/api', requireSecret) before route definitions to prevent future routes missing auth
+- [Phase 03-server-restructure]: Prisma singleton in server/lib/prisma.js — route files import, never instantiate
+- [Phase 03-server-restructure]: GET /api/outreach returns { data, total } pagination shape (not flat array)
+- [Phase 03-server-restructure]: All outreach catch blocks use next(e) — global handler in index.js owns P2002/P2025 responses
+- [Phase 03-server-restructure]: Tracking router mounted at / with full /track and /api prefixes to preserve sent-email URLs
 
 ### Pending Todos
 
@@ -82,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T21:18:15.277Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-server-restructure/03-CONTEXT.md
+Last session: 2026-03-15T21:52:39.779Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
