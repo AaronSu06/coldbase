@@ -344,18 +344,22 @@ export async function findEmails({ company, firstName, lastName, domain: provide
   }
   const isCatchAll = (catchAllResult === 'EXISTS');
 
-  // Probe each candidate — reuse cached result if already probed
-  const probed = [];
-  for (const candidate of candidates) {
-    let smtpResult;
-    if (probedEmails.has(candidate.email)) {
-      smtpResult = probedEmails.get(candidate.email); // reuse actual result
-    } else {
-      smtpResult = await smtpProbe(mxHost, candidate.email);
-      probedEmails.set(candidate.email, smtpResult);
-    }
-    probed.push({ ...candidate, smtpResult });
-  }
+  // Probe each candidate in parallel — reuse cached result if already probed
+  const probeResults = await Promise.allSettled(
+    candidates.map(async (candidate) => {
+      let smtpResult;
+      if (probedEmails.has(candidate.email)) {
+        smtpResult = probedEmails.get(candidate.email);
+      } else {
+        smtpResult = await smtpProbe(mxHost, candidate.email);
+        probedEmails.set(candidate.email, smtpResult);
+      }
+      return { ...candidate, smtpResult };
+    })
+  );
+  const probed = probeResults
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value);
 
   // Stage 4: Score and validate
   const results = [];
