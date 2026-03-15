@@ -34,7 +34,7 @@
 ### Performance
 
 - [x] **PERF-01**: `GET /api/outreach` supports `limit` and `offset` query params; response includes `total` count; default limit of 100 records
-- [ ] **PERF-02**: SMTP email verification probes in `emailFinder.js` run in parallel using `Promise.allSettled()`; sequential blocking eliminated
+- [x] **PERF-02**: SMTP email verification probes in `emailFinder.js` run in parallel using `Promise.allSettled()`; sequential blocking eliminated
 
 ### Database
 
@@ -96,7 +96,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SERV-02 | Phase 3 | Complete |
 | SERV-03 | Phase 3 | Complete |
 | PERF-01 | Phase 3 | Complete |
-| PERF-02 | Phase 3 | Pending |
+| PERF-02 | Phase 3 | Complete |
 | EXT-01 | Phase 4 | Pending |
 | EXT-02 | Phase 4 | Pending |
 | EXT-03 | Phase 4 | Pending |

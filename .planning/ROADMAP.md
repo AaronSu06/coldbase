@@ -98,6 +98,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Security Hardening | 1/2 | In Progress|  |
 | 2. Database and Quick Fixes | 0/2 | Not started | - |
-| 3. Server Restructure | 0/3 | Not started | - |
+| 3. Server Restructure | 2/3 | In Progress|  |
 | 4. Extension Refactor | 0/TBD | Not started | - |
 | 5. Test Coverage | 0/TBD | Not started | - |
