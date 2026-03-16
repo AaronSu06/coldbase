@@ -109,6 +109,8 @@ window.ReachDetector = (function () {
   // ─── DOM observer + periodic scan + resize ───────────────────────────────────
 
   let _isEmailClient = false;
+  let _scanInterval = null;
+  let _healthInterval = null;
 
   const domObserver = new MutationObserver((mutations) => {
     let shouldScanEditors = false;
@@ -155,6 +157,9 @@ window.ReachDetector = (function () {
       'outlook.office365.com',
     ]).has(location.hostname);
 
+    // Idempotent: disconnect and re-observe so re-injection after extension reload
+    // does not leave a stale observer referencing old _state.
+    domObserver.disconnect();
     domObserver.observe(document.body, {
       childList: true,
       subtree: true,
@@ -163,18 +168,18 @@ window.ReachDetector = (function () {
       attributeFilter: ['style', 'class', 'aria-hidden', 'hidden'],
     });
 
-    if (_isEmailClient) setInterval(() => scanForEditors(state), 1500);
+    // Clear previous intervals before creating new ones (idempotent on re-init).
+    if (_scanInterval) { clearInterval(_scanInterval); _scanInterval = null; }
+    if (_healthInterval) { clearInterval(_healthInterval); _healthInterval = null; }
+
+    if (_isEmailClient) _scanInterval = setInterval(() => scanForEditors(state), 1500);
 
     window.addEventListener('resize', () => {
       for (const editorEl of state.liveEditors) {
         if (!document.body.contains(editorEl)) continue;
         const w = state.editorWidgets.get(editorEl);
         if (!w) continue;
-        const container =
-          editorEl.closest('[role="dialog"]') ||
-          editorEl.closest('.nH') ||
-          document.body;
-        window.ReachWidget.placeWidget(editorEl, container, w);
+        window.ReachWidget.placeWidget(editorEl, null, w);
       }
     });
 
@@ -182,7 +187,7 @@ window.ReachDetector = (function () {
 
     // Extension context health check
     setTimeout(() => {
-      setInterval(() => {
+      _healthInterval = setInterval(() => {
         if (!chrome.runtime?.id) window.ReachTracking.showReloadBanner();
       }, 5000);
     }, 10_000);

@@ -132,15 +132,26 @@ window.ReachWidget = (function () {
     return neighborRect;
   }
 
-  // container param is kept for API compatibility (email-detector.js resize handler passes it),
-  // but is unused: the widget is position:fixed so coordinates are viewport-relative.
-  // DEBUG: forced to bottom-left to confirm widget renders at all (revert after testing).
+  // Widget is position:fixed, so all coordinates are viewport-relative.
+  // container param is kept for API compatibility with email-detector.js resize handler.
   function placeWidget(editorEl, _container, w) {
-    w.style.top    = '';
-    w.style.right  = '';
-    w.style.bottom = '100px';
-    w.style.left   = '20px';
-    w.style.border = '2px solid red';
+    const HORIZONTAL_NUDGE_PX = 1;
+    const VERTICAL_GAP_PX = 8;
+    const editorRect = editorEl.getBoundingClientRect();
+    const neighborRect = detectNeighborRect(editorEl, w);
+    let topPx, rightPx;
+    if (neighborRect) {
+      topPx   = neighborRect.bottom + VERTICAL_GAP_PX;
+      rightPx = window.innerWidth - neighborRect.right - HORIZONTAL_NUDGE_PX;
+    } else {
+      topPx   = editorRect.top - 6;
+      rightPx = window.innerWidth - editorRect.right + 4;
+    }
+    w.style.bottom = '';
+    w.style.left   = '';
+    w.style.top    = topPx + 'px';
+    w.style.right  = rightPx + 'px';
+    w.style.border = '';
   }
 
   // Clears per-editor state from all shared WeakMaps — delegates to content.js via state

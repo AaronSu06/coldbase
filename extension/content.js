@@ -1,7 +1,15 @@
 // content.js — Reach Gmail compose orchestrator
 // Runs as a classic script (no ES module imports allowed in content scripts).
 // Owns shared state; delegates detection, widget, and tracking to module namespaces.
-if (window.__reachLoaded) { throw new Error('[Reach] Already loaded — skipping re-injection.'); }
+//
+// Re-injection: after an extension reload Chrome re-injects all content scripts into
+// open tabs.  Each module IIFE re-executes and resets its _state = null.  We always
+// proceed to init() so modules are restored.  Module init() calls are idempotent
+// (intervals are cleared before re-creating, observer is disconnected then re-observed).
+if (window.__reachLoaded) {
+  // Allow re-initialisation — modules were reset by their IIFEs re-running.
+  window.__reachLoaded = false;
+}
 window.__reachLoaded = true;
 
 const log = window.ReachLogger('content');
