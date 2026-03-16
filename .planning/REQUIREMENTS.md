@@ -44,7 +44,7 @@
 
 ### Bug Fixes
 
-- [ ] **BUG-01**: Company name extraction in `classifier.js` fixed to handle bracket format — `[Stripe] Internship` correctly extracts `Stripe` not `Stripe]`
+- [x] **BUG-01**: Company name extraction in `classifier.js` fixed to handle bracket format — `[Stripe] Internship` correctly extracts `Stripe` not `Stripe]`
 
 ## v2 Requirements
 
@@ -91,7 +91,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DB-01 | Phase 2 | Pending |
 | DB-02 | Phase 2 | Pending |
 | DB-03 | Phase 2 | Pending |
-| BUG-01 | Phase 2 | Pending |
+| BUG-01 | Phase 2 | Complete |
 | SERV-01 | Phase 3 | Complete |
 | SERV-02 | Phase 3 | Complete |
 | SERV-03 | Phase 3 | Complete |
