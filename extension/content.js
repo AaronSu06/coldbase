@@ -84,14 +84,14 @@
         savedTrackingDefault = changes.trackingDefault.newValue || 'auto';
         window.ReachWidget.syncTrackMode();
       });
-    } catch (_) {}
+    } catch (e) { log.error('initStorageListeners failed:', e); }
   }
 
   // ─── Boot sequence ─────────────────────────────────────────────────────────────
 
-  try { window.ReachDetector.init(state); } catch (e) { console.error('[Reach/content] ReachDetector.init() threw:', e); }
-  try { window.ReachWidget.init(state);   } catch (e) { console.error('[Reach/content] ReachWidget.init() threw:', e); }
-  try { window.ReachTracking.init(state); } catch (e) { console.error('[Reach/content] ReachTracking.init() threw:', e); }
+  try { window.ReachDetector.init(state); } catch (e) { log.error('ReachDetector.init() threw:', e); }
+  try { window.ReachWidget.init(state);   } catch (e) { log.error('ReachWidget.init() threw:', e); }
+  try { window.ReachTracking.init(state); } catch (e) { log.error('ReachTracking.init() threw:', e); }
   initStorageListeners();
 
   // ─── Message listener ──────────────────────────────────────────────────────────
