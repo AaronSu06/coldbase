@@ -13,6 +13,7 @@ function makeLogger(module) {
   return {
     debug: (...a) => DEBUG && console.debug(prefix, ...a),
     info:  (...a) => DEBUG && console.log(prefix, ...a),
+    warn:  (...a) => console.warn(prefix, ...a),
     error: (...a) => console.error(prefix, ...a),
   };
 }
