@@ -39,7 +39,7 @@ window.ReachWidget = (function () {
     s.id = 'oiq-w-style';
     s.textContent = `
       .oiq-w {
-        position: absolute !important;
+        position: fixed !important;
         width: 24px !important;
         height: 24px !important;
         border-radius: 6px !important;
@@ -132,20 +132,15 @@ window.ReachWidget = (function () {
     return neighborRect;
   }
 
-  function placeWidget(editorEl, container, w) {
-    const HORIZONTAL_NUDGE_PX = 1;
-    const VERTICAL_GAP_PX = 8;
-    const editorRect = editorEl.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const neighborRect = detectNeighborRect(editorEl, w);
-    const topPx = neighborRect
-      ? neighborRect.bottom - containerRect.top + VERTICAL_GAP_PX
-      : editorRect.top - containerRect.top - 6;
-    const rightPx = neighborRect
-      ? Math.max(0, containerRect.right - neighborRect.right - HORIZONTAL_NUDGE_PX)
-      : (containerRect.right - editorRect.right + 4);
-    w.style.top   = topPx + 'px';
-    w.style.right = rightPx + 'px';
+  // container param is kept for API compatibility (email-detector.js resize handler passes it),
+  // but is unused: the widget is position:fixed so coordinates are viewport-relative.
+  // DEBUG: forced to bottom-left to confirm widget renders at all (revert after testing).
+  function placeWidget(editorEl, _container, w) {
+    w.style.top    = '';
+    w.style.right  = '';
+    w.style.bottom = '100px';
+    w.style.left   = '20px';
+    w.style.border = '2px solid red';
   }
 
   // Clears per-editor state from all shared WeakMaps — delegates to content.js via state
@@ -157,20 +152,12 @@ window.ReachWidget = (function () {
     _state.liveEditors.delete(el);
   }
 
-  // Widget container uses document.body as fallback (not document) because it
-  // needs a DOM element for getBoundingClientRect and appendChild.
+  // Widget is always appended to document.body and uses position:fixed so that it renders
+  // on top of any extension (e.g. Mailtrack) that wraps the compose dialog with
+  // overflow:hidden or otherwise acts as a clipping containing block.
   function getOrCreateWidget(editorEl) {
     if (_state.editorWidgets.has(editorEl)) return _state.editorWidgets.get(editorEl);
     injectStyles();
-
-    const container =
-      editorEl.closest('[role="dialog"]') ||
-      editorEl.closest('.nH') ||
-      document.body;
-
-    if (window.getComputedStyle(container).position === 'static') {
-      container.style.position = 'relative';
-    }
 
     const w = document.createElement('div');
     w.className = 'oiq-w';
@@ -179,16 +166,16 @@ window.ReachWidget = (function () {
       _state.lastActiveEditor = editorEl;
       openComposePanel(editorEl);
     });
-    container.appendChild(w);
+    document.body.appendChild(w);
     _state.editorWidgets.set(editorEl, w);
     _state.liveEditors.add(editorEl);
 
-    placeWidget(editorEl, container, w);
+    placeWidget(editorEl, null, w);
 
     // Re-probe at 300ms — other extensions may inject widgets a few ms after ours.
     setTimeout(() => {
       if (document.body.contains(w) && document.body.contains(editorEl)) {
-        placeWidget(editorEl, container, w);
+        placeWidget(editorEl, null, w);
       }
     }, 300);
 
