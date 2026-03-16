@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-16T07:01:21.607Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-16T07:07:14.434Z"
 last_activity: 2026-03-13 — Plan 01-01 complete; REACH_SECRET and localhost URLs removed from extension and web
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 11
-  completed_plans: 6
+  completed_plans: 7
   percent: 5
 ---
 
@@ -57,6 +57,7 @@ Progress: [█░░░░░░░░░] 5%
 | Phase 03-server-restructure P03 | 3 | 2 tasks | 2 files |
 | Phase 03-server-restructure P03 | 3min | 3 tasks | 2 files |
 | Phase 04-extension-refactor P01 | 2min | 2 tasks | 2 files |
+| Phase 04-extension-refactor P02 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase 04-01]: logger.js self-contains its DEBUG flag — does NOT import from config.js — to avoid ES module import constraint in content script (classic script) context
 - [Phase 04-01]: config.js is gitignored (local only); DEBUG constant added to config.example.js as the committed template
 - [Phase 04-01]: makeLogger function exported as logger so callers write import { logger } from './logger.js'
+- [Phase 04-02]: apiFetchRetry accepts getAuthToken callback to avoid circular dep (api-client.js must not import auth.js)
+- [Phase 04-02]: GMAIL_API constant duplicated in api-client.js and reply-checker.js — preferred over cross-module constant re-export
 
 ### Pending Todos
 
@@ -100,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T07:01:21.604Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-03-16T07:07:14.432Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
