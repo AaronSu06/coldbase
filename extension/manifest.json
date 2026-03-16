@@ -32,7 +32,7 @@
     },
     {
       "matches": ["http://localhost/*"],
-      "js": ["relay.js"],
+      "js": ["logger.js", "relay.js"],
       "run_at": "document_idle"
     }
   ],

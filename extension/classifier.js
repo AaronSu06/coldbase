@@ -1,3 +1,7 @@
+import { logger } from './logger.js';
+
+const log = logger('classifier');
+
 const GENERIC_DOMAINS = new Set([
   'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com',
   'icloud.com', 'me.com', 'live.com', 'msn.com',
@@ -160,7 +164,8 @@ export async function fetchClearbitCompany(domain) {
     const data = await res.json();
     const match = data.find(c => c.domain === domain || domain.endsWith(c.domain));
     return match?.name || null;
-  } catch {
+  } catch (err) {
+    log.error('fetchClearbitCompany failed for domain', domain, err);
     return null;
   }
 }
