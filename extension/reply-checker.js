@@ -3,6 +3,7 @@
 
 import { logger } from './logger-esm.js';
 import { getAuthToken } from './auth.js';
+import { extractEmailAddress, normalizeForMatch } from './text-utils.js';
 import { apiFetch, apiFetchRetry, serverFetch, postOutreach, postTrackingPixel, fetchOutreach } from './api-client.js';
 import { isColdOutreach, extractCompanyFromEmail, extractCompanyFromText, fetchClearbitCompany, extractFirstName, isGenericDomain } from './classifier.js';
 
@@ -60,11 +61,6 @@ function extractBody(message) {
   return message.snippet || '';
 }
 
-function extractEmailAddress(header) {
-  const match = header.match(/<([^>]+)>/);
-  return match ? match[1] : header.trim();
-}
-
 function shortFrom(header) {
   if (!header) return 'Unknown';
   const withoutEmail = header.replace(/<[^>]+>/g, '').replace(/"/g, '').trim();
@@ -74,15 +70,6 @@ function shortFrom(header) {
 function stripQuotedText(text) {
   // Remove "On [date] ... wrote: ..." — the standard Gmail/email reply quote header
   return text.replace(/\s+On\s+.+wrote:.*/s, '').trim();
-}
-
-function normalizeForMatch(text) {
-  return (text || '')
-    .toLowerCase()
-    .replace(/[-_]/g, '')
-    .replace(/[^a-z0-9\s,]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 function buildConversationPreview(thread) {
