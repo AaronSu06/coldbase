@@ -76,7 +76,13 @@ Plans:
   2. `extension/content.js` is an orchestrator only; send detection in `extension/email-detector.js`, compose widget in `extension/compose-widget.js`, pixel injection in `extension/tracking.js`
   3. `extension/logger.js` exists with debug/info/error levels; verbose debug logs are suppressed when `NODE_ENV=production`; raw `console.log` calls eliminated from extension files
   4. No bare `catch {}` or `.catch(() => {})` blocks remain in extension code; all catch blocks log the error at minimum
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Logger module: create extension/logger.js (dual-mode ES+global), add DEBUG to config.js (EXT-03)
+- [ ] 04-02-PLAN.md — background.js split: create auth.js, api-client.js, reply-checker.js; rewrite background.js as orchestrator (EXT-01, EXT-03, EXT-04)
+- [ ] 04-03-PLAN.md — content.js split: create email-detector.js, compose-widget.js, tracking.js; rewrite content.js as orchestrator; update manifest (EXT-02, EXT-03, EXT-04)
+- [ ] 04-04-PLAN.md — Verification sweep + human smoke test: grep checks + extension reload in Chrome (EXT-01, EXT-02, EXT-03, EXT-04)
 
 ### Phase 5: Test Coverage
 **Goal**: Automated tests exist for classifier logic, utility functions, and critical server routes; the test suite runs cleanly with no failures
@@ -99,5 +105,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Security Hardening | 1/2 | In Progress|  |
 | 2. Database and Quick Fixes | 0/2 | Not started | - |
 | 3. Server Restructure | 2/3 | In Progress|  |
-| 4. Extension Refactor | 0/TBD | Not started | - |
+| 4. Extension Refactor | 0/4 | Not started | - |
 | 5. Test Coverage | 0/TBD | Not started | - |
