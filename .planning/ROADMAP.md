@@ -93,7 +93,13 @@ Plans:
   2. Integration tests cover `POST /api/outreach` (create and duplicate), `PATCH /api/outreach/:threadId`, `GET /api/outreach` with pagination, and `GET /track/:trackingId`; all pass
   3. Unit tests cover date formatting, `normalizeStatus()`, email address parsing, and `normalizeForMatch()`; all pass
   4. Running `npm test` exits 0 with no skipped or failing tests
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Test infrastructure: server/app.js split, root package.json test script, extension/text-utils.js, web/src/lib/normalize.js (TEST-01, TEST-02, TEST-03)
+- [ ] 05-02-PLAN.md — Classifier tests: extend classifier.test.js with isColdOutreach, countKeywordMatches, extractCompanyFromEmail (TEST-01)
+- [ ] 05-03-PLAN.md — Utility unit tests: utils.test.js, normalize.test.js, text-utils.test.js (TEST-03)
+- [ ] 05-04-PLAN.md — Integration tests: server/outreach.test.js, server/tracking.test.js (TEST-02)
 
 ## Progress
 
@@ -106,4 +112,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Database and Quick Fixes | 2/2 | Complete   | 2026-03-16 |
 | 3. Server Restructure | 2/3 | In Progress|  |
 | 4. Extension Refactor | 6/6 | Complete   | 2026-03-16 |
-| 5. Test Coverage | 0/TBD | Not started | - |
+| 5. Test Coverage | 0/4 | Not started | - |
