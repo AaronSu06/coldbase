@@ -1,7 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { extractCompanyFromText } from './classifier.js';
-// RED: isColdOutreach, countKeywordMatches, extractCompanyFromEmail not yet imported
+import { extractCompanyFromText, isColdOutreach, countKeywordMatches, extractCompanyFromEmail } from './classifier.js';
 
 describe('extractCompanyFromText', () => {
   it('BUG-01: extracts company name from bracket format without trailing bracket', () => {
