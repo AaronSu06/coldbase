@@ -1,11 +1,22 @@
 import { countKeywordMatches } from './classifier.js';
 import { SERVER_URL, DASH_URL } from './config.js';
-import { logger } from './logger.js';
 import { getAuthToken } from './auth.js';
 import { serverFetch, fetchOutreach } from './api-client.js';
 import { checkReplies, trackLatestSent } from './reply-checker.js';
 
-const log = logger('background');
+// logger.js is a classic script (no ES module exports) — define makeLogger inline here.
+const DEBUG = true;
+function makeLogger(module) {
+  const prefix = `[Reach/${module}]`;
+  return {
+    debug: (...a) => DEBUG && console.debug(prefix, ...a),
+    info:  (...a) => DEBUG && console.log(prefix, ...a),
+    warn:  (...a) => console.warn(prefix, ...a),
+    error: (...a) => console.error(prefix, ...a),
+  };
+}
+
+const log = makeLogger('background');
 
 // ─── Event listeners ──────────────────────────────────────────────────────────
 
@@ -45,16 +56,19 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
 chrome.action.onClicked.addListener((tab) => {
   if (!tab.id) return;
-  chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => {
+  chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_SIDEBAR' }, () => {
     const err = chrome.runtime.lastError;
-    // "port closed" = message was received (panel toggled) — do nothing
+    // "port closed" = message was received (sidebar toggled) — do nothing
     // "Could not establish connection" = no content script — inject and retry
     if (!err?.message?.includes('Could not establish connection')) return;
     chrome.scripting.executeScript(
-      { target: { tabId: tab.id }, files: ['content.js'] },
+      {
+        target: { tabId: tab.id },
+        files: ['logger.js', 'email-detector.js', 'compose-widget.js', 'tracking.js', 'content.js', 'sidebar.js'],
+      },
       () => {
         if (chrome.runtime.lastError) return; // restricted page (chrome://, etc.)
-        chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => {
+        chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_SIDEBAR' }, () => {
           void chrome.runtime.lastError;
         });
       }

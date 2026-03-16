@@ -170,11 +170,9 @@ window.ReachWidget = (function () {
     // Guard: _state is null if ReachWidget.init() hasn't run yet (can happen if
     // ReachDetector.init() calls scanForEditors synchronously before ReachWidget.init()).
     if (!_state) {
-      console.log('[REACH-DIAG] getOrCreateWidget: _state is null — ReachWidget.init() has not run yet. Widget skipped.');
       return null;
     }
     if (_state.editorWidgets.has(editorEl)) return _state.editorWidgets.get(editorEl);
-    console.log('[REACH-DIAG] getOrCreateWidget: creating widget for editor', editorEl);
     injectStyles();
 
     const w = document.createElement('div');
@@ -203,7 +201,6 @@ window.ReachWidget = (function () {
   function updateWidget(editorEl, matchCount) {
     // Guard: if _state not set yet, bail silently (init order issue).
     if (!_state) {
-      console.log('[REACH-DIAG] updateWidget: _state is null — bailing. This means ReachDetector.init() ran scanForEditors before ReachWidget.init() set _state.');
       return;
     }
     if (!document.body.contains(editorEl)) {
@@ -1110,10 +1107,8 @@ window.ReachWidget = (function () {
   // ─── Public API ──────────────────────────────────────────────────────────────
 
   function init(state) {
-    console.log('[REACH-DIAG] ReachWidget.init() called');
     _state = state;
     injectStyles();
-    console.log('[REACH-DIAG] ReachWidget.init() complete — _state set');
     log.debug('ReachWidget initialized.');
   }
 

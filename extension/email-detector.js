@@ -37,7 +37,6 @@ window.ReachDetector = (function () {
       window.ReachWidget.clearEditorState(el);
     }
     state.observedEditors.add(el);
-    console.log('[REACH-DIAG] attachToEditor: about to call ReachWidget.update(el) — ReachWidget._state should be set by now if ReachWidget.init() ran first');
     log.info('Attached to compose editor.');
 
     state.editorManualModes.set(el, state.savedTrackingDefault);
@@ -78,7 +77,6 @@ window.ReachDetector = (function () {
       '[role="dialog"] div[contenteditable="true"],' +
       'div[contenteditable="true"][aria-multiline="true"]'
     );
-    console.log('[REACH-DIAG] scanForEditors found', candidates.length, 'editor candidate(s)');
     candidates.forEach((el) => attachToEditor(el, state));
   }
 
@@ -151,7 +149,6 @@ window.ReachDetector = (function () {
   // ─── Public API ──────────────────────────────────────────────────────────────
 
   function init(state) {
-    console.log('[REACH-DIAG] ReachDetector.init() called');
     _state = state;
     _isEmailClient = new Set([
       'mail.google.com',
@@ -187,9 +184,7 @@ window.ReachDetector = (function () {
     });
 
     if (_isEmailClient) {
-      console.log('[REACH-DIAG] ReachDetector.init() — running initial synchronous scanForEditors');
       scanForEditors(state);
-      console.log('[REACH-DIAG] ReachDetector.init() — initial scanForEditors complete (if you see this, no throw)');
     }
 
     // Extension context health check
@@ -199,7 +194,6 @@ window.ReachDetector = (function () {
       }, 5000);
     }, 10_000);
 
-    console.log('[REACH-DIAG] ReachDetector.init() complete');
     log.debug('ReachDetector initialized.');
   }
 

@@ -91,25 +91,9 @@ function initStorageListeners() {
 
 // ─── Boot sequence ─────────────────────────────────────────────────────────────
 
-console.log('[REACH-DIAG] content.js boot: ReachDetector=', typeof ReachDetector, 'ReachWidget=', typeof ReachWidget, 'ReachTracking=', typeof ReachTracking);
-try {
-  ReachDetector.init(state);
-  console.log('[REACH-DIAG] content.js: ReachDetector.init() returned OK');
-} catch (e) {
-  console.error('[REACH-DIAG] content.js: ReachDetector.init() THREW:', e);
-}
-try {
-  ReachWidget.init(state);
-  console.log('[REACH-DIAG] content.js: ReachWidget.init() returned OK');
-} catch (e) {
-  console.error('[REACH-DIAG] content.js: ReachWidget.init() THREW:', e);
-}
-try {
-  ReachTracking.init(state);
-  console.log('[REACH-DIAG] content.js: ReachTracking.init() returned OK');
-} catch (e) {
-  console.error('[REACH-DIAG] content.js: ReachTracking.init() THREW:', e);
-}
+try { ReachDetector.init(state); } catch (e) { console.error('[Reach/content] ReachDetector.init() threw:', e); }
+try { ReachWidget.init(state);   } catch (e) { console.error('[Reach/content] ReachWidget.init() threw:', e); }
+try { ReachTracking.init(state); } catch (e) { console.error('[Reach/content] ReachTracking.init() threw:', e); }
 initStorageListeners();
 
 // ─── Message listener ──────────────────────────────────────────────────────────
