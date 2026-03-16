@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Database and Quick Fixes** - Harden SQLite schema with indices and FK constraints, fix .gitignore, fix bracket extraction bug (completed 2026-03-16)
 - [ ] **Phase 3: Server Restructure** - Decompose monolithic index.js into domain route files, add Zod validation, global error handler, pagination, and parallel SMTP
 - [x] **Phase 4: Extension Refactor** - Split background.js and content.js by concern, add structured logging module, replace silent error swallowing
-- [ ] **Phase 5: Test Coverage** - Unit tests for classifier and utilities, integration tests for critical server routes
+- [x] **Phase 5: Test Coverage** - Unit tests for classifier and utilities, integration tests for critical server routes (completed 2026-03-16)
 
 ## Phase Details
 
@@ -112,4 +112,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Database and Quick Fixes | 2/2 | Complete   | 2026-03-16 |
 | 3. Server Restructure | 2/3 | In Progress|  |
 | 4. Extension Refactor | 6/6 | Complete   | 2026-03-16 |
-| 5. Test Coverage | 1/4 | In Progress|  |
+| 5. Test Coverage | 4/4 | Complete   | 2026-03-16 |
