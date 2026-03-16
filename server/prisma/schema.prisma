@@ -34,19 +34,25 @@ model Outreach {
   nextActionDate DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([sentDate])
+  @@index([archived])
 }
 
 model TrackingPixel {
-  id         String   @id @default(cuid())
+  id         String      @id @default(cuid())
   threadId   String
-  trackingId String   @unique
-  createdAt  DateTime @default(now())
+  trackingId String      @unique
+  createdAt  DateTime    @default(now())
+  openEvents OpenEvent[]
 }
 
 model OpenEvent {
-  id         String   @id @default(cuid())
-  trackingId String
-  openedAt   DateTime @default(now())
-  userAgent  String?
-  ipAddress  String?
+  id            String        @id @default(cuid())
+  trackingId    String
+  openedAt      DateTime      @default(now())
+  userAgent     String?
+  ipAddress     String?
+  trackingPixel TrackingPixel @relation(fields: [trackingId], references: [trackingId], onDelete: Cascade)
 }
