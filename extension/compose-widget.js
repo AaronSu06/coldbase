@@ -675,7 +675,7 @@ window.ReachWidget = (function () {
         }
         updateTrackToggle(mode);
         _state.savedTrackingDefault = mode;
-        try { chrome.storage.local.set({ trackingDefault: mode }); } catch (_) {}
+        try { chrome.storage.local.set({ trackingDefault: mode }); } catch (e) { log.error('Failed to persist trackingDefault:', e); }
       });
     });
 
