@@ -1,7 +1,7 @@
 // extension/reply-checker.js
 // Reply detection logic, parsing helpers, and outreach tracking.
 
-import { logger } from './logger.js';
+import { logger } from './logger-esm.js';
 import { getAuthToken } from './auth.js';
 import { apiFetch, apiFetchRetry, serverFetch, postOutreach, postTrackingPixel, fetchOutreach } from './api-client.js';
 import { isColdOutreach, extractCompanyFromEmail, extractCompanyFromText, fetchClearbitCompany, extractFirstName, isGenericDomain } from './classifier.js';

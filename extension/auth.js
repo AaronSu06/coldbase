@@ -1,7 +1,7 @@
 // extension/auth.js
 // OAuth token management — wraps chrome.identity.getAuthToken with structured logging.
 
-import { logger } from './logger.js';
+import { logger } from './logger-esm.js';
 
 const log = logger('auth');
 

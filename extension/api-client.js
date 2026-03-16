@@ -1,7 +1,7 @@
 // extension/api-client.js
 // Gmail API transport helpers + server API call helpers.
 
-import { logger } from './logger.js';
+import { logger } from './logger-esm.js';
 import { SERVER_URL, REACH_SECRET } from './config.js';
 
 const log = logger('api-client');
