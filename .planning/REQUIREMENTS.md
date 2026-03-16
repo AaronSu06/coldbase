@@ -27,9 +27,9 @@
 
 ### Testing
 
-- [ ] **TEST-01**: Unit tests for `classifier.js` covering `isColdOutreach()`, `extractCompanyFromEmail()`, `countKeywordMatches()` — including edge cases: bracket format `[Company]`, non-English names, HTML-only messages, forwarded emails
-- [ ] **TEST-02**: Integration tests for critical server routes: `POST /api/outreach` (create + duplicate handling), `PATCH /api/outreach/:threadId` (update), `GET /api/outreach` (pagination), `GET /track/:trackingId` (pixel logging)
-- [ ] **TEST-03**: Unit tests for utility functions: date formatting, `normalizeStatus()`, email address parsing, `normalizeForMatch()`
+- [x] **TEST-01**: Unit tests for `classifier.js` covering `isColdOutreach()`, `extractCompanyFromEmail()`, `countKeywordMatches()` — including edge cases: bracket format `[Company]`, non-English names, HTML-only messages, forwarded emails
+- [x] **TEST-02**: Integration tests for critical server routes: `POST /api/outreach` (create + duplicate handling), `PATCH /api/outreach/:threadId` (update), `GET /api/outreach` (pagination), `GET /track/:trackingId` (pixel logging)
+- [x] **TEST-03**: Unit tests for utility functions: date formatting, `normalizeStatus()`, email address parsing, `normalizeForMatch()`
 
 ### Performance
 
@@ -101,9 +101,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXT-02 | Phase 4 | Complete |
 | EXT-03 | Phase 4 | Complete |
 | EXT-04 | Phase 4 | Complete |
-| TEST-01 | Phase 5 | Pending |
-| TEST-02 | Phase 5 | Pending |
-| TEST-03 | Phase 5 | Pending |
+| TEST-01 | Phase 5 | Complete |
+| TEST-02 | Phase 5 | Complete |
+| TEST-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 20 total
