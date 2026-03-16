@@ -1,16 +1,16 @@
 ---
-status: verifying
+status: investigating
 trigger: "reach-widget-sidepanel-broken: After Phase 4 refactor, compose widget and side panel silently broken"
 created: 2026-03-16T00:00:00Z
-updated: 2026-03-16T00:06:00Z
+updated: 2026-03-16T00:10:00Z
 ---
 
 ## Current Focus
 
-hypothesis: After extension reload with Gmail tab open, window.__reachLoaded=true causes content.js to throw before calling init() on any module, leaving _state=null in all modules. With _state=null, email-detector.js _isEmailClient stays false and no scan interval is created, so attachToEditor/updateWidget/getOrCreateWidget never runs and widget is never created.
-test: Human confirmed — bottom-left diagnostic widget not visible = widget DOM element never created at all.
-expecting: After fix (guard allows re-init, init() made idempotent, placeWidget uses viewport-relative coordinates), widget appears at correct position when Compose is opened.
-next_action: Human verification of fix on extension reload + fresh tab.
+hypothesis: ReachDetector.init() calls scanForEditors() SYNCHRONOUSLY at the end of init() (email-detector.js line 186), which calls attachToEditor() → window.ReachWidget.update() → updateWidget() → getOrCreateWidget() → _state.editorWidgets — but _state in compose-widget.js is still null because ReachWidget.init() has NOT yet been called (content.js calls ReachDetector.init() first on line 94, THEN ReachWidget.init() on line 95). This causes a TypeError: Cannot read properties of null (reading 'editorWidgets'). The exception propagates out of ReachDetector.init(), so content.js NEVER reaches ReachWidget.init() or ReachTracking.init(). The scan interval was registered before the throw (line 175 runs before 186), but every interval tick also crashes on _state null — so widget is never created.
+test: Diagnostic commit with [REACH-DIAG] console.logs + null guard in getOrCreateWidget/updateWidget applied. On reload, console should show: ReachWidget.init() THROWS or updateWidget bails with null _state message.
+expecting: After null guards: ReachDetector.init() no longer throws, content.js reaches ReachWidget.init(), _state gets set, interval scan creates widget within 1500ms.
+next_action: User loads extension with diagnostic build, opens Gmail, opens DevTools console, opens Compose, reports [REACH-DIAG] output.
 
 ## Symptoms
 
@@ -105,41 +105,46 @@ started: After Phase 4 refactor commits (04-02, 04-03). Extension was working be
   found: setInterval called unconditionally on init — multiple calls create duplicate intervals. domObserver.observe() called without disconnect — duplicate observe calls are handled by Chrome but disconnect+re-observe is cleaner.
   implication: After re-init fix in content.js, init() must be made idempotent to prevent duplicate intervals on re-injection.
 
+- timestamp: 2026-03-16T00:10:00Z
+  checked: exact init call order in content.js vs synchronous scanForEditors at end of ReachDetector.init()
+  found: content.js calls ReachDetector.init(state) on line 94 FIRST. email-detector.js init() at line 175 registers the 1500ms interval, then at line 186 calls scanForEditors(state) synchronously. scanForEditors → attachToEditor → window.ReachWidget.update(el) → updateWidget() → line 197: _state.editorWidgets.has(editorEl) — but _state in compose-widget.js is null (ReachWidget.init() has not run yet). TypeError thrown. Exception propagates up through scanForEditors → init() → back to content.js line 94. content.js NEVER reaches line 95 (ReachWidget.init) or line 96 (ReachTracking.init). ReachWidget._state stays null. Every interval tick (1500ms) calls the same path and crashes on null _state. Widget never created.
+  implication: This is the true root cause. The __reachLoaded fix from prior session was necessary but not sufficient. The synchronous initial scan in ReachDetector.init() must not crash even when ReachWidget._state is null. Fix: add null guard at top of updateWidget() and getOrCreateWidget() in compose-widget.js. Also wrap each init() call in content.js with try/catch so one module crashing does not prevent the others from initialising.
+
 ## Resolution
 
 root_cause: |
   Bug #2 (sidebar, FIXED): background.js chrome.action.onClicked sent { type: 'OPEN_PANEL' }
   but sidebar.js only listens for { type: 'TOGGLE_SIDEBAR' }. Fixed in prior session.
 
-  Bug #1 (compose widget, ROOT CAUSE CONFIRMED): After extension reload while Gmail tab is
-  open, Chrome re-injects all content scripts. Module IIFEs (email-detector.js,
-  compose-widget.js, tracking.js) re-execute, resetting _state = null in each module.
-  content.js then runs, sees window.__reachLoaded = true, and throws
-  'Already loaded — skipping re-injection.' before calling ReachDetector.init(),
-  ReachWidget.init(), or ReachTracking.init(). Result: _state stays null in all modules,
-  email-detector.js _isEmailClient stays false, no scan interval is created, scanForEditors
-  never runs, attachToEditor never called, widget never created.
+  Bug #1 (compose widget, ROOT CAUSE REVISED): email-detector.js init() calls
+  scanForEditors() SYNCHRONOUSLY before returning (line 186). This runs INSIDE
+  ReachDetector.init() which is called FIRST in content.js (line 94), BEFORE
+  ReachWidget.init() (line 95). When a compose editor is already in the DOM
+  (or during any subsequent interval tick where scanForEditors finds an editor),
+  the call chain scanForEditors → attachToEditor → window.ReachWidget.update() →
+  updateWidget() dereferences _state.editorWidgets where _state is null in compose-widget.js.
+  TypeError is thrown, propagates up through scanForEditors → ReachDetector.init() →
+  back to content.js line 94. content.js never reaches line 95 (ReachWidget.init) or
+  line 96. ReachWidget._state stays null. Every 1500ms interval tick crashes the same way.
+  Widget is never created.
 
-  Secondary fix applied: change widget from position:absolute (container-relative) to
-  position:fixed (viewport-relative, immune to Mailtrack overflow:hidden clipping).
+  The prior __reachLoaded fix was necessary (correct) but this underlying crash was the
+  remaining blocker.
 
 fix: |
-  1. extension/content.js: Changed __reachLoaded guard from throw to allow re-init.
-     window.__reachLoaded = false before setting = true, so on re-injection the module
-     init() calls always run. Added comment explaining idempotent init strategy.
+  1. extension/compose-widget.js: Added null guards.
+     - updateWidget(): return early if _state is null.
+     - getOrCreateWidget(): return null if _state is null.
+     These prevent TypeError when ReachDetector's synchronous initial scan fires
+     before ReachWidget.init() has set _state.
 
-  2. extension/email-detector.js: Made init() idempotent.
-     - Added _scanInterval and _healthInterval tracking variables.
-     - clearInterval(_scanInterval) before creating new interval.
-     - domObserver.disconnect() before domObserver.observe() to clear stale callbacks.
-     - Removed container-relative placeWidget call in resize handler (uses null now).
+  2. extension/content.js: Wrapped each init() call in try/catch.
+     If one module init throws, the others still run. This is defensive and ensures
+     ReachWidget.init() and ReachTracking.init() always execute even if ReachDetector.init()
+     throws for any reason.
 
-  3. extension/compose-widget.js: Restored proper viewport-relative placeWidget.
-     - Removed debug bottom-left forced positioning and red border.
-     - placeWidget now uses viewport-relative coordinates: topPx from editorRect.top,
-       rightPx from window.innerWidth - editorRect.right. Neighbor case also viewport-relative.
-     - CSS .oiq-w position:fixed (kept from debug commit, correct fix for Mailtrack clipping).
-     - widget still appended to document.body (kept from debug commit, correct fix).
+  3. Diagnostic console.log calls added (prefixed [REACH-DIAG]) across all four files
+     (logger.js, email-detector.js, compose-widget.js, content.js) for verification.
 
-verification: awaiting human confirmation
-files_changed: [extension/content.js, extension/email-detector.js, extension/compose-widget.js]
+verification: awaiting human diagnostic run
+files_changed: [extension/content.js, extension/email-detector.js, extension/compose-widget.js, extension/logger.js]

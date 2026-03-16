@@ -91,9 +91,25 @@ function initStorageListeners() {
 
 // ─── Boot sequence ─────────────────────────────────────────────────────────────
 
-ReachDetector.init(state);
-ReachWidget.init(state);
-ReachTracking.init(state);
+console.log('[REACH-DIAG] content.js boot: ReachDetector=', typeof ReachDetector, 'ReachWidget=', typeof ReachWidget, 'ReachTracking=', typeof ReachTracking);
+try {
+  ReachDetector.init(state);
+  console.log('[REACH-DIAG] content.js: ReachDetector.init() returned OK');
+} catch (e) {
+  console.error('[REACH-DIAG] content.js: ReachDetector.init() THREW:', e);
+}
+try {
+  ReachWidget.init(state);
+  console.log('[REACH-DIAG] content.js: ReachWidget.init() returned OK');
+} catch (e) {
+  console.error('[REACH-DIAG] content.js: ReachWidget.init() THREW:', e);
+}
+try {
+  ReachTracking.init(state);
+  console.log('[REACH-DIAG] content.js: ReachTracking.init() returned OK');
+} catch (e) {
+  console.error('[REACH-DIAG] content.js: ReachTracking.init() THREW:', e);
+}
 initStorageListeners();
 
 // ─── Message listener ──────────────────────────────────────────────────────────

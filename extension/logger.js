@@ -24,4 +24,5 @@ export { makeLogger as logger };
 // Global for content script consumers (classic scripts loaded via manifest content_scripts array)
 if (typeof window !== 'undefined') {
   window.ReachLogger = makeLogger;
+  console.log('[REACH-DIAG] logger.js: window.ReachLogger set');
 }
