@@ -38,9 +38,9 @@
 
 ### Database
 
-- [ ] **DB-01**: Prisma schema adds `@@index` directives on `status`, `sentDate`, and `archived` fields in `Outreach` model
-- [ ] **DB-02**: `OpenEvent` model adds `@relation` to `TrackingPixel` with `onDelete: Cascade` foreign key constraint
-- [ ] **DB-03**: `*.db` added to `.gitignore`; empty root-level `dev.db` file removed from working tree
+- [x] **DB-01**: Prisma schema adds `@@index` directives on `status`, `sentDate`, and `archived` fields in `Outreach` model
+- [x] **DB-02**: `OpenEvent` model adds `@relation` to `TrackingPixel` with `onDelete: Cascade` foreign key constraint
+- [x] **DB-03**: `*.db` added to `.gitignore`; empty root-level `dev.db` file removed from working tree
 
 ### Bug Fixes
 
@@ -88,9 +88,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEC-02 | Phase 1 | Complete |
 | SEC-03 | Phase 1 | Complete |
 | SEC-04 | Phase 1 | Complete |
-| DB-01 | Phase 2 | Pending |
-| DB-02 | Phase 2 | Pending |
-| DB-03 | Phase 2 | Pending |
+| DB-01 | Phase 2 | Complete |
+| DB-02 | Phase 2 | Complete |
+| DB-03 | Phase 2 | Complete |
 | BUG-01 | Phase 2 | Complete |
 | SERV-01 | Phase 3 | Complete |
 | SERV-02 | Phase 3 | Complete |

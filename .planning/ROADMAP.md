@@ -13,7 +13,7 @@ This milestone hardens the Reach codebase for production without changing any us
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Security Hardening** - Remove hardcoded secrets, lock CORS, add rate limiting, validate REACH_SECRET on all protected endpoints
-- [ ] **Phase 2: Database and Quick Fixes** - Harden SQLite schema with indices and FK constraints, fix .gitignore, fix bracket extraction bug
+- [x] **Phase 2: Database and Quick Fixes** - Harden SQLite schema with indices and FK constraints, fix .gitignore, fix bracket extraction bug (completed 2026-03-16)
 - [ ] **Phase 3: Server Restructure** - Decompose monolithic index.js into domain route files, add Zod validation, global error handler, pagination, and parallel SMTP
 - [x] **Phase 4: Extension Refactor** - Split background.js and content.js by concern, add structured logging module, replace silent error swallowing
 - [ ] **Phase 5: Test Coverage** - Unit tests for classifier and utilities, integration tests for critical server routes
@@ -103,7 +103,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Security Hardening | 1/2 | In Progress|  |
-| 2. Database and Quick Fixes | 1/2 | In Progress|  |
+| 2. Database and Quick Fixes | 2/2 | Complete   | 2026-03-16 |
 | 3. Server Restructure | 2/3 | In Progress|  |
 | 4. Extension Refactor | 4/4 | Complete | 2026-03-16 |
 | 5. Test Coverage | 0/TBD | Not started | - |
