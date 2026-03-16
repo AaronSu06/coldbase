@@ -1,7 +1,9 @@
 {
   "name": "reach",
   "private": true,
+  "type": "module",
   "scripts": {
-    "generate-secret": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+    "test": "node --test --test-concurrency=1 extension/*.test.js web/src/**/*.test.js server/*.test.js",
+    "generate-secret": "node --eval \"import('crypto').then(m => console.log(m.randomBytes(32).toString('hex')))\""
   }
 }
