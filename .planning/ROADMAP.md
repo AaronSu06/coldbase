@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Security Hardening** - Remove hardcoded secrets, lock CORS, add rate limiting, validate REACH_SECRET on all protected endpoints
 - [ ] **Phase 2: Database and Quick Fixes** - Harden SQLite schema with indices and FK constraints, fix .gitignore, fix bracket extraction bug
 - [ ] **Phase 3: Server Restructure** - Decompose monolithic index.js into domain route files, add Zod validation, global error handler, pagination, and parallel SMTP
-- [ ] **Phase 4: Extension Refactor** - Split background.js and content.js by concern, add structured logging module, replace silent error swallowing
+- [x] **Phase 4: Extension Refactor** - Split background.js and content.js by concern, add structured logging module, replace silent error swallowing
 - [ ] **Phase 5: Test Coverage** - Unit tests for classifier and utilities, integration tests for critical server routes
 
 ## Phase Details
@@ -79,10 +79,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Logger module: create extension/logger.js (dual-mode ES+global), add DEBUG to config.js (EXT-03)
-- [ ] 04-02-PLAN.md — background.js split: create auth.js, api-client.js, reply-checker.js; rewrite background.js as orchestrator (EXT-01, EXT-03, EXT-04)
-- [ ] 04-03-PLAN.md — content.js split: create email-detector.js, compose-widget.js, tracking.js; rewrite content.js as orchestrator; update manifest (EXT-02, EXT-03, EXT-04)
-- [ ] 04-04-PLAN.md — Verification sweep + human smoke test: grep checks + extension reload in Chrome (EXT-01, EXT-02, EXT-03, EXT-04)
+- [x] 04-01-PLAN.md — Logger module: create extension/logger.js (dual-mode ES+global), add DEBUG to config.js (EXT-03)
+- [x] 04-02-PLAN.md — background.js split: create auth.js, api-client.js, reply-checker.js; rewrite background.js as orchestrator (EXT-01, EXT-03, EXT-04)
+- [x] 04-03-PLAN.md — content.js split: create email-detector.js, compose-widget.js, tracking.js; rewrite content.js as orchestrator; update manifest (EXT-02, EXT-03, EXT-04)
+- [x] 04-04-PLAN.md — Verification sweep + human smoke test: grep checks + extension reload in Chrome (EXT-01, EXT-02, EXT-03, EXT-04)
 
 ### Phase 5: Test Coverage
 **Goal**: Automated tests exist for classifier logic, utility functions, and critical server routes; the test suite runs cleanly with no failures
@@ -105,5 +105,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Security Hardening | 1/2 | In Progress|  |
 | 2. Database and Quick Fixes | 0/2 | Not started | - |
 | 3. Server Restructure | 2/3 | In Progress|  |
-| 4. Extension Refactor | 3/4 | In Progress|  |
+| 4. Extension Refactor | 4/4 | Complete | 2026-03-16 |
 | 5. Test Coverage | 0/TBD | Not started | - |
