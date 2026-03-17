@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Production Foundation
 status: planning
-stopped_at: Phase 8 context gathered
-last_updated: "2026-03-17T21:48:48.627Z"
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-03-17T22:05:01.961Z"
 last_activity: 2026-03-17 — v1.1 roadmap created
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 2
   percent: 0
 ---
 
@@ -50,6 +50,8 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 - Trend: Stable
 
 *Updated after each plan completion*
+| Phase 08-postgresql-migration-schema-cleanup P01 | 1min | 2 tasks | 2 files |
+| Phase 08 P02 | 49s | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -62,6 +64,10 @@ Recent decisions affecting current work:
 - [v1.1 research]: Fresh Postgres baseline migration — delete existing SQLite migrations, run `prisma migrate dev --name init-postgres` once
 - [v1.1 research]: Health endpoint at `/health` (no `/api` prefix) to bypass `requireSecret` auth guard at `app.use('/api', requireSecret)`
 - [v1.1 research]: `instrument.js` as first import in `index.js` — guarantees Sentry captures errors during Prisma startup
+- [Phase 08-postgresql-migration-schema-cleanup]: Neon dual-URL pattern for PostgreSQL datasource: DATABASE_URL (pooled) + DIRECT_URL (direct)
+- [Phase 08-postgresql-migration-schema-cleanup]: Drop aiSuggestion/draft from schema before baseline migration to avoid carrying dead columns into PostgreSQL
+- [Phase 08]: Tests use TEST_DATABASE_URL/TEST_DIRECT_URL env vars pointing at Neon test branch; no fallback so missing vars fail clearly
+- [Phase 08]: analytics.test.js covers only the insufficient data path — seeding for sufficient path deferred
 
 ### Pending Todos
 
@@ -74,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T21:48:48.625Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-postgresql-migration-schema-cleanup/08-CONTEXT.md
+Last session: 2026-03-17T22:05:01.959Z
+Stopped at: Completed 08-02-PLAN.md
+Resume file: None

@@ -101,7 +101,7 @@ Plans:
 | 5. Test Coverage | v1.0 | 4/4 | Complete | 2026-03-16 |
 | 6. Integration Fixes | v1.0 | 2/2 | Complete | 2026-03-17 |
 | 7. Tracking Pixel + Debug Config | v1.0 | 2/2 | Complete | 2026-03-17 |
-| 8. PostgreSQL Migration + Schema Cleanup | v1.1 | 0/3 | Not started | - |
+| 8. PostgreSQL Migration + Schema Cleanup | 2/3 | In Progress|  | - |
 | 9. Observability | v1.1 | 0/? | Not started | - |
 | 10. Sentry Server Integration | v1.1 | 0/? | Not started | - |
 | 11. Extension Cleanup | v1.1 | 0/? | Not started | - |

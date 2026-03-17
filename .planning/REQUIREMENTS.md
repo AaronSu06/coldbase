@@ -7,8 +7,8 @@
 
 ### Database
 
-- [ ] **DB-01**: Prisma datasource migrated to PostgreSQL; `pg` driver installed; `analytics.js` raw SQL updated for PostgreSQL compatibility; `prisma migrate deploy` runs on server start
-- [ ] **DATA-01**: `aiSuggestion` and `draft` columns removed from Outreach schema; all code references removed before migration runs
+- [x] **DB-01**: Prisma datasource migrated to PostgreSQL; `pg` driver installed; `analytics.js` raw SQL updated for PostgreSQL compatibility; `prisma migrate deploy` runs on server start
+- [x] **DATA-01**: `aiSuggestion` and `draft` columns removed from Outreach schema; all code references removed before migration runs
 
 ### Observability
 
@@ -49,8 +49,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DB-01 | Phase 8 | Pending |
-| DATA-01 | Phase 8 | Pending |
+| DB-01 | Phase 8 | Complete |
+| DATA-01 | Phase 8 | Complete |
 | OBS-01 | Phase 9 | Pending |
 | OBS-02 | Phase 9 | Pending |
 | MON-01 | Phase 10 | Pending |
