@@ -22,7 +22,7 @@
 
 - [x] **EXT-01**: `background.js` split into focused modules — `extension/auth.js` (OAuth token management), `extension/api-client.js` (server API calls), `extension/reply-checker.js` (reply detection logic); `background.js` becomes orchestrator
 - [x] **EXT-02**: `content.js` split into focused modules — `extension/email-detector.js` (send detection), `extension/compose-widget.js` (UI widget), `extension/tracking.js` (pixel injection); `content.js` becomes orchestrator
-- [ ] **EXT-03**: Structured logging module created (`extension/logger.js`) with debug/info/error levels; replaces 80+ raw `console.log` calls throughout extension; verbose logs suppressed in production
+- [x] **EXT-03**: Structured logging module created (`extension/logger.js`) with debug/info/error levels; replaces 80+ raw `console.log` calls throughout extension; verbose logs suppressed in production
 - [x] **EXT-04**: All silent `catch {}` and `.catch(() => {})` error swallowing replaced with proper error handling that logs failures and propagates where appropriate
 
 ### Testing
@@ -99,7 +99,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-02 | Phase 3 | Complete |
 | EXT-01 | Phase 4 | Complete |
 | EXT-02 | Phase 4 | Complete |
-| EXT-03 | Phase 7 | Pending |
+| EXT-03 | Phase 7 | Complete |
 | EXT-04 | Phase 4 | Complete |
 | TEST-01 | Phase 5 | Complete |
 | TEST-02 | Phase 5 | Complete |
