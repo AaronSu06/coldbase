@@ -1,5 +1,6 @@
 // MUST be before any imports that transitively load prisma
-process.env.DATABASE_URL = 'file:./test.db';
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+process.env.DIRECT_URL = process.env.TEST_DIRECT_URL;
 process.env.REACH_SECRET = 'test-secret';
 
 import { describe, it, before, after } from 'node:test';
