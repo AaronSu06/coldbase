@@ -13,16 +13,16 @@
 
 ### Security
 
-- [x] **SEC-01**: All hardcoded localhost endpoints and REACH_SECRET removed from extension source; values read from extension config or environment
+- [ ] **SEC-01**: All hardcoded localhost endpoints and REACH_SECRET removed from extension source; values read from extension config or environment
 - [x] **SEC-02**: CORS configured with explicit allowed origins via `ALLOWED_ORIGINS` environment variable; wildcard disabled
 - [x] **SEC-03**: Rate limiting applied to expensive endpoints: `/api/find-email`, `/api/draft-email`, `/api/suggest-domains` (express-rate-limit)
-- [x] **SEC-04**: REACH_SECRET validated consistently on every protected server endpoint; missing or invalid secret returns 401
+- [ ] **SEC-04**: REACH_SECRET validated consistently on every protected server endpoint; missing or invalid secret returns 401
 
 ### Extension Cleanup
 
 - [x] **EXT-01**: `background.js` split into focused modules — `extension/auth.js` (OAuth token management), `extension/api-client.js` (server API calls), `extension/reply-checker.js` (reply detection logic); `background.js` becomes orchestrator
 - [x] **EXT-02**: `content.js` split into focused modules — `extension/email-detector.js` (send detection), `extension/compose-widget.js` (UI widget), `extension/tracking.js` (pixel injection); `content.js` becomes orchestrator
-- [x] **EXT-03**: Structured logging module created (`extension/logger.js`) with debug/info/error levels; replaces 80+ raw `console.log` calls throughout extension; verbose logs suppressed in production
+- [ ] **EXT-03**: Structured logging module created (`extension/logger.js`) with debug/info/error levels; replaces 80+ raw `console.log` calls throughout extension; verbose logs suppressed in production
 - [x] **EXT-04**: All silent `catch {}` and `.catch(() => {})` error swallowing replaced with proper error handling that logs failures and propagates where appropriate
 
 ### Testing
@@ -33,7 +33,7 @@
 
 ### Performance
 
-- [x] **PERF-01**: `GET /api/outreach` supports `limit` and `offset` query params; response includes `total` count; default limit of 100 records
+- [ ] **PERF-01**: `GET /api/outreach` supports `limit` and `offset` query params; response includes `total` count; default limit of 100 records
 - [x] **PERF-02**: SMTP email verification probes in `emailFinder.js` run in parallel using `Promise.allSettled()`; sequential blocking eliminated
 
 ### Database
@@ -84,10 +84,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEC-01 | Phase 1 | Complete |
+| SEC-01 | Phase 7 | Pending |
 | SEC-02 | Phase 1 | Complete |
 | SEC-03 | Phase 1 | Complete |
-| SEC-04 | Phase 1 | Complete |
+| SEC-04 | Phase 6 | Pending |
 | DB-01 | Phase 2 | Complete |
 | DB-02 | Phase 2 | Complete |
 | DB-03 | Phase 2 | Complete |
@@ -95,11 +95,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SERV-01 | Phase 3 | Complete |
 | SERV-02 | Phase 3 | Complete |
 | SERV-03 | Phase 3 | Complete |
-| PERF-01 | Phase 3 | Complete |
+| PERF-01 | Phase 6 | Pending |
 | PERF-02 | Phase 3 | Complete |
 | EXT-01 | Phase 4 | Complete |
 | EXT-02 | Phase 4 | Complete |
-| EXT-03 | Phase 4 | Complete |
+| EXT-03 | Phase 7 | Pending |
 | EXT-04 | Phase 4 | Complete |
 | TEST-01 | Phase 5 | Complete |
 | TEST-02 | Phase 5 | Complete |
@@ -109,6 +109,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 - v1 requirements: 20 total
 - Mapped to phases: 20
 - Unmapped: 0
+- Pending (gap closure): SEC-01 (Phase 7), SEC-04 (Phase 6), PERF-01 (Phase 6), EXT-03 (Phase 7)
 
 ---
 *Requirements defined: 2026-03-12*

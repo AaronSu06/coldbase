@@ -101,10 +101,30 @@ Plans:
 - [ ] 05-03-PLAN.md — Utility unit tests: utils.test.js, normalize.test.js, text-utils.test.js (TEST-03)
 - [ ] 05-04-PLAN.md — Integration tests: server/outreach.test.js, server/tracking.test.js (TEST-02)
 
+### Phase 6: Integration Fixes
+**Goal**: Web dashboard and extension background handlers work correctly at runtime — web API calls include the secret header, extension handlers destructure the paginated response shape
+**Depends on**: Phases 1, 3, 4
+**Requirements**: SEC-04 (close partial), PERF-01 (close partial)
+**Gap Closure**: Closes gaps from v1.0 audit
+
+Plans:
+- [ ] 06-01-PLAN.md — Web dashboard auth: inject VITE_REACH_SECRET env var, attach x-reach-secret header to all web/src/lib/api.js fetch calls (SEC-04)
+- [ ] 06-02-PLAN.md — Extension response shape: destructure .data from fetchOutreach() in background.js (GET_STATS, GET_RECENT) and reply-checker.js (PERF-01)
+
+### Phase 7: Tracking Pixel URL + Debug Config
+**Goal**: Tracking pixel uses SERVER_URL from config in all deployments; background.js logger respects DEBUG flag from config.js
+**Depends on**: Phase 4, Phase 6
+**Requirements**: SEC-01 (close partial), EXT-03 (close partial)
+**Gap Closure**: Closes gaps from v1.0 audit
+
+Plans:
+- [ ] 07-01-PLAN.md — Tracking pixel bridge: fetch SERVER_URL via chrome.runtime.sendMessage GET_RUNTIME_CONFIG before constructing pixel URL in tracking.js (SEC-01)
+- [ ] 07-02-PLAN.md — Wire DEBUG config: import DEBUG from config.js in background.js, pass to makeLogger from logger-esm.js (EXT-03)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -113,3 +133,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 3. Server Restructure | 2/3 | In Progress|  |
 | 4. Extension Refactor | 6/6 | Complete   | 2026-03-16 |
 | 5. Test Coverage | 4/4 | Complete   | 2026-03-16 |
+| 6. Integration Fixes | 0/2 | Pending    |  |
+| 7. Tracking Pixel + Debug Config | 0/2 | Pending    |  |
