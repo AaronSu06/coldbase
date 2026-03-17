@@ -16,7 +16,7 @@
 - [ ] **SEC-01**: All hardcoded localhost endpoints and REACH_SECRET removed from extension source; values read from extension config or environment
 - [x] **SEC-02**: CORS configured with explicit allowed origins via `ALLOWED_ORIGINS` environment variable; wildcard disabled
 - [x] **SEC-03**: Rate limiting applied to expensive endpoints: `/api/find-email`, `/api/draft-email`, `/api/suggest-domains` (express-rate-limit)
-- [ ] **SEC-04**: REACH_SECRET validated consistently on every protected server endpoint; missing or invalid secret returns 401
+- [x] **SEC-04**: REACH_SECRET validated consistently on every protected server endpoint; missing or invalid secret returns 401
 
 ### Extension Cleanup
 
@@ -87,7 +87,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEC-01 | Phase 7 | Pending |
 | SEC-02 | Phase 1 | Complete |
 | SEC-03 | Phase 1 | Complete |
-| SEC-04 | Phase 6 | Pending |
+| SEC-04 | Phase 6 | Complete |
 | DB-01 | Phase 2 | Complete |
 | DB-02 | Phase 2 | Complete |
 | DB-03 | Phase 2 | Complete |

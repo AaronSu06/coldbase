@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-03-17T05:41:21.317Z"
-last_activity: 2026-03-16 — Phase 4 complete; all EXT-01 through EXT-04 verified; human smoke test passed
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-03-17T05:58:26.046Z"
+last_activity: 2026-03-17 — Phase 6 Plan 1 complete; web dashboard auth header fix deployed
 progress:
   total_phases: 7
   completed_phases: 5
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 19
+  completed_plans: 18
   percent: 18
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ## Current Position
 
-Phase: 4 of 5 (Extension Refactor) — COMPLETE
-Plan: 4/4 complete in Phase 4; ready for Phase 5
+Phase: 6 of 7 (Integration Fixes) — IN PROGRESS
+Plan: 1/3 complete in Phase 6
 Status: In progress
-Last activity: 2026-03-16 — Phase 4 complete; all EXT-01 through EXT-04 verified; human smoke test passed
+Last activity: 2026-03-17 — Phase 6 Plan 1 complete; web dashboard auth header fix deployed
 
 Progress: [██░░░░░░░░] 18%
 
@@ -68,6 +68,7 @@ Progress: [██░░░░░░░░] 18%
 | Phase 05-test-coverage P02 | 6min | 2 tasks | 1 files |
 | Phase 05-test-coverage P03 | 2min | 2 tasks | 3 files |
 | Phase 05-test-coverage P04 | 8min | 2 tasks | 2 files |
+| Phase 06-integration-fixes P01 | 8min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -117,6 +118,9 @@ Recent decisions affecting current work:
 - [Phase 05-04]: Tests share DB state within a file — POST creates thread-001, PATCH/GET depend on it; acceptable for integration tests
 - [Phase 05-04]: tracking.test.js runs its own prisma migrate reset so it works correctly when run in isolation
 - [Phase 05-04]: No x-reach-secret header in tracking tests — /track is not under /api and requires no auth
+- [Phase 06-01]: apiFetch guard throws early when VITE_REACH_SECRET absent with clear error message rather than confusing 401
+- [Phase 06-01]: deleteOutreach failures logged not surfaced to user; 404 on already-deleted is expected race condition
+- [Phase 06-01]: Error banner shown only when error truthy and records empty; stale data visible on subsequent poll failures
 
 ### Pending Todos
 
@@ -129,6 +133,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T05:41:21.304Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-integration-fixes/06-CONTEXT.md
+Last session: 2026-03-17T05:58:26.042Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
