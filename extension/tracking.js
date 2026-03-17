@@ -8,6 +8,9 @@ window.ReachTracking = (function () {
   // Module-local reference to shared state (set by init)
   let _state = null;
 
+  // Cached server base URL from config — pre-fetched in init()
+  let _serverBase = 'http://localhost:3001';
+
   // Toast deduplication
   let toastFired = false;
   let toastCooldown = null;
@@ -21,7 +24,7 @@ window.ReachTracking = (function () {
 
   function injectTrackingPixel(editorEl, trackingId) {
     const img = document.createElement('img');
-    img.src = 'http://localhost:3001/track/' + trackingId + '.gif';
+    img.src = _serverBase + '/track/' + trackingId + '.gif';
     img.width = 1; img.height = 1;
     img.style.cssText = 'display:block;width:1px;height:1px;opacity:0;position:absolute;pointer-events:none;';
     img.alt = '';
@@ -139,6 +142,16 @@ window.ReachTracking = (function () {
   function init(state) {
     _state = state;
     log.debug('ReachTracking initialized.');
+    chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (resp) => {
+      if (chrome.runtime.lastError) {
+        log.warn('GET_RUNTIME_CONFIG failed — using fallback serverBase:', chrome.runtime.lastError.message);
+        return;
+      }
+      if (resp?.ok && resp.config?.serverBase) {
+        _serverBase = resp.config.serverBase;
+        log.debug('serverBase loaded from config:', _serverBase);
+      }
+    });
   }
 
   return {
