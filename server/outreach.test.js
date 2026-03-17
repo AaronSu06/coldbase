@@ -127,6 +127,25 @@ describe('PATCH /api/outreach/:threadId', () => {
 });
 
 describe('GET /api/outreach', () => {
+  it('GET /api/outreach returns 401 without x-reach-secret header', async () => {
+    const res = await new Promise((resolve, reject) => {
+      const req = http.request({
+        hostname: '127.0.0.1',
+        port,
+        path: '/api/outreach',
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      }, (res) => {
+        let raw = '';
+        res.on('data', c => (raw += c));
+        res.on('end', () => resolve({ status: res.statusCode }));
+      });
+      req.on('error', reject);
+      req.end();
+    });
+    assert.equal(res.status, 401);
+  });
+
   it('returns { data, total } shape', async () => {
     const { status, body } = await request('GET', '/api/outreach');
     assert.strictEqual(status, 200);
