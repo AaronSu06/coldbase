@@ -59,10 +59,11 @@ Plans:
   2. `x-reach-secret` header value is redacted (not logged) in request logs
   3. `GET /health` returns HTTP 200 with `status`, `uptime`, `version`, and `dbLatencyMs` fields
   4. `GET /health` requires no authentication header and is accessible without a `REACH_SECRET` value
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: TBD
+- [ ] 09-01-PLAN.md — Observability test scaffold (failing tests for OBS-01 and OBS-02)
+- [ ] 09-02-PLAN.md — Implement requestLogger middleware and /health route; wire both into app.js
 
 ### Phase 10: Sentry Server Integration
 **Goal**: Unhandled server exceptions and promise rejections are captured in Sentry with environment context and PII scrubbed
@@ -102,6 +103,6 @@ Plans:
 | 6. Integration Fixes | v1.0 | 2/2 | Complete | 2026-03-17 |
 | 7. Tracking Pixel + Debug Config | v1.0 | 2/2 | Complete | 2026-03-17 |
 | 8. PostgreSQL Migration + Schema Cleanup | 3/3 | Complete   | 2026-03-17 | - |
-| 9. Observability | v1.1 | 0/? | Not started | - |
+| 9. Observability | v1.1 | 0/2 | Not started | - |
 | 10. Sentry Server Integration | v1.1 | 0/? | Not started | - |
 | 11. Extension Cleanup | v1.1 | 0/? | Not started | - |
