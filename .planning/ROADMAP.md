@@ -43,10 +43,12 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
   3. `aiSuggestion` and `draft` columns no longer exist in the Outreach table
   4. All existing API endpoints return correct responses against the PostgreSQL database
   5. `analytics.js` raw SQL queries execute without error on PostgreSQL (no `strftime()` calls remain)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 08-01: TBD
+- [ ] 08-01-PLAN.md — Update schema.prisma to PostgreSQL datasource + drop aiSuggestion/draft columns + fix analytics.js raw SQL
+- [ ] 08-02-PLAN.md — Update test files to use TEST_DATABASE_URL; create analytics.test.js; update .env.example
+- [ ] 08-03-PLAN.md — Delete SQLite migrations, wire prisma migrate deploy into index.js, generate PostgreSQL baseline migration
 
 ### Phase 9: Observability
 **Goal**: Every HTTP request leaves a structured log entry and the server exposes a public health endpoint load balancers can poll
@@ -99,7 +101,7 @@ Plans:
 | 5. Test Coverage | v1.0 | 4/4 | Complete | 2026-03-16 |
 | 6. Integration Fixes | v1.0 | 2/2 | Complete | 2026-03-17 |
 | 7. Tracking Pixel + Debug Config | v1.0 | 2/2 | Complete | 2026-03-17 |
-| 8. PostgreSQL Migration + Schema Cleanup | v1.1 | 0/? | Not started | - |
+| 8. PostgreSQL Migration + Schema Cleanup | v1.1 | 0/3 | Not started | - |
 | 9. Observability | v1.1 | 0/? | Not started | - |
 | 10. Sentry Server Integration | v1.1 | 0/? | Not started | - |
 | 11. Extension Cleanup | v1.1 | 0/? | Not started | - |
