@@ -86,7 +86,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_STATS') {
     fetchOutreach()
       .then(r => r.json())
-      .then(records => {
+      .then(({ data: records }) => {
         const sent = records.length;
         const replied = records.filter(r =>
           r.status === 'Replied' || r.status === 'Interviewing' || r.status === 'Offer'
@@ -129,7 +129,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_RECENT') {
     fetchOutreach()
       .then(r => r.json())
-      .then(records => {
+      .then(({ data: records }) => {
         const recent = records.slice(0, 3).map(r => ({
           company: r.company,
           status: r.status,
