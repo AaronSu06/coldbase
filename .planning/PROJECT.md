@@ -1,10 +1,21 @@
-# Reach — Codebase Refactor
+# Reach
 
 ## What This Is
 
 Reach is a Chrome extension + web dashboard for tracking cold outreach emails sent via Gmail. It auto-detects sent emails, injects tracking pixels to detect opens, monitors for replies, and surfaces analytics. The web dashboard provides a kanban view of all tracked threads with AI-powered follow-up drafting.
 
-The codebase is now production-hardened (v1.0): secrets externalized, server decomposed into domain routes, extension split into focused modules, full test suite, structured logging.
+Being built as a SaaS product for strangers to sign up, connect their Gmail, and track outreach — with potential paid tiers for more features.
+
+## Current Milestone: v1.1 Production Foundation
+
+**Goal:** Migrate to PostgreSQL, clean up schema, add observability, and fix silent UX failures — building the production foundation before multi-tenancy.
+
+**Target features:**
+- PostgreSQL migration via Prisma (replace SQLite)
+- Schema cleanup: drop unused `aiSuggestion` and `draft` columns
+- Request/response logging middleware + `/api/health` endpoint
+- Surface Gmail token expiry errors to the user
+- Error monitoring (Sentry)
 
 ## Core Value
 
@@ -39,21 +50,22 @@ A reliable, maintainable codebase that real users can depend on: secure by defau
 
 ### Active
 
+- [ ] Migrate database from SQLite to PostgreSQL via Prisma — DB-01
+- [ ] Remove unused `aiSuggestion` and `draft` columns from Outreach schema — DATA-01
 - [ ] Request/response logging middleware (structured JSON logs) — OBS-01
 - [ ] Server health check endpoint (GET /api/health) — OBS-02
-- [ ] Remove unused 5-minute polling interval from useOutreach hook — EXT-V2-01
-- [ ] Fix conversation preview truncation (hardcoded 120-char limit) — EXT-V2-02
 - [ ] Surface Gmail token expiry error to user — EXT-V2-03
-- [ ] Remove unused aiSuggestion and draft fields from Outreach schema — DATA-01
+- [ ] Integrate error monitoring (Sentry) on server and extension — MON-01
 
 ### Out of Scope
 
 - UI redesign or component restructuring — UI stays identical
-- PostgreSQL migration — keep SQLite with schema improvements
+- Multi-tenancy / user accounts — v1.2 milestone
 - Real-time push / WebSockets — polling/visibility refresh is sufficient
 - Audit log / undo history — future milestone
 - Data export — future milestone
 - Mobile app — out of scope
+- Server deployment / hosting — user handling separately; will notify when stable URL is ready
 
 ## Context
 
@@ -90,4 +102,4 @@ All v1.0 refactor goals complete. Codebase is now production-hardened.
 | Decimal phase numbering for gap closure | Phases 6-7 inserted after audit without renumbering original 1-5 | ✓ Good — clear insertion semantics |
 
 ---
-*Last updated: 2026-03-17 after v1.0 milestone*
+*Last updated: 2026-03-17 after v1.1 milestone start*

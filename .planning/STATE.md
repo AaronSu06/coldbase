@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: Reach Refactor
-status: complete
-stopped_at: Milestone complete
+milestone: v1.1
+milestone_name: Production Foundation
+status: defining_requirements
+stopped_at: ~
 last_updated: "2026-03-17T00:00:00.000Z"
-last_activity: 2026-03-17 — v1.0 milestone archived
+last_activity: 2026-03-17 — Milestone v1.1 started
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 21
-  completed_plans: 21
-  percent: 18
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,8 +25,10 @@ See: .planning/PROJECT.md (updated 2026-03-17)
 
 ## Current Position
 
-v1.0 milestone COMPLETE — all 7 phases, 21 plans shipped.
-Ready for `/gsd:new-milestone` to define v1.1 scope.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-17 — Milestone v1.1 started
 
 Progress: [██░░░░░░░░] 18%
 
