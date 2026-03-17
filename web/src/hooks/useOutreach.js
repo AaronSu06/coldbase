@@ -18,11 +18,13 @@ function normalizeRecords(records) {
 
 export function useOutreach() {
   const [records, setRecords] = useState([]);
+  const [error, setError] = useState(null);
 
   const load = useCallback(() => {
+    setError(null);
     fetchOutreach()
       .then(({ data }) => setRecords(normalizeRecords(data)))
-      .catch(e => console.error('[Reach] Failed to fetch records:', e.message));
+      .catch(e => setError(e.message));
   }, []);
 
   useEffect(() => {
@@ -115,8 +117,8 @@ export function useOutreach() {
 
   const deleteRecord = useCallback((threadId) => {
     setRecords(prev => prev.filter(r => r.threadId !== threadId));
-    deleteOutreach(threadId);
+    deleteOutreach(threadId).catch(e => console.error('[Reach] deleteOutreach failed:', e.message));
   }, []);
 
-  return { records, refresh: load, updateStatus, toggleFavorite, toggleArchived, archiveAll, updateRecord, deleteRecord };
+  return { records, error, refresh: load, updateStatus, toggleFavorite, toggleArchived, archiveAll, updateRecord, deleteRecord };
 }

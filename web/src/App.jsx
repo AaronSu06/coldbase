@@ -91,7 +91,7 @@ function StatPill({ value, label }) {
 // ── App ────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const { records, refresh, updateStatus, toggleFavorite, toggleArchived, archiveAll, updateRecord, deleteRecord } = useOutreach();
+  const { records, error, refresh, updateStatus, toggleFavorite, toggleArchived, archiveAll, updateRecord, deleteRecord } = useOutreach();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedThreadId, setSelectedThreadId] = useState(null);
@@ -384,6 +384,10 @@ export default function App() {
         <div className="flex-1 overflow-hidden">
           {activeTab === 'Insights' ? (
             <InsightsPanel />
+          ) : error && records.length === 0 ? (
+            <div className="flex items-center justify-center flex-1 h-full text-red-400 text-sm">
+              Failed to load data: {error}
+            </div>
           ) : showEmptySearch ? (
             <div className="flex items-center justify-center h-full">
               <EmptyState context="search" query={query} />
