@@ -79,7 +79,7 @@ chrome.action.onClicked.addListener((tab) => {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_RUNTIME_CONFIG') {
-    sendResponse({ ok: true, config: { serverApiBase: SERVER_URL, dashboardUrl: DASH_URL } });
+    sendResponse({ ok: true, config: { serverApiBase: SERVER_URL, dashboardUrl: DASH_URL, serverBase: SERVER_URL.replace(/\/api$/, '') } });
     return;
   }
 
