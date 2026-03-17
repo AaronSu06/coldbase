@@ -38,11 +38,9 @@ created: 2026-03-17
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 09-01-01 | 01 | 0 | OBS-01, OBS-02 | unit | `node --test server/observability.test.js` | ❌ W0 | ⬜ pending |
-| 09-02-01 | 02 | 1 | OBS-01 | integration | `node --test server/observability.test.js` | ❌ W0 | ⬜ pending |
-| 09-02-02 | 02 | 1 | OBS-01 | integration | `node --test server/observability.test.js` | ❌ W0 | ⬜ pending |
-| 09-03-01 | 03 | 1 | OBS-02 | integration | `node --test server/observability.test.js` | ❌ W0 | ⬜ pending |
-| 09-03-02 | 03 | 1 | OBS-02 | integration | `node --test server/observability.test.js` | ❌ W0 | ⬜ pending |
+| 09-01-01 | 01 | 1 | OBS-01, OBS-02 | tdd scaffold | `node --test server/observability.test.js` | ❌ W1 | ⬜ pending |
+| 09-02-01 | 02 | 2 | OBS-01 | integration | `node --test server/observability.test.js` | ❌ W1 | ⬜ pending |
+| 09-02-02 | 02 | 2 | OBS-02 | integration | `node --test server/observability.test.js` | ❌ W1 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
