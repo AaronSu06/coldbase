@@ -14,11 +14,11 @@ router.get('/best-time', async (req, res, next) => {
     }
     const rows = await prisma.$queryRaw`
       SELECT
-        CAST(strftime('%H', sentDate) AS INTEGER) AS hour,
+        EXTRACT(HOUR FROM "sentDate")::INTEGER AS hour,
         COUNT(*) AS sent_count,
-        SUM(CASE WHEN repliedAt IS NOT NULL THEN 1 ELSE 0 END) AS replied_count
-      FROM Outreach
-      WHERE archived = 0
+        SUM(CASE WHEN "repliedAt" IS NOT NULL THEN 1 ELSE 0 END)::INTEGER AS replied_count
+      FROM "Outreach"
+      WHERE archived = false
       GROUP BY hour
       ORDER BY hour
     `;
