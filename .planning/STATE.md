@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-03-17T05:58:26.046Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-03-17T06:01:05.311Z"
 last_activity: 2026-03-17 — Phase 6 Plan 1 complete; web dashboard auth header fix deployed
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 19
-  completed_plans: 18
+  completed_plans: 19
   percent: 18
 ---
 
@@ -69,6 +69,7 @@ Progress: [██░░░░░░░░] 18%
 | Phase 05-test-coverage P03 | 2min | 2 tasks | 3 files |
 | Phase 05-test-coverage P04 | 8min | 2 tasks | 2 files |
 | Phase 06-integration-fixes P01 | 8min | 3 tasks | 5 files |
+| Phase 06-integration-fixes P02 | 66s | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -121,6 +122,8 @@ Recent decisions affecting current work:
 - [Phase 06-01]: apiFetch guard throws early when VITE_REACH_SECRET absent with clear error message rather than confusing 401
 - [Phase 06-01]: deleteOutreach failures logged not surfaced to user; 404 on already-deleted is expected race condition
 - [Phase 06-01]: Error banner shown only when error truthy and records empty; stale data visible on subsequent poll failures
+- [Phase 06-02]: fetchOutreach() delegates to serverFetch('/outreach') — auth header now attached automatically via the existing helper
+- [Phase 06-02]: sidebar rateEl shows 'unreachable' on GET_STATS failure as the visible error indicator; sentEl/repliedEl remain '—'
 
 ### Pending Todos
 
@@ -133,6 +136,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T05:58:26.042Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-03-17T06:01:05.307Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
