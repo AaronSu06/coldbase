@@ -98,5 +98,5 @@ export async function postTrackingPixel(payload) {
  * Returns the raw Response so callers can call .json() themselves.
  */
 export async function fetchOutreach() {
-  return fetch(`${SERVER_URL}/outreach`);
+  return serverFetch('/outreach');
 }
