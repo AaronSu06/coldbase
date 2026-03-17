@@ -3,18 +3,7 @@ import { SERVER_URL, DASH_URL } from './config.js';
 import { getAuthToken } from './auth.js';
 import { serverFetch, fetchOutreach } from './api-client.js';
 import { checkReplies, trackLatestSent } from './reply-checker.js';
-
-// logger.js is a classic script (no ES module exports) — define makeLogger inline here.
-const DEBUG = true;
-function makeLogger(module) {
-  const prefix = `[Reach/${module}]`;
-  return {
-    debug: (...a) => DEBUG && console.debug(prefix, ...a),
-    info:  (...a) => DEBUG && console.log(prefix, ...a),
-    warn:  (...a) => console.warn(prefix, ...a),
-    error: (...a) => console.error(prefix, ...a),
-  };
-}
+import { makeLogger } from './logger-esm.js';
 
 const log = makeLogger('background');
 
