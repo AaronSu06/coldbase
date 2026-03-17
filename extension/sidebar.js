@@ -225,7 +225,7 @@ function loadStats() {
     if (chrome.runtime.lastError || !response?.ok) {
       if (sentEl) sentEl.textContent = '—';
       if (repliedEl) repliedEl.textContent = '—';
-      if (rateEl) rateEl.textContent = '—';
+      if (rateEl) rateEl.textContent = 'unreachable';
       return;
     }
     if (sentEl) sentEl.textContent = response.sent;

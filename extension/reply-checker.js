@@ -249,7 +249,7 @@ export async function checkReplies(token) {
   let records;
   try {
     const res = await fetchOutreach();
-    records = await res.json();
+    records = (await res.json()).data;
     log.info(`Reply check: ${records.length} tracked record(s).`);
   } catch (e) {
     log.error('Could not fetch records for reply check:', e.message);
