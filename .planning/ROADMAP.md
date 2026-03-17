@@ -26,7 +26,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
 **Milestone Goal:** Migrate to PostgreSQL, add observability, integrate error monitoring, and remove dead schema weight — building the production foundation before multi-tenancy.
 
-- [ ] **Phase 8: PostgreSQL Migration + Schema Cleanup** - Migrate Prisma from SQLite to PostgreSQL and drop unused columns
+- [x] **Phase 8: PostgreSQL Migration + Schema Cleanup** - Migrate Prisma from SQLite to PostgreSQL and drop unused columns (completed 2026-03-17)
 - [ ] **Phase 9: Observability** - Add request/response logging middleware and a public health endpoint
 - [ ] **Phase 10: Sentry Server Integration** - Wire Sentry to Express for unhandled exception capture
 - [ ] **Phase 11: Extension Cleanup** - Remove dead polling interval and fix preview truncation
@@ -101,7 +101,7 @@ Plans:
 | 5. Test Coverage | v1.0 | 4/4 | Complete | 2026-03-16 |
 | 6. Integration Fixes | v1.0 | 2/2 | Complete | 2026-03-17 |
 | 7. Tracking Pixel + Debug Config | v1.0 | 2/2 | Complete | 2026-03-17 |
-| 8. PostgreSQL Migration + Schema Cleanup | 2/3 | In Progress|  | - |
+| 8. PostgreSQL Migration + Schema Cleanup | 3/3 | Complete   | 2026-03-17 | - |
 | 9. Observability | v1.1 | 0/? | Not started | - |
 | 10. Sentry Server Integration | v1.1 | 0/? | Not started | - |
 | 11. Extension Cleanup | v1.1 | 0/? | Not started | - |

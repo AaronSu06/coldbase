@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Production Foundation
 status: planning
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-03-17T22:05:01.961Z"
+stopped_at: Completed 08-03-PLAN.md
+last_updated: "2026-03-17T22:36:40.813Z"
 last_activity: 2026-03-17 — v1.1 roadmap created
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 *Updated after each plan completion*
 | Phase 08-postgresql-migration-schema-cleanup P01 | 1min | 2 tasks | 2 files |
 | Phase 08 P02 | 49s | 2 tasks | 4 files |
+| Phase 08-postgresql-migration-schema-cleanup P03 | multi-session | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,9 @@ Recent decisions affecting current work:
 - [Phase 08-postgresql-migration-schema-cleanup]: Drop aiSuggestion/draft from schema before baseline migration to avoid carrying dead columns into PostgreSQL
 - [Phase 08]: Tests use TEST_DATABASE_URL/TEST_DIRECT_URL env vars pointing at Neon test branch; no fallback so missing vars fail clearly
 - [Phase 08]: analytics.test.js covers only the insufficient data path — seeding for sufficient path deferred
+- [Phase 08-postgresql-migration-schema-cleanup]: Delete all SQLite migrations and generate fresh PostgreSQL baseline — cleaner than converting migration history
+- [Phase 08-postgresql-migration-schema-cleanup]: Dynamic import('./app.js') required in index.js — static ESM imports are hoisted before execSync migrate deploy runs
+- [Phase 08-postgresql-migration-schema-cleanup]: execSync prisma migrate deploy with process.exit(1) on failure — server never starts against unmigrated DB
 
 ### Pending Todos
 
@@ -80,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T22:05:01.959Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-03-17T22:36:40.811Z
+Stopped at: Completed 08-03-PLAN.md
 Resume file: None
