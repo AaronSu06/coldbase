@@ -5,7 +5,7 @@
 // Content scripts must use logger.js (classic script) instead — ES module
 // syntax is not allowed in manifest content_scripts arrays.
 
-const DEBUG = true;
+import { DEBUG } from './config.js';
 
 export function makeLogger(module) {
   const prefix = `[Reach/${module}]`;
