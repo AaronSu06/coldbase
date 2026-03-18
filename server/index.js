@@ -1,3 +1,4 @@
+import './instrument.js';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
