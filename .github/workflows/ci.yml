@@ -42,6 +42,22 @@ jobs:
     defaults:
       run:
         working-directory: server
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: reach_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/reach_ci
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/reach_ci
     steps:
       - uses: actions/checkout@v4
 
@@ -58,7 +74,7 @@ jobs:
         run: npx prisma validate
 
       - name: Check migrations are up to date
-        run: npx prisma migrate diff --from-migrations ./prisma/migrations --to-schema-datamodel ./prisma/schema.prisma --shadow-database-url "file:./shadow.db" --exit-code || (echo "Unapplied schema changes detected — run prisma migrate dev" && exit 1)
+        run: npx prisma migrate diff --from-migrations ./prisma/migrations --to-schema-datamodel ./prisma/schema.prisma --shadow-database-url "$DATABASE_URL" --exit-code || (echo "Unapplied schema changes detected — run prisma migrate dev" && exit 1)
 
   extension-package:
     name: Package extension
