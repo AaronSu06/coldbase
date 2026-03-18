@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node --watch index.js",
     "start": "node index.js",
+    "test": "node --env-file=.env.test --test *.test.js",
     "db:migrate": "prisma migrate dev",
     "postinstall": "prisma generate"
   },
