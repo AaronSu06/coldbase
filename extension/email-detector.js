@@ -32,6 +32,9 @@ window.ReachDetector = (function () {
     state.editorManualModes.set(el, state.savedTrackingDefault || 'force_track');
     // updateWidget is in ReachWidget — it's a callback path so ReachWidget is loaded by now
     window.ReachWidget.update(el);
+    // Hide widgets on all other live editors (UI-SYNC-01) — update(el) alone only shows the
+    // new one; without this loop the old editors' widgets stay visible and appear to stack.
+    for (const e of state.liveEditors) { if (e !== el) window.ReachWidget.update(e); }
     window.ReachWidget.syncTrackMode(); // sync panel if already open (UI-SYNC-02)
     window.ReachTracking.watchSendButton(el);
 
