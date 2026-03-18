@@ -112,6 +112,7 @@ window.ReachWidget = (function () {
     for (const testY of probeYs) {
       const el = document.elementFromPoint(probeX, testY);
       if (!el || el === document.body || editorEl.contains(el) || el.contains(editorEl)) continue;
+      if (el.classList.contains('oiq-w')) continue; // skip other Reach widgets
       neighborRect = el.getBoundingClientRect();
       break;
     }
