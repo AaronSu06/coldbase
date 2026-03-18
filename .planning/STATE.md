@@ -64,6 +64,10 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 13 added: Compose Widget & Panel Sync — fix widget focus to most-recent compose window, dynamic sidebar sync, unified non-Gmail sidebar matching Gmail layout
+
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
