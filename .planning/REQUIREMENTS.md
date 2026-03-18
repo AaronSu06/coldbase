@@ -24,6 +24,12 @@
 - [x] **EXT-01**: Unused 5-minute polling interval removed from `useOutreach` hook
 - [x] **EXT-02**: Hardcoded 120-char conversation preview truncation replaced with configurable/appropriate limit
 
+### Extension Panel Restore
+
+- [ ] **EXT-V2-01**: Compose panel is mountable from widget click and extension icon click; panel renders with three tabs (Overview, Find Contacts, Draft with AI)
+- [ ] **EXT-V2-02**: Overview tab shows live sent/replied/rate stats and a functional Auto/On/Off tracking toggle pill that persists across tabs
+- [ ] **EXT-V2-03**: Find Contacts tab calls server `/find-email` and displays results; Draft with AI tab calls server `/draft-email` and inserts generated text into compose window
+
 ## v1.2 Requirements
 
 ### Extension UX
@@ -56,6 +62,9 @@
 | MON-01 | Phase 10 | Complete |
 | EXT-01 | Phase 11 | Complete |
 | EXT-02 | Phase 11 | Complete |
+| EXT-V2-01 | Phase 12 | Planned |
+| EXT-V2-02 | Phase 12 | Planned |
+| EXT-V2-03 | Phase 12 | Planned |
 
 **Coverage:**
 - v1.1 requirements: 7 total

@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 Reach Refactor** — Phases 1–7 (shipped 2026-03-17)
-- 🚧 **v1.1 Production Foundation** — Phases 8–11 (in progress)
+- 🚧 **v1.1 Production Foundation** — Phases 8–12 (in progress)
 
 ## Phases
 
@@ -30,6 +30,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 9: Observability** - Add request/response logging middleware and a public health endpoint (completed 2026-03-18)
 - [x] **Phase 10: Sentry Server Integration** - Wire Sentry to Express for unhandled exception capture (completed 2026-03-18)
 - [x] **Phase 11: Extension Cleanup** - Remove dead polling interval and fix preview truncation (completed 2026-03-18)
+- [ ] **Phase 12: Extension Panel Restore** - Reconnect the compose panel and restore all three tabs: overview (stats + tracking toggle), find contacts, and draft with AI
 
 ## Phase Details
 
@@ -92,6 +93,17 @@ Plans:
 Plans:
 - [ ] 11-01-PLAN.md — Remove polling interval from useOutreach; fix buildConversationPreview body priority + export + tests
 
+### Phase 12: Extension Panel Restore
+**Goal**: The compose panel is accessible from the widget and extension icon, with all three tabs fully functional: Overview (stats + tracking toggle pill), Find Contacts (email finder), and Draft with AI (Gemini-powered drafts)
+**Depends on**: Phase 11
+**Requirements**: EXT-V2-01, EXT-V2-02, EXT-V2-03
+**Success Criteria** (what must be TRUE):
+  1. Clicking the widget or extension icon opens the compose panel with three tabs
+  2. Overview tab shows live stats and the Auto/On/Off tracking toggle pill
+  3. Find Contacts tab submits to the server and displays results with copy button
+  4. Draft with AI tab generates a draft via server and offers insert-into-compose
+**Plans**: TBD
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -107,3 +119,4 @@ Plans:
 | 9. Observability | 3/3 | Complete   | 2026-03-18 | - |
 | 10. Sentry Server Integration | 2/2 | Complete    | 2026-03-18 | - |
 | 11. Extension Cleanup | 1/1 | Complete    | 2026-03-18 | - |
+| 12. Extension Panel Restore | v1.1 | 0/TBD | Planned | - |
