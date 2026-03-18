@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Production Foundation
 status: planning
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-03-18T02:14:36.875Z"
+stopped_at: Completed 10-02-PLAN.md
+last_updated: "2026-03-18T02:17:26.712Z"
 last_activity: 2026-03-17 — v1.1 roadmap created
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 | Phase 09-observability P02 | 5min | 2 tasks | 2 files |
 | Phase 09-observability P03 | multi-session | 2 tasks | 2 files |
 | Phase 10-sentry-server-integration P01 | 3min | 1 tasks | 4 files |
+| Phase 10-sentry-server-integration P02 | 1min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 10-sentry-server-integration]: Export beforeSend and initSentry as named functions for direct unit-test access, avoiding --experimental-test-module-mocks
 - [Phase 10-sentry-server-integration]: initSentry() called as module side-effect so instrument.js can be first import in index.js for full startup error capture
 - [Phase 10-sentry-server-integration]: SENTRY_DSN absent from .env.test — module-load side-effect is a no-op during tests, no Sentry network traffic
+- [Phase 10-sentry-server-integration]: import './instrument.js' as first line of index.js guarantees Sentry captures Prisma startup errors
+- [Phase 10-sentry-server-integration]: Sentry.setupExpressErrorHandler(app) placed before global error handler so Sentry captures raw errors before local formatting
 
 ### Pending Todos
 
@@ -97,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T02:14:36.873Z
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-03-18T02:17:26.709Z
+Stopped at: Completed 10-02-PLAN.md
 Resume file: None
