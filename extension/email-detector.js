@@ -14,18 +14,6 @@ window.ReachDetector = (function () {
     return (text || '').toLowerCase().replace(/[-_]/g, '').replace(/[^a-z0-9\s]/g, ' ');
   }
 
-  function requestKeywordScore(text) {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage({ type: 'KEYWORD_SCORE', text }, (response) => {
-        if (chrome.runtime.lastError || !response?.ok || typeof response.score !== 'number') {
-          resolve(0);
-          return;
-        }
-        resolve(response.score);
-      });
-    });
-  }
-
   // ─── Editor attachment ───────────────────────────────────────────────────────
 
   function attachToEditor(el, state) {
@@ -39,33 +27,21 @@ window.ReachDetector = (function () {
     state.observedEditors.add(el);
     log.info('Attached to compose editor.');
 
-    state.editorManualModes.set(el, state.savedTrackingDefault);
-    state.editorAutoScores.set(el, 0);
+    // Set lastActiveEditor BEFORE calling update() so widget visibility sees it (UI-SYNC-01)
+    state.lastActiveEditor = el;
+    state.editorManualModes.set(el, state.savedTrackingDefault || 'force_track');
     // updateWidget is in ReachWidget — it's a callback path so ReachWidget is loaded by now
     window.ReachWidget.update(el);
+    window.ReachWidget.syncTrackMode(); // sync panel if already open (UI-SYNC-02)
     window.ReachTracking.watchSendButton(el);
 
     el.addEventListener('focus', () => {
       state.lastActiveEditor = el;
+      window.ReachWidget.syncTrackMode();
     });
 
     el.addEventListener('input', () => {
       state.lastActiveEditor = el;
-      const container = window.ReachWidget.getComposeContainer(el);
-      const subjectEl =
-        container.querySelector('input[name="subjectbox"]') ||
-        document.querySelector('input[name="subjectbox"]');
-      const subject = subjectEl ? subjectEl.value : '';
-      const body = el.innerText || el.textContent || '';
-      const combined = subject + ' ' + body;
-
-      const seq = (state.editorScoreSeq.get(el) || 0) + 1;
-      state.editorScoreSeq.set(el, seq);
-      requestKeywordScore(combined).then((score) => {
-        if (state.editorScoreSeq.get(el) !== seq) return;
-        if (!document.body.contains(el)) return;
-        window.ReachWidget.update(el, score);
-      });
     });
   }
 

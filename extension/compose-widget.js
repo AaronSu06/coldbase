@@ -45,32 +45,20 @@ window.ReachWidget = (function () {
         border-radius: 6px !important;
         overflow: hidden !important;
         z-index: 999 !important;
-        opacity: 1 !important;
+        opacity: 0.35 !important;
         pointer-events: auto !important;
         cursor: pointer !important;
         box-shadow: 0 1px 5px rgba(0,0,0,0.22) !important;
-        transition: box-shadow 0.25s ease !important;
+        transition: opacity 0.2s ease, box-shadow 0.25s ease !important;
       }
-      .oiq-w.oiq-partial {
-        animation: oiq-ring 2.5s ease-in-out infinite !important;
-      }
-      .oiq-w.oiq-manual-track {
-        outline: 2px solid #86efac !important;
-        outline-offset: 1px !important;
-      }
-      .oiq-w.oiq-manual-skip {
-        outline: 2px solid #fca5a5 !important;
-        outline-offset: 1px !important;
+      .oiq-w.oiq-tracking-on {
+        opacity: 1 !important;
       }
       .oiq-w img.oiq-icon {
         width: 26px !important;
         height: 26px !important;
         display: block !important;
         object-fit: cover !important;
-      }
-      @keyframes oiq-ring {
-        0%, 100% { box-shadow: 0 1px 5px rgba(0,0,0,0.22); }
-        50%       { box-shadow: 0 0 0 3px rgba(29,78,216,0.35), 0 1px 5px rgba(0,0,0,0.22); }
       }
     `;
     document.head.appendChild(s);
@@ -198,7 +186,7 @@ window.ReachWidget = (function () {
     return w;
   }
 
-  function updateWidget(editorEl, matchCount) {
+  function updateWidget(editorEl) {
     // Guard: if _state not set yet, bail silently (init order issue).
     if (!_state) {
       return;
@@ -208,31 +196,34 @@ window.ReachWidget = (function () {
         _state.editorWidgets.get(editorEl).remove();
         clearEditorState(editorEl);
       }
+      // If the active editor was removed, promote the next live editor (UI-SYNC-01)
+      if (_state.lastActiveEditor === editorEl) {
+        _state.lastActiveEditor = null;
+        for (const e of _state.liveEditors) {
+          if (document.body.contains(e)) {
+            _state.lastActiveEditor = e;
+            break;
+          }
+        }
+        if (_state.lastActiveEditor) updateWidget(_state.lastActiveEditor);
+      }
       return;
     }
 
-    if (matchCount !== undefined) {
-      _state.editorAutoScores.set(editorEl, matchCount);
-    }
-    const currentScore = _state.editorAutoScores.get(editorEl) || 0;
     const w = getOrCreateWidget(editorEl);
-    const manualMode = _state.editorManualModes.get(editorEl) || 'auto';
+    const manualMode = _state.editorManualModes.get(editorEl) || 'force_track';
 
-    w.classList.remove('oiq-partial', 'oiq-tracking', 'oiq-manual-track', 'oiq-manual-skip');
     if (manualMode === 'force_track') {
-      w.classList.add('oiq-manual-track');
-      w.title = 'Reach: manual tracking ON (click to set OFF)';
-      return;
-    }
-    if (manualMode === 'force_skip') {
-      w.classList.add('oiq-manual-skip');
-      w.title = 'Reach: manual tracking OFF (click for AUTO)';
-      return;
+      w.classList.add('oiq-tracking-on');
+      w.title = 'Reach: tracking ON';
+    } else {
+      w.classList.remove('oiq-tracking-on');
+      w.title = 'Reach: tracking OFF';
     }
 
-    w.title = 'Reach: auto mode (click to force ON)';
-    if (currentScore >= 2) w.classList.add('oiq-tracking');
-    else if (currentScore === 1) w.classList.add('oiq-partial');
+    // Show widget ONLY on the most-recently-focused editor (UI-SYNC-01)
+    const isActive = (_state.lastActiveEditor === editorEl);
+    w.style.display = isActive ? '' : 'none';
   }
 
   // ─── Compose panel styles ────────────────────────────────────────────────────
@@ -348,9 +339,8 @@ window.ReachWidget = (function () {
       cursor: pointer; transition: background 120ms ease, color 120ms ease;
     }
     .tt-btn:last-child { border-right: none; }
-    .tt-btn.active-auto   { background: #4f46e5; color: #fff; }
-    .tt-btn.active-on     { background: #16a34a; color: #fff; }
-    .tt-btn.active-off    { background: #dc2626; color: #fff; }
+    .tt-btn.active-on  { background: #4f46e5; color: #fff; }
+    .tt-btn.active-off { background: #6b7280; color: #fff; }
     .section-title {
       font-size: 10px; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 8px;
@@ -559,7 +549,6 @@ window.ReachWidget = (function () {
           <div class="field-row" id="cp-tracking-row">
             <span class="field-label">Tracking</span>
             <div class="track-toggle" id="cp-track-toggle">
-              <button class="tt-btn" data-mode="auto">Auto</button>
               <button class="tt-btn" data-mode="force_track">On</button>
               <button class="tt-btn" data-mode="force_skip">Off</button>
             </div>
@@ -669,9 +658,18 @@ window.ReachWidget = (function () {
     shadow.querySelectorAll('.tt-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const mode = btn.dataset.mode;
-        if (ctx.currentEditorEl) {
-          _state.editorManualModes.set(ctx.currentEditorEl, mode);
-          updateWidget(ctx.currentEditorEl, _state.editorAutoScores.get(ctx.currentEditorEl) || 0);
+        // Always resolve the most-recent live editor — ctx.currentEditorEl may be stale
+        // if the compose window was closed/reopened without the panel being toggled.
+        const liveEditor =
+          (ctx.currentEditorEl && document.body.contains(ctx.currentEditorEl))
+            ? ctx.currentEditorEl
+            : (_state.lastActiveEditor && document.body.contains(_state.lastActiveEditor)
+                ? _state.lastActiveEditor
+                : null);
+        if (liveEditor) {
+          ctx.currentEditorEl = liveEditor; // keep ctx fresh
+          _state.editorManualModes.set(liveEditor, mode);
+          updateWidget(liveEditor);
         }
         updateTrackToggle(mode);
         _state.savedTrackingDefault = mode;
@@ -923,8 +921,10 @@ window.ReachWidget = (function () {
       const domain     = firstEmail.split('@')[1] || '';
       const rawName    = (toEls[0]?.textContent || '').trim().split(' ')[0];
       const contactName = rawName && rawName !== firstEmail ? rawName : '';
-      const company    = domain
-        ? domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1)
+      const domainParts = domain.split('.');
+      const domainRoot  = domainParts.length >= 2 ? domainParts[domainParts.length - 2] : domainParts[0];
+      const company    = domainRoot
+        ? domainRoot.charAt(0).toUpperCase() + domainRoot.slice(1)
         : '';
 
       if (company)     shadow.getElementById('cp-draft-company').value = company;
@@ -1018,10 +1018,10 @@ window.ReachWidget = (function () {
     // Shared toggle updater used by Overview tab setup and setEditor/syncTrackMode.
     const trackBtns = shadow.querySelectorAll('.tt-btn');
     function updateTrackToggle(mode) {
-      trackBtns.forEach(b => b.classList.remove('active-auto', 'active-on', 'active-off'));
-      const classMap = { auto: 'active-auto', force_track: 'active-on', force_skip: 'active-off' };
+      trackBtns.forEach(b => b.classList.remove('active-on', 'active-off'));
+      const classMap = { force_track: 'active-on', force_skip: 'active-off' };
       const btn = shadow.querySelector(`.tt-btn[data-mode="${mode}"]`);
-      if (btn) btn.classList.add(classMap[mode]);
+      if (btn && classMap[mode]) btn.classList.add(classMap[mode]);
     }
 
     // Wire up tabs.
@@ -1050,9 +1050,10 @@ window.ReachWidget = (function () {
     // Update ctx + UI when the panel is opened for a (possibly different) editor.
     function setEditor(editorEl) {
       ctx.currentEditorEl = editorEl;
-      updateTrackToggle(
-        editorEl ? (_state.editorManualModes.get(editorEl) || _state.savedTrackingDefault) : _state.savedTrackingDefault
-      );
+      const mode = editorEl
+        ? (_state.editorManualModes.get(editorEl) || _state.savedTrackingDefault || 'force_track')
+        : (_state.savedTrackingDefault || 'force_track');
+      updateTrackToggle(mode);
       shadow.getElementById('cp-draft-empty').style.display = editorEl ? 'none' : '';
       shadow.getElementById('cp-draft-form').style.display  = editorEl ? '' : 'none';
       loadOverviewData();
@@ -1061,14 +1062,20 @@ window.ReachWidget = (function () {
       }
     }
 
-    // Sync toggle when tracking default changes in storage (no editor switch).
+    // Sync toggle — also refreshes ctx to the most recent live editor.
     function syncTrackMode() {
-      const mode = (ctx.currentEditorEl && _state.editorManualModes.get(ctx.currentEditorEl)) || _state.savedTrackingDefault;
+      const liveEditor = (_state.lastActiveEditor && document.body.contains(_state.lastActiveEditor))
+        ? _state.lastActiveEditor
+        : ctx.currentEditorEl;
+      if (liveEditor) ctx.currentEditorEl = liveEditor;
+      const mode = (ctx.currentEditorEl && _state.editorManualModes.get(ctx.currentEditorEl))
+        || _state.savedTrackingDefault
+        || 'force_track';
       updateTrackToggle(mode);
     }
 
     loadOverviewData();
-    return { host, setEditor, syncTrackMode };
+    return { host, setEditor, syncTrackMode, loadOverviewData };
   }
 
   // ─── Panel state + open ──────────────────────────────────────────────────────
@@ -1077,6 +1084,7 @@ window.ReachWidget = (function () {
   let _composePanelSetEditor      = null;
   let _composePanelSyncTrackMode  = null;
   let _composePanelCurrentEditor  = null;
+  let _composePanelLoadOverview   = null;
 
   function openComposePanel(editorEl) {
     if (!_composePanelHost) {
@@ -1084,6 +1092,7 @@ window.ReachWidget = (function () {
       _composePanelHost          = panel.host;
       _composePanelSetEditor     = panel.setEditor;
       _composePanelSyncTrackMode = panel.syncTrackMode;
+      _composePanelLoadOverview  = panel.loadOverviewData;
       document.documentElement.appendChild(_composePanelHost);
     }
 
@@ -1102,6 +1111,15 @@ window.ReachWidget = (function () {
 
   function syncTrackMode() {
     _composePanelSyncTrackMode?.();
+  }
+
+  // Refresh the Overview tab data — called by content.js when background signals
+  // that a scan completed. Only refreshes if the panel is currently visible so
+  // we don't make unnecessary network requests.
+  function refreshOverview() {
+    if (_composePanelHost && _composePanelHost.style.display !== 'none') {
+      _composePanelLoadOverview?.();
+    }
   }
 
   // ─── Public API ──────────────────────────────────────────────────────────────
@@ -1123,6 +1141,7 @@ window.ReachWidget = (function () {
     update: updateWidget,
     openComposePanel,
     syncTrackMode,
+    refreshOverview,
     clearEditorState,
     getComposeContainer,
     getComposeMetadata,
