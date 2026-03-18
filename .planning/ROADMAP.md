@@ -129,7 +129,7 @@ Plans:
 **Goal:** Widget focus tracks the most-recent compose window, the sidebar tracking toggle syncs dynamically to new compose windows, and the non-Gmail sidebar matches the Gmail compose panel's three-tab layout
 **Requirements**: UI-SYNC-01, UI-SYNC-02, UI-SYNC-03
 **Depends on:** Phase 12
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 13-01-PLAN.md — Widget visibility gating (show only on active compose) + lastActiveEditor pre-set + syncTrackMode on attach
