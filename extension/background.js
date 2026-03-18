@@ -2,7 +2,7 @@ import { countKeywordMatches } from './classifier.js';
 import { SERVER_URL, DASH_URL } from './config.js';
 import { getAuthToken } from './auth.js';
 import { serverFetch, fetchOutreach } from './api-client.js';
-import { checkReplies, trackLatestSent } from './reply-checker.js';
+import { checkReplies, trackLatestSent, trackFromPendingScan } from './reply-checker.js';
 import { makeLogger } from './logger-esm.js';
 
 const log = makeLogger('background');
@@ -20,7 +20,28 @@ chrome.storage.onChanged.addListener((changes, area) => {
     if (!pendingScan) return; // delete event fired by remove() below — ignore
     chrome.storage.local.remove('outreachiq_pending_scan');
     log.info('Storage trigger received — running trackLatestSent.');
-    trackLatestSent(false, pendingScan);
+    trackLatestSent(false, pendingScan).then(async (tracked) => {
+      // If Gmail API path failed (OAuth unavailable) AND the content script
+      // provided email metadata, attempt the direct-POST fallback.
+      if (!tracked && (pendingScan?.emailSubject || pendingScan?.emailRecipients)) {
+        log.info('Gmail API path returned false — attempting content-script data fallback.');
+        tracked = await trackFromPendingScan(pendingScan).catch((e) => {
+          log.error('trackFromPendingScan threw:', e.message);
+          return false;
+        });
+      }
+
+      // Notify all content scripts that a scan completed so they can refresh
+      // the panel UI. We use storage (not sendMessage) to avoid the MV3
+      // service-worker cold-start race, and to reach all open Gmail tabs at once.
+      chrome.storage.local.set({ outreachiq_scan_complete: { ts: Date.now(), tracked: !!tracked } }, () => {
+        void chrome.runtime.lastError; // suppress unchecked-error warning
+        // Remove immediately after writing so onChanged fires on every send.
+        chrome.storage.local.remove('outreachiq_scan_complete', () => {
+          void chrome.runtime.lastError;
+        });
+      });
+    });
   }
 });
 

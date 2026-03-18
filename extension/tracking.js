@@ -39,12 +39,29 @@ window.ReachTracking = (function () {
       const btn = e.target.closest('[data-tooltip*="Send"], [aria-label*="Send"]');
       if (!btn) return;
       if (editorEl.dataset.reachTracking) return;
-      const manualMode = _state.editorManualModes.get(editorEl) || 'auto';
+      const manualMode = _state.editorManualModes.get(editorEl) || 'force_track';
       if (manualMode === 'force_skip') return;
       const trackingId = generateTrackingId();
       editorEl.dataset.reachTracking = trackingId;
       injectTrackingPixel(editorEl, trackingId);
       _state.pendingTrackingId = trackingId;
+
+      // Capture email metadata now (compose window still open).
+      // Stored on _state so fireSendToast can include it in the storage payload,
+      // enabling the background to build a record without needing Gmail API auth.
+      try {
+        const meta = window.ReachWidget.getComposeMetadata(editorEl);
+        const bodyText = (editorEl.innerText || editorEl.textContent || '').slice(0, 2000);
+        _state.pendingEmailMeta = {
+          subject: meta.subject || '',
+          recipients: meta.recipients || '',
+          body: bodyText,
+        };
+        log.debug('Captured email metadata at send click:', meta.subject, '|', meta.recipients);
+      } catch (err) {
+        log.debug('Could not capture email metadata at send click:', err?.message);
+        _state.pendingEmailMeta = null;
+      }
     }, true);
   }
 
@@ -96,7 +113,7 @@ window.ReachTracking = (function () {
     clearTimeout(toastCooldown);
     toastCooldown = setTimeout(() => { toastFired = false; }, 10_000);
 
-    log.info('"Message sent" detected \u2014 triggering scan in 3s.');
+    log.info('"Message sent" detected \u2014 triggering scan in 5s.');
     setTimeout(() => {
       if (!chrome.runtime?.id) {
         log.warn('Extension context invalidated \u2014 cannot trigger scan.');
@@ -104,26 +121,38 @@ window.ReachTracking = (function () {
         return;
       }
 
+      // emailMeta captured at send-click time (compose window was still open then).
+      const capturedMeta = _state.pendingEmailMeta || null;
+      _state.pendingEmailMeta = null;
+
       let pendingScanPayload = {
         ts: Date.now(),
         overrideMode: null,
         subjectHint: '',
         recipientsHint: '',
         trackingId: _state.pendingTrackingId,
+        // Fallback data for servers that can POST without Gmail API auth:
+        emailSubject: capturedMeta?.subject || '',
+        emailRecipients: capturedMeta?.recipients || '',
+        emailBody: capturedMeta?.body || '',
       };
 
       if (_state.lastActiveEditor && document.body.contains(_state.lastActiveEditor)) {
-        const manualMode = _state.editorManualModes.get(_state.lastActiveEditor) || 'auto';
+        const manualMode = _state.editorManualModes.get(_state.lastActiveEditor) || 'force_track';
         const meta = window.ReachWidget.getComposeMetadata(_state.lastActiveEditor);
         pendingScanPayload = {
           ts: Date.now(),
-          overrideMode: manualMode === 'auto' ? null : manualMode,
+          overrideMode: manualMode,
           subjectHint: window.ReachDetector.normalizeHint(meta.subject).slice(0, 120),
           recipientsHint: window.ReachDetector.normalizeHint(meta.recipients).slice(0, 180),
           trackingId: _state.pendingTrackingId,
+          // Prefer live metadata if compose is still open, else use captured snapshot.
+          emailSubject: meta.subject || capturedMeta?.subject || '',
+          emailRecipients: meta.recipients || capturedMeta?.recipients || '',
+          emailBody: capturedMeta?.body || '',
         };
-        _state.editorManualModes.set(_state.lastActiveEditor, 'auto');
-        window.ReachWidget.update(_state.lastActiveEditor, _state.editorAutoScores.get(_state.lastActiveEditor) || 0);
+        _state.editorManualModes.set(_state.lastActiveEditor, _state.savedTrackingDefault || 'force_track');
+        window.ReachWidget.update(_state.lastActiveEditor);
       }
       _state.pendingTrackingId = null;
 
@@ -134,7 +163,7 @@ window.ReachTracking = (function () {
           log.info('Storage trigger written \u2014 background will pick it up.');
         }
       });
-    }, 3000);
+    }, 5000);
   }
 
   // ─── Public API ──────────────────────────────────────────────────────────────

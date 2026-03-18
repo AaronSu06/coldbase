@@ -31,8 +31,9 @@
   const liveEditors        = new Set();
 
   let lastActiveEditor    = null;
-  let savedTrackingDefault = 'auto';
+  let savedTrackingDefault = 'force_track';
   let pendingTrackingId   = null;
+  let pendingEmailMeta    = null; // { subject, recipients, body } captured at send-click
 
   // State object passed to each module init so they can read/write shared state
   // without owning it. Getter/setter ensures modules always see the current value
@@ -50,6 +51,8 @@
     set savedTrackingDefault(v){ savedTrackingDefault = v; },
     get pendingTrackingId()    { return pendingTrackingId; },
     set pendingTrackingId(v)   { pendingTrackingId = v; },
+    get pendingEmailMeta()     { return pendingEmailMeta; },
+    set pendingEmailMeta(v)    { pendingEmailMeta = v; },
   };
 
   // ─── Centralised cleanup ───────────────────────────────────────────────────────
@@ -72,17 +75,22 @@
         if (r.trackingDefault) {
           savedTrackingDefault = r.trackingDefault;
           for (const el of liveEditors) {
-            if ((editorManualModes.get(el) || 'auto') === 'auto') {
-              editorManualModes.set(el, savedTrackingDefault);
-              window.ReachWidget.update(el);
-            }
+            editorManualModes.set(el, savedTrackingDefault);
+            window.ReachWidget.update(el);
           }
         }
       });
       chrome.storage.onChanged.addListener((changes, area) => {
-        if (area !== 'local' || !('trackingDefault' in changes)) return;
-        savedTrackingDefault = changes.trackingDefault.newValue || 'auto';
-        window.ReachWidget.syncTrackMode();
+        if (area !== 'local') return;
+        if ('trackingDefault' in changes) {
+          savedTrackingDefault = changes.trackingDefault.newValue || 'force_track';
+          window.ReachWidget.syncTrackMode();
+        }
+        // Background notifies us when a scan completes — refresh the panel overview
+        // so newly tracked emails appear without requiring manual interaction.
+        if ('outreachiq_scan_complete' in changes && changes.outreachiq_scan_complete.newValue) {
+          window.ReachWidget.refreshOverview();
+        }
       });
     } catch (e) { log.error('initStorageListeners failed:', e); }
   }

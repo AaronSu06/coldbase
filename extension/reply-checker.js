@@ -95,11 +95,11 @@ export function buildConversationPreview(thread) {
 export async function trackLatestSent(interactive = false, pendingScan = null) {
   if (scanInProgress) {
     log.info('Scan already in progress — skipping duplicate trigger.');
-    return;
+    return false;
   }
   scanInProgress = true;
   try {
-    await _trackLatestSent(interactive, pendingScan);
+    return await _trackLatestSent(interactive, pendingScan);
   } finally {
     scanInProgress = false;
   }
@@ -114,7 +114,7 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
     log.info('Auth token acquired.');
   } catch (e) {
     log.error('Could not acquire auth token:', e.message);
-    return;
+    return false;
   }
 
   let messageList;
@@ -128,12 +128,12 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
     log.info(`Fetched sent message list — ${messageList.length} message(s).`);
   } catch (e) {
     log.error('Failed to fetch sent messages:', e.message);
-    return;
+    return false;
   }
 
   if (!messageList.length) {
     log.warn('No sent messages found.');
-    return;
+    return false;
   }
 
   const msgId = messageList[0].id;
@@ -148,7 +148,7 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
     );
   } catch (e) {
     log.error('Could not fetch full message:', e.message);
-    return;
+    return false;
   }
 
   const subject = extractHeader(fullMsg, 'Subject');
@@ -188,7 +188,7 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
   if (!isColdEmail) {
     log.info('Not classified as cold outreach — skipping.');
     log.info('Tip: if this was a cold email, check that your email contains job-related keywords.');
-    return;
+    return false;
   }
 
   const domain = contactEmail.split('@')[1] || '';
@@ -224,9 +224,11 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
 
     if (res.status === 409) {
       log.info('threadId already tracked (409) — no-op.');
+      return false;
     } else if (!res.ok) {
       const errBody = await res.text();
       log.error(`Server error on POST: ${res.status} — ${errBody}`);
+      return false;
     } else {
       const saved = await res.json();
       log.info(`Tracked! id=${saved.id} company="${company}" subject="${subject}"`);
@@ -237,9 +239,120 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
           log.warn('Could not register tracking pixel:', e.message);
         }
       }
+      return true;
     }
   } catch (e) {
     log.error('Could not reach server (is it running on :3001?):', e.message);
+    return false;
+  }
+}
+
+// ─── Fallback: track from content-script-provided data (no OAuth needed) ─────
+
+/**
+ * Build and POST an outreach record entirely from data captured by the content
+ * script at send time. Used when chrome.identity.getAuthToken is unavailable
+ * (e.g. unpacked dev extension with misconfigured OAuth client ID).
+ *
+ * Limitations vs. full Gmail API path:
+ * - threadId is a synthetic UUID (no Gmail thread link, reply detection won't work)
+ * - gmailUrl points to the SENT label view rather than the specific thread
+ * - Duplicate detection per-send is UUID-based (no 409 on re-scan of same thread)
+ *
+ * @param {object} pendingScan — payload from outreachiq_pending_scan storage key
+ * @returns {Promise<boolean>} true if a new record was saved, false otherwise
+ */
+export async function trackFromPendingScan(pendingScan) {
+  const subject    = pendingScan?.emailSubject    || '';
+  const recipients = pendingScan?.emailRecipients || '';
+  const body       = pendingScan?.emailBody       || '';
+
+  if (!subject && !recipients) {
+    log.warn('trackFromPendingScan: no email data in pendingScan — cannot build record.');
+    return false;
+  }
+
+  log.info('trackFromPendingScan() — building record from content-script data (OAuth unavailable).');
+  log.info(`Subject: "${subject}" | Recipients: "${recipients}"`);
+
+  // Classification: same rules as the Gmail API path
+  let isColdEmail = isColdOutreach(subject + ' ' + body);
+  if (pendingScan?.overrideMode === 'force_track') isColdEmail = true;
+  if (pendingScan?.overrideMode === 'force_skip')  isColdEmail = false;
+
+  log.info(`Classification → isCold=${isColdEmail} | override=${pendingScan?.overrideMode ?? 'none'}`);
+
+  if (!isColdEmail) {
+    log.info('trackFromPendingScan: not classified as cold outreach — skipping.');
+    return false;
+  }
+
+  // Parse first recipient as the contact
+  const firstRecipient = recipients.split(',')[0].trim();
+  const contactEmail   = extractEmailAddress(firstRecipient) || firstRecipient;
+  const domain         = contactEmail.split('@')[1] || '';
+
+  if (!contactEmail || !domain) {
+    log.warn('trackFromPendingScan: could not parse a valid recipient email — skipping.');
+    return false;
+  }
+
+  const company =
+    extractCompanyFromText(subject, body)
+    || (!isGenericDomain(contactEmail) ? await fetchClearbitCompany(domain).catch(() => null) : null)
+    || (!isGenericDomain(contactEmail) ? extractCompanyFromEmail(contactEmail) : null)
+    || 'Unknown';
+
+  const contactName = extractFirstName(firstRecipient);
+  const sentDate    = new Date().toISOString();
+
+  // Synthetic threadId: unique per send so it never collides with a real Gmail threadId.
+  // Format: reach_ prefix makes it identifiable as synthetic; UUID ensures uniqueness.
+  const syntheticThreadId = 'reach_' + (pendingScan?.trackingId || crypto.randomUUID());
+
+  const record = {
+    threadId:      syntheticThreadId,
+    gmailUrl:      'https://mail.google.com/mail/u/0/#sent',
+    company,
+    contactName,
+    contactEmail,
+    domain,
+    subject,
+    sentDate,
+    status:        'Sent',
+    snippet:       body.slice(0, 500),
+    messageCount:  1,
+    hasReply:      false,
+    latestActivity: sentDate,
+  };
+
+  log.info(`POSTing record (fallback) — company="${company}" threadId="${syntheticThreadId}"`);
+
+  try {
+    const res = await postOutreach(record);
+
+    if (res.status === 409) {
+      log.info('threadId already tracked (409) — no-op.');
+      return false;
+    } else if (!res.ok) {
+      const errBody = await res.text();
+      log.error(`Server error on POST: ${res.status} — ${errBody}`);
+      return false;
+    } else {
+      const saved = await res.json();
+      log.info(`Tracked via fallback! id=${saved.id} company="${company}" subject="${subject}"`);
+      if (pendingScan?.trackingId) {
+        try {
+          await postTrackingPixel({ trackingId: pendingScan.trackingId, threadId: syntheticThreadId });
+        } catch (e) {
+          log.warn('Could not register tracking pixel:', e.message);
+        }
+      }
+      return true;
+    }
+  } catch (e) {
+    log.error('trackFromPendingScan: could not reach server:', e.message);
+    return false;
   }
 }
 

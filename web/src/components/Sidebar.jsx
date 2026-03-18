@@ -72,6 +72,10 @@ function parseThread(record) {
   }
   if (raw.includes('\n\n')) {
     const hasMarkers = raw.includes('[OUT]') || raw.includes('[IN]');
+    if (!hasMarkers) {
+      // Single email body — paragraph breaks are not message boundaries
+      return [{ from: '', text: raw, fromMe: true }];
+    }
     const parts = raw.split('\n\n').map((part, idx) => {
       const fromMe = part.startsWith('[OUT] ');
       const fromContact = part.startsWith('[IN] ');

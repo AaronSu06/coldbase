@@ -95,8 +95,10 @@ export function isColdOutreach(body) {
 
 export function extractCompanyFromEmail(emailAddress) {
   // rachel@rocketbrew.com → "Rocketbrew"
+  // john@mail.stripe.com → "Stripe" (use part before TLD, not first subdomain)
   const domain = emailAddress.split('@')[1] || '';
-  const name = domain.split('.')[0];
+  const parts = domain.split('.');
+  const name = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
@@ -137,10 +139,6 @@ export function extractCompanyFromText(subject, body) {
   const onBehalfMatch = matchCompany(body, new RegExp(`\\bon behalf of\\s+(${COMPANY_PATTERN.source})`));
   if (onBehalfMatch) return onBehalfMatch;
 
-  // "with [Company]" in body
-  const withMatch = matchCompany(body, new RegExp(`\\bwith\\s+(${COMPANY_PATTERN.source})`));
-  if (withMatch) return withMatch;
-
   // "Company -" subject prefix (company name before dash)
   const subjectPrefixMatch = subject.match(new RegExp(`^(${COMPANY_PATTERN.source})\\s*[-–]`));
   if (subjectPrefixMatch) {
@@ -148,9 +146,12 @@ export function extractCompanyFromText(subject, body) {
     if (!SKIP_WORDS.has(name.split(' ')[0])) return name;
   }
 
-  // "- Company" in subject (e.g. "Internship - Google Summer 2026")
-  const subjectSuffixMatch = subject.match(/[-–]\s*([A-Z][A-Za-z0-9.]+)/);
-  if (subjectSuffixMatch && !SKIP_WORDS.has(subjectSuffixMatch[1])) return subjectSuffixMatch[1];
+  // "- Company" in subject (e.g. "Internship - Jane Street Capital")
+  const subjectSuffixMatch = subject.match(new RegExp(`[-–]\\s*(${COMPANY_PATTERN.source})`));
+  if (subjectSuffixMatch) {
+    const name = subjectSuffixMatch[1];
+    if (!SKIP_WORDS.has(name.split(' ')[0])) return name;
+  }
 
   return null;
 }
