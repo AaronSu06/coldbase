@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Production Foundation
 status: planning
-stopped_at: "Checkpoint: 12-01 Tasks 1+2 complete, awaiting human-verify"
-last_updated: "2026-03-18T04:44:06.533Z"
+stopped_at: Completed 12-extension-panel-restore 12-01-PLAN.md
+last_updated: "2026-03-18T04:58:48.344Z"
 last_activity: 2026-03-17 — v1.1 roadmap created
 progress:
   total_phases: 5
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 | Phase 10-sentry-server-integration P02 | 1min | 3 tasks | 3 files |
 | Phase 11-extension-cleanup P01 | 2min | 2 tasks | 3 files |
 | Phase 12-extension-panel-restore P01 | 1min | 2 tasks | 2 files |
+| Phase 12-extension-panel-restore P01 | multi-session | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,7 @@ Recent decisions affecting current work:
 - [Phase 11-extension-cleanup]: Export buildConversationPreview as named export to enable direct unit testing
 - [Phase 12-extension-panel-restore]: tab.url.startsWith check in background.js onClicked — simple URL prefix is reliable for Gmail tab detection
 - [Phase 12-extension-panel-restore]: msgType variable declared once at function scope, reused in both initial sendMessage and executeScript retry callback
+- [Phase 12-extension-panel-restore]: extension/config.js is gitignored and must be manually synced — REACH_SECRET in config.js must match server .env REACH_SECRET
 
 ### Pending Todos
 
@@ -107,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T04:44:06.531Z
-Stopped at: Checkpoint: 12-01 Tasks 1+2 complete, awaiting human-verify
+Last session: 2026-03-18T04:58:48.341Z
+Stopped at: Completed 12-extension-panel-restore 12-01-PLAN.md
 Resume file: None
