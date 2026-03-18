@@ -72,7 +72,7 @@ function stripQuotedText(text) {
   return text.replace(/\s+On\s+.+wrote:.*/s, '').trim();
 }
 
-function buildConversationPreview(thread) {
+export function buildConversationPreview(thread) {
   const messages = thread?.messages || [];
   if (messages.length === 0) return '';
 
@@ -82,7 +82,7 @@ function buildConversationPreview(thread) {
       const from = shortFrom(extractHeader(msg, 'From'));
       // SENT label = sent by the authenticated user; anything else = inbound
       const direction = (msg.labelIds || []).includes('SENT') ? '[OUT]' : '[IN]';
-      const raw = (msg.snippet || extractBody(msg) || '').replace(/\s+/g, ' ').trim();
+      const raw = (extractBody(msg) || msg.snippet || '').replace(/\s+/g, ' ').trim();
       const text = stripQuotedText(raw).slice(0, 300);
       return text ? `${direction} ${from}: ${text}` : '';
     })
@@ -280,7 +280,7 @@ export async function checkReplies(token) {
           : new Date().toISOString();
         const latestIsFromMe = (latestMsg?.labelIds || []).includes('SENT');
         const conversationPreview = buildConversationPreview(thread);
-        log.debug(`Conversation preview (${thread.messages?.length} msgs): ${JSON.stringify(conversationPreview?.slice(0, 120))}`);
+        log.debug(`Conversation preview (${thread.messages?.length} msgs): ${JSON.stringify(conversationPreview?.slice(0, 300))}`);
         const patch = {
           messageCount: msgCount,
           latestActivity: repliedAt,
