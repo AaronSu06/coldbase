@@ -87,10 +87,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. The `useOutreach` hook does not register or fire a 5-minute polling interval
   2. Conversation preview text in the extension sidebar is not hard-capped at 120 characters
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 11-01: TBD
+- [ ] 11-01-PLAN.md — Remove polling interval from useOutreach; fix buildConversationPreview body priority + export + tests
 
 ## Progress
 
@@ -106,4 +106,4 @@ Plans:
 | 8. PostgreSQL Migration + Schema Cleanup | 3/3 | Complete   | 2026-03-17 | - |
 | 9. Observability | 3/3 | Complete   | 2026-03-18 | - |
 | 10. Sentry Server Integration | 2/2 | Complete    | 2026-03-18 | - |
-| 11. Extension Cleanup | v1.1 | 0/? | Not started | - |
+| 11. Extension Cleanup | v1.1 | 0/1 | Not started | - |
