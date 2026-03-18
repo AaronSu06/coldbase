@@ -29,12 +29,6 @@ export function useOutreach() {
 
   useEffect(() => {
     load();
-
-    const poll = setInterval(load, 5 * 60_000); // safety-net only
-
-    return () => {
-      clearInterval(poll);
-    };
   }, [load]);
 
   const persistPatch = useCallback((threadId, patch, context) => {
