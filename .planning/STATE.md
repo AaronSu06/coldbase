@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Production Foundation
 status: planning
-stopped_at: Completed 09-01-PLAN.md
-last_updated: "2026-03-18T00:05:17.677Z"
+stopped_at: Completed 09-02-PLAN.md
+last_updated: "2026-03-18T00:08:51.971Z"
 last_activity: 2026-03-17 — v1.1 roadmap created
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 | Phase 08 P02 | 49s | 2 tasks | 4 files |
 | Phase 08-postgresql-migration-schema-cleanup P03 | multi-session | 3 tasks | 2 files |
 | Phase 09-observability P01 | 4min | 1 tasks | 1 files |
+| Phase 09-observability P02 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,9 @@ Recent decisions affecting current work:
 - [Phase 08-postgresql-migration-schema-cleanup]: execSync prisma migrate deploy with process.exit(1) on failure — server never starts against unmigrated DB
 - [Phase 09-observability]: Test helper omits x-reach-secret by default in observability.test.js — opposite of outreach.test.js — because /health is public
 - [Phase 09-observability]: No prisma migrate reset in observability test before() — health check is read-only SELECT 1
+- [Phase 09-observability]: req.path not req.url in requestLogger — logs path only, no query string duplication in path field
+- [Phase 09-observability]: GET /health placed before app.use('/api', requireSecret) — public endpoint, no auth required
+- [Phase 09-observability]: version read via readFileSync at module load time in app.js — avoids repeated filesystem I/O in handler
 
 ### Pending Todos
 
@@ -87,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T00:05:17.675Z
-Stopped at: Completed 09-01-PLAN.md
+Last session: 2026-03-18T00:08:51.968Z
+Stopped at: Completed 09-02-PLAN.md
 Resume file: None
