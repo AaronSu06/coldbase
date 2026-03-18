@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Production Foundation
 status: planning
-stopped_at: Phase 11 context gathered
-last_updated: "2026-03-18T02:45:04.266Z"
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-18T03:05:51.025Z"
 last_activity: 2026-03-17 — v1.1 roadmap created
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  completed_phases: 4
+  total_plans: 9
+  completed_plans: 9
   percent: 0
 ---
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 | Phase 09-observability P03 | multi-session | 2 tasks | 2 files |
 | Phase 10-sentry-server-integration P01 | 3min | 1 tasks | 4 files |
 | Phase 10-sentry-server-integration P02 | 1min | 3 tasks | 3 files |
+| Phase 11-extension-cleanup P01 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,9 @@ Recent decisions affecting current work:
 - [Phase 10-sentry-server-integration]: SENTRY_DSN absent from .env.test — module-load side-effect is a no-op during tests, no Sentry network traffic
 - [Phase 10-sentry-server-integration]: import './instrument.js' as first line of index.js guarantees Sentry captures Prisma startup errors
 - [Phase 10-sentry-server-integration]: Sentry.setupExpressErrorHandler(app) placed before global error handler so Sentry captures raw errors before local formatting
+- [Phase 11-extension-cleanup]: Remove setInterval polling from useOutreach — load() fires once on mount, manual refresh via refresh:load returned value
+- [Phase 11-extension-cleanup]: extractBody(msg) || msg.snippet priority ensures full decoded email body wins over Gmail 120-char truncated snippet
+- [Phase 11-extension-cleanup]: Export buildConversationPreview as named export to enable direct unit testing
 
 ### Pending Todos
 
@@ -100,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T02:45:04.264Z
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-extension-cleanup/11-CONTEXT.md
+Last session: 2026-03-18T03:05:45.529Z
+Stopped at: Completed 11-01-PLAN.md
+Resume file: None

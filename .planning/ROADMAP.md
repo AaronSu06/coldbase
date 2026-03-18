@@ -29,7 +29,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 8: PostgreSQL Migration + Schema Cleanup** - Migrate Prisma from SQLite to PostgreSQL and drop unused columns (completed 2026-03-17)
 - [x] **Phase 9: Observability** - Add request/response logging middleware and a public health endpoint (completed 2026-03-18)
 - [x] **Phase 10: Sentry Server Integration** - Wire Sentry to Express for unhandled exception capture (completed 2026-03-18)
-- [ ] **Phase 11: Extension Cleanup** - Remove dead polling interval and fix preview truncation
+- [x] **Phase 11: Extension Cleanup** - Remove dead polling interval and fix preview truncation (completed 2026-03-18)
 
 ## Phase Details
 
@@ -106,4 +106,4 @@ Plans:
 | 8. PostgreSQL Migration + Schema Cleanup | 3/3 | Complete   | 2026-03-17 | - |
 | 9. Observability | 3/3 | Complete   | 2026-03-18 | - |
 | 10. Sentry Server Integration | 2/2 | Complete    | 2026-03-18 | - |
-| 11. Extension Cleanup | v1.1 | 0/1 | Not started | - |
+| 11. Extension Cleanup | 1/1 | Complete   | 2026-03-18 | - |

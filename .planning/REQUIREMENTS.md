@@ -21,8 +21,8 @@
 
 ### Extension Cleanup
 
-- [ ] **EXT-01**: Unused 5-minute polling interval removed from `useOutreach` hook
-- [ ] **EXT-02**: Hardcoded 120-char conversation preview truncation replaced with configurable/appropriate limit
+- [x] **EXT-01**: Unused 5-minute polling interval removed from `useOutreach` hook
+- [x] **EXT-02**: Hardcoded 120-char conversation preview truncation replaced with configurable/appropriate limit
 
 ## v1.2 Requirements
 
@@ -54,8 +54,8 @@
 | OBS-01 | Phase 9 | Complete |
 | OBS-02 | Phase 9 | Complete |
 | MON-01 | Phase 10 | Complete |
-| EXT-01 | Phase 11 | Pending |
-| EXT-02 | Phase 11 | Pending |
+| EXT-01 | Phase 11 | Complete |
+| EXT-02 | Phase 11 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 7 total
