@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import * as Sentry from '@sentry/node';
 import cors from 'cors';
 import { rateLimit } from 'express-rate-limit';
 import { readFileSync } from 'node:fs';
@@ -90,6 +91,9 @@ app.post('/api/find-email',      expensiveRateLimit, emailRoutes);
 app.post('/api/suggest-domains', expensiveRateLimit, emailRoutes);
 app.post('/api/draft-email',     expensiveRateLimit, emailRoutes);
 app.use('/api/insights',   analyticsRoutes);
+
+// ─── Sentry error handler — captures before formatting ────────────────────────
+Sentry.setupExpressErrorHandler(app);
 
 // ─── Global error handler — MUST be last app.use() call ───────────────────────
 
