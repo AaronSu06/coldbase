@@ -45,21 +45,18 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
 chrome.action.onClicked.addListener((tab) => {
   if (!tab.id) return;
-  const isGmail = tab.url && tab.url.startsWith('https://mail.google.com/');
-  const msgType = isGmail ? 'OPEN_PANEL' : 'TOGGLE_SIDEBAR';
-  chrome.tabs.sendMessage(tab.id, { type: msgType }, () => {
+  chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => {
     const err = chrome.runtime.lastError;
-    // "port closed" = message was received (sidebar toggled) — do nothing
-    // "Could not establish connection" = no content script — inject and retry
+    // "Could not establish connection" = no content script yet — inject and retry
     if (!err?.message?.includes('Could not establish connection')) return;
     chrome.scripting.executeScript(
       {
         target: { tabId: tab.id },
-        files: ['logger.js', 'email-detector.js', 'compose-widget.js', 'tracking.js', 'content.js', 'sidebar.js'],
+        files: ['logger.js', 'email-detector.js', 'compose-widget.js', 'tracking.js', 'content.js'],
       },
       () => {
         if (chrome.runtime.lastError) return; // restricted page (chrome://, etc.)
-        chrome.tabs.sendMessage(tab.id, { type: msgType }, () => {
+        chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => {
           void chrome.runtime.lastError;
         });
       }
