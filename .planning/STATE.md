@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Production Foundation
 status: planning
-stopped_at: Phase 9 context gathered
-last_updated: "2026-03-17T23:45:47.854Z"
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-03-18T00:05:17.677Z"
 last_activity: 2026-03-17 — v1.1 roadmap created
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 5
+  completed_plans: 4
   percent: 0
 ---
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 | Phase 08-postgresql-migration-schema-cleanup P01 | 1min | 2 tasks | 2 files |
 | Phase 08 P02 | 49s | 2 tasks | 4 files |
 | Phase 08-postgresql-migration-schema-cleanup P03 | multi-session | 3 tasks | 2 files |
+| Phase 09-observability P01 | 4min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Recent decisions affecting current work:
 - [Phase 08-postgresql-migration-schema-cleanup]: Delete all SQLite migrations and generate fresh PostgreSQL baseline — cleaner than converting migration history
 - [Phase 08-postgresql-migration-schema-cleanup]: Dynamic import('./app.js') required in index.js — static ESM imports are hoisted before execSync migrate deploy runs
 - [Phase 08-postgresql-migration-schema-cleanup]: execSync prisma migrate deploy with process.exit(1) on failure — server never starts against unmigrated DB
+- [Phase 09-observability]: Test helper omits x-reach-secret by default in observability.test.js — opposite of outreach.test.js — because /health is public
+- [Phase 09-observability]: No prisma migrate reset in observability test before() — health check is read-only SELECT 1
 
 ### Pending Todos
 
@@ -84,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T23:45:47.839Z
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-observability/09-CONTEXT.md
+Last session: 2026-03-18T00:05:17.675Z
+Stopped at: Completed 09-01-PLAN.md
+Resume file: None

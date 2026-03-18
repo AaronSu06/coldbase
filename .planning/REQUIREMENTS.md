@@ -12,8 +12,8 @@
 
 ### Observability
 
-- [ ] **OBS-01**: Request/response logging middleware emits structured JSON (method, path, status, duration) on every request; `x-reach-secret` header is redacted from logs
-- [ ] **OBS-02**: `GET /health` returns DB liveness status, uptime, version, and DB latency; mounted before `requireSecret` so no auth header is required
+- [x] **OBS-01**: Request/response logging middleware emits structured JSON (method, path, status, duration) on every request; `x-reach-secret` header is redacted from logs
+- [x] **OBS-02**: `GET /health` returns DB liveness status, uptime, version, and DB latency; mounted before `requireSecret` so no auth header is required
 
 ### Error Monitoring
 
@@ -51,8 +51,8 @@
 |-------------|-------|--------|
 | DB-01 | Phase 8 | Complete |
 | DATA-01 | Phase 8 | Complete |
-| OBS-01 | Phase 9 | Pending |
-| OBS-02 | Phase 9 | Pending |
+| OBS-01 | Phase 9 | Complete |
+| OBS-02 | Phase 9 | Complete |
 | MON-01 | Phase 10 | Pending |
 | EXT-01 | Phase 11 | Pending |
 | EXT-02 | Phase 11 | Pending |
