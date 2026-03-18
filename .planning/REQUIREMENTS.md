@@ -17,7 +17,7 @@
 
 ### Error Monitoring
 
-- [ ] **MON-01**: `@sentry/node` wired to Express via `instrument.js` as first server import; captures unhandled exceptions and promise rejections with `environment` and `release` tags; `beforeSend` strips PII from request data
+- [x] **MON-01**: `@sentry/node` wired to Express via `instrument.js` as first server import; captures unhandled exceptions and promise rejections with `environment` and `release` tags; `beforeSend` strips PII from request data
 
 ### Extension Cleanup
 
@@ -53,7 +53,7 @@
 | DATA-01 | Phase 8 | Complete |
 | OBS-01 | Phase 9 | Complete |
 | OBS-02 | Phase 9 | Complete |
-| MON-01 | Phase 10 | Pending |
+| MON-01 | Phase 10 | Complete |
 | EXT-01 | Phase 11 | Pending |
 | EXT-02 | Phase 11 | Pending |
 

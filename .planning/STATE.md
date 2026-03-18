@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Production Foundation
 status: planning
-stopped_at: Phase 10 context gathered
-last_updated: "2026-03-18T01:46:49.024Z"
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-03-18T02:14:36.875Z"
 last_activity: 2026-03-17 — v1.1 roadmap created
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 8
+  completed_plans: 7
   percent: 0
 ---
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 | Phase 09-observability P01 | 4min | 1 tasks | 1 files |
 | Phase 09-observability P02 | 5min | 2 tasks | 2 files |
 | Phase 09-observability P03 | multi-session | 2 tasks | 2 files |
+| Phase 10-sentry-server-integration P01 | 3min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,9 @@ Recent decisions affecting current work:
 - [Phase 09-observability]: GET /health placed before app.use('/api', requireSecret) — public endpoint, no auth required
 - [Phase 09-observability]: version read via readFileSync at module load time in app.js — avoids repeated filesystem I/O in handler
 - [Phase 09-observability]: npm test script uses --env-file=.env.test so TEST_DATABASE_URL is available to Prisma without dotenv import in test files
+- [Phase 10-sentry-server-integration]: Export beforeSend and initSentry as named functions for direct unit-test access, avoiding --experimental-test-module-mocks
+- [Phase 10-sentry-server-integration]: initSentry() called as module side-effect so instrument.js can be first import in index.js for full startup error capture
+- [Phase 10-sentry-server-integration]: SENTRY_DSN absent from .env.test — module-load side-effect is a no-op during tests, no Sentry network traffic
 
 ### Pending Todos
 
@@ -93,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T01:46:49.020Z
-Stopped at: Phase 10 context gathered
-Resume file: .planning/phases/10-sentry-server-integration/10-CONTEXT.md
+Last session: 2026-03-18T02:14:36.873Z
+Stopped at: Completed 10-01-PLAN.md
+Resume file: None
