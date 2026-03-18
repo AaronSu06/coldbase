@@ -105,5 +105,5 @@ Plans:
 | 7. Tracking Pixel + Debug Config | v1.0 | 2/2 | Complete | 2026-03-17 |
 | 8. PostgreSQL Migration + Schema Cleanup | 3/3 | Complete   | 2026-03-17 | - |
 | 9. Observability | 3/3 | Complete   | 2026-03-18 | - |
-| 10. Sentry Server Integration | 2/2 | Complete   | 2026-03-18 | - |
+| 10. Sentry Server Integration | 2/2 | Complete    | 2026-03-18 | - |
 | 11. Extension Cleanup | v1.1 | 0/? | Not started | - |
