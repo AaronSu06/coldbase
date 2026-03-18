@@ -2,17 +2,29 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { rateLimit } from 'express-rate-limit';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
+import requestLogger from './middleware/requestLogger.js';
+import { prisma } from './lib/prisma.js';
 import outreachRoutes  from './routes/outreach.js';
 import trackingRoutes  from './routes/tracking.js';
 import emailRoutes     from './routes/email.js';
 import analyticsRoutes from './routes/analytics.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const { version } = JSON.parse(
+  readFileSync(join(__dirname, 'package.json'), 'utf8')
+);
 
 const app = express();
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : ['http://localhost:5173'];
+
+app.use(requestLogger);
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -39,6 +51,24 @@ function requireSecret(req, res, next) {
   }
   next();
 }
+
+app.get('/health', async (req, res) => {
+  const uptime = process.uptime();
+  try {
+    const t0 = Date.now();
+    await prisma.$queryRaw`SELECT 1`;
+    const dbLatencyMs = Date.now() - t0;
+    res.json({ status: 'ok', uptime, version, dbLatencyMs });
+  } catch (err) {
+    res.status(503).json({
+      status: 'error',
+      uptime,
+      version,
+      dbLatencyMs: null,
+      error: err.message,
+    });
+  }
+});
 
 app.use('/api', requireSecret);
 
