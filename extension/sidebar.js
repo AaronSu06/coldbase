@@ -41,13 +41,13 @@ function buildSidebar() {
 
     .panel {
       position: fixed;
-      right: 0;
-      top: 72px;
+      right: 16px;
+      top: 16px;
       z-index: 2147483647;
-      width: 300px;
+      width: 320px;
       background: #ffffff;
-      border-radius: 12px 0 0 12px;
-      box-shadow: -4px 0 24px rgba(0, 0, 0, 0.13);
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.14);
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 13px;
       color: #0a0a0a;
@@ -450,7 +450,7 @@ function loadStats() {
     if (chrome.runtime.lastError || !response?.ok) {
       if (sentEl)    sentEl.textContent    = '—';
       if (repliedEl) repliedEl.textContent = '—';
-      if (rateEl)    rateEl.textContent    = 'unreachable';
+      if (rateEl)    rateEl.textContent    = '—';
       return;
     }
     if (sentEl)    sentEl.textContent    = response.sent;

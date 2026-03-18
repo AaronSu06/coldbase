@@ -37,6 +37,8 @@ window.ReachDetector = (function () {
 
     el.addEventListener('focus', () => {
       state.lastActiveEditor = el;
+      // Update visibility on all live editors so only the focused one shows (UI-SYNC-01)
+      for (const e of state.liveEditors) window.ReachWidget.update(e);
       window.ReachWidget.syncTrackMode();
     });
 
@@ -91,6 +93,7 @@ window.ReachDetector = (function () {
   const domObserver = new MutationObserver((mutations) => {
     let shouldScanEditors = false;
     let shouldScanToast = false;
+    let shouldUpdateLive = false; // true when a compose dialog may have been removed
 
     for (const mutation of mutations) {
       if (mutation.type === 'characterData') {
@@ -115,11 +118,28 @@ window.ReachDetector = (function () {
           shouldScanEditors = true;
         }
       }
+
+      // Detect removed compose dialogs so widget promotion fires immediately (UI-SYNC-01)
+      for (const node of mutation.removedNodes) {
+        if (node.nodeType !== Node.ELEMENT_NODE) continue;
+        if (
+          node.matches('div[contenteditable="true"]') ||
+          node.querySelector?.('div[contenteditable="true"]')
+        ) {
+          shouldUpdateLive = true;
+        }
+      }
+
       shouldScanToast = true;
     }
 
     if (shouldScanToast) scanForSendToast();
     if (shouldScanEditors && _isEmailClient) scanForEditors(_state);
+    // Update widget visibility for all live editors — cleans up removed editors and
+    // promotes the next active one (UI-SYNC-01 widget promotion)
+    if (shouldUpdateLive && _isEmailClient) {
+      for (const e of _state.liveEditors) window.ReachWidget.update(e);
+    }
   });
 
   // ─── Public API ──────────────────────────────────────────────────────────────
