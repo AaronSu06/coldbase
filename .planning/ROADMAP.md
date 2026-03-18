@@ -102,7 +102,10 @@ Plans:
   2. Overview tab shows live stats and the Auto/On/Off tracking toggle pill
   3. Find Contacts tab submits to the server and displays results with copy button
   4. Draft with AI tab generates a draft via server and offers insert-into-compose
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 12-01-PLAN.md — Fix background.js icon-click routing (Gmail→OPEN_PANEL, other→TOGGLE_SIDEBAR); remove dead settings CSS from popup.html
 
 ## Progress
 
@@ -119,4 +122,4 @@ Plans:
 | 9. Observability | 3/3 | Complete   | 2026-03-18 | - |
 | 10. Sentry Server Integration | 2/2 | Complete    | 2026-03-18 | - |
 | 11. Extension Cleanup | 1/1 | Complete    | 2026-03-18 | - |
-| 12. Extension Panel Restore | v1.1 | 0/TBD | Planned | - |
+| 12. Extension Panel Restore | v1.1 | 0/1 | Planned | - |
