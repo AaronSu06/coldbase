@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Production Foundation
 status: planning
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-03-18T03:08:01.421Z"
+stopped_at: "Checkpoint: 12-01 Tasks 1+2 complete, awaiting human-verify"
+last_updated: "2026-03-18T04:44:06.533Z"
 last_activity: 2026-03-17 — v1.1 roadmap created
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 9
-  completed_plans: 9
+  total_phases: 5
+  completed_phases: 5
+  total_plans: 10
+  completed_plans: 10
   percent: 0
 ---
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0% (v1.1)
 | Phase 10-sentry-server-integration P01 | 3min | 1 tasks | 4 files |
 | Phase 10-sentry-server-integration P02 | 1min | 3 tasks | 3 files |
 | Phase 11-extension-cleanup P01 | 2min | 2 tasks | 3 files |
+| Phase 12-extension-panel-restore P01 | 1min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,8 @@ Recent decisions affecting current work:
 - [Phase 11-extension-cleanup]: Remove setInterval polling from useOutreach — load() fires once on mount, manual refresh via refresh:load returned value
 - [Phase 11-extension-cleanup]: extractBody(msg) || msg.snippet priority ensures full decoded email body wins over Gmail 120-char truncated snippet
 - [Phase 11-extension-cleanup]: Export buildConversationPreview as named export to enable direct unit testing
+- [Phase 12-extension-panel-restore]: tab.url.startsWith check in background.js onClicked — simple URL prefix is reliable for Gmail tab detection
+- [Phase 12-extension-panel-restore]: msgType variable declared once at function scope, reused in both initial sendMessage and executeScript retry callback
 
 ### Pending Todos
 
@@ -104,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T03:05:45.529Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-03-18T04:44:06.531Z
+Stopped at: Checkpoint: 12-01 Tasks 1+2 complete, awaiting human-verify
 Resume file: None

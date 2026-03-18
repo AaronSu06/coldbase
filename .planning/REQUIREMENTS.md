@@ -26,9 +26,9 @@
 
 ### Extension Panel Restore
 
-- [ ] **EXT-V2-01**: Compose panel is mountable from widget click and extension icon click; panel renders with three tabs (Overview, Find Contacts, Draft with AI)
-- [ ] **EXT-V2-02**: Overview tab shows live sent/replied/rate stats and a functional Auto/On/Off tracking toggle pill that persists across tabs
-- [ ] **EXT-V2-03**: Find Contacts tab calls server `/find-email` and displays results; Draft with AI tab calls server `/draft-email` and inserts generated text into compose window
+- [x] **EXT-V2-01**: Compose panel is mountable from widget click and extension icon click; panel renders with three tabs (Overview, Find Contacts, Draft with AI)
+- [x] **EXT-V2-02**: Overview tab shows live sent/replied/rate stats and a functional Auto/On/Off tracking toggle pill that persists across tabs
+- [x] **EXT-V2-03**: Find Contacts tab calls server `/find-email` and displays results; Draft with AI tab calls server `/draft-email` and inserts generated text into compose window
 
 ## v1.2 Requirements
 

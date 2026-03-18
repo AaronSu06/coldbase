@@ -30,7 +30,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 9: Observability** - Add request/response logging middleware and a public health endpoint (completed 2026-03-18)
 - [x] **Phase 10: Sentry Server Integration** - Wire Sentry to Express for unhandled exception capture (completed 2026-03-18)
 - [x] **Phase 11: Extension Cleanup** - Remove dead polling interval and fix preview truncation (completed 2026-03-18)
-- [ ] **Phase 12: Extension Panel Restore** - Reconnect the compose panel and restore all three tabs: overview (stats + tracking toggle), find contacts, and draft with AI
+- [x] **Phase 12: Extension Panel Restore** - Reconnect the compose panel and restore all three tabs: overview (stats + tracking toggle), find contacts, and draft with AI (completed 2026-03-18)
 
 ## Phase Details
 
@@ -122,4 +122,4 @@ Plans:
 | 9. Observability | 3/3 | Complete   | 2026-03-18 | - |
 | 10. Sentry Server Integration | 2/2 | Complete    | 2026-03-18 | - |
 | 11. Extension Cleanup | 1/1 | Complete    | 2026-03-18 | - |
-| 12. Extension Panel Restore | v1.1 | 0/1 | Planned | - |
+| 12. Extension Panel Restore | 1/1 | Complete   | 2026-03-18 | - |
