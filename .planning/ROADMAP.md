@@ -74,10 +74,11 @@ Plans:
   2. Sentry events include `environment` and `release` tags
   3. Request body data (which may contain email addresses) is stripped from Sentry event payloads
   4. Sentry is initialized before any application code runs — errors during Prisma startup are captured
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 10-01: TBD
+- [ ] 10-01-PLAN.md — Create instrument.js with exported initSentry/beforeSend functions; write sentry.test.js (TDD)
+- [ ] 10-02-PLAN.md — Wire instrument.js into index.js (first import) and app.js (setupExpressErrorHandler); update .env.example
 
 ### Phase 11: Extension Cleanup
 **Goal**: The extension no longer runs a dead polling interval and conversation previews display at an appropriate length
@@ -104,5 +105,5 @@ Plans:
 | 7. Tracking Pixel + Debug Config | v1.0 | 2/2 | Complete | 2026-03-17 |
 | 8. PostgreSQL Migration + Schema Cleanup | 3/3 | Complete   | 2026-03-17 | - |
 | 9. Observability | 3/3 | Complete   | 2026-03-18 | - |
-| 10. Sentry Server Integration | v1.1 | 0/? | Not started | - |
+| 10. Sentry Server Integration | v1.1 | 0/2 | Not started | - |
 | 11. Extension Cleanup | v1.1 | 0/? | Not started | - |
