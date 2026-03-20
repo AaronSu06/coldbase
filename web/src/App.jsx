@@ -198,12 +198,12 @@ export default function App() {
       {/* ── Top Nav ─────────────────────────────────────────────────── */}
       <TopNav activeSection={activeSection} onSectionChange={setActiveSection} />
 
-      {/* ── Unified tracker bar (tabs + filters + actions + stats) ── */}
+      {/* ── Row A: navigation + stats ───────────────────────────── */}
       {activeSection === 'tracker' && (
-        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-center gap-2 sm:gap-3 h-11 flex-shrink-0">
+        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-stretch h-10 flex-shrink-0">
 
           {/* Active / Archived tabs */}
-          <div className="flex items-stretch h-full" role="tablist" aria-label="Tracker navigation">
+          <div className="flex items-stretch" role="tablist" aria-label="Tracker navigation">
             {['Active', 'Archived'].map(tab => (
               <button
                 key={tab}
@@ -221,7 +221,21 @@ export default function App() {
             ))}
           </div>
 
-          <div className="w-px h-5 bg-chrome-border flex-shrink-0 hidden sm:block" aria-hidden="true" />
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Stats — desktop only */}
+          <div className="hidden sm:flex items-center gap-5" aria-label="Summary statistics">
+            <StatInline value={statSent}    label="sent" />
+            <StatInline value={statReplied} label="replied" />
+            <StatInline value={replyRate}   label="reply rate" />
+          </div>
+        </div>
+      )}
+
+      {/* ── Row B: filters + actions ─────────────────────────────── */}
+      {activeSection === 'tracker' && (
+        <div className="bg-chrome-surface border-b border-chrome-border px-4 sm:px-8 flex items-center gap-2 sm:gap-3 h-9 flex-shrink-0">
 
           {/* Search + date range */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -244,7 +258,7 @@ export default function App() {
               onClick={() => setShowFavoritesOnly(prev => !prev)}
               aria-label={showFavoritesOnly ? 'Show all contacts' : 'Show favorites only'}
               aria-pressed={showFavoritesOnly}
-              className={`flex items-center gap-1.5 text-[13px] px-2.5 py-1.5 rounded-md transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 ${
+              className={`flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-md transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 ${
                 showFavoritesOnly
                   ? 'text-rose-500 bg-rose-500/10'
                   : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
@@ -259,7 +273,7 @@ export default function App() {
               type="button"
               onClick={handleArchiveAll}
               aria-label="Archive all visible contacts"
-              className="hidden sm:flex items-center gap-1.5 text-[13px] px-2.5 py-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+              className="hidden sm:flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
               <Archive size={14} strokeWidth={2} aria-hidden="true" />
               Archive all
@@ -270,7 +284,7 @@ export default function App() {
               type="button"
               onClick={exportCSV}
               aria-label="Export current view as CSV"
-              className="hidden sm:flex items-center gap-1.5 text-[13px] px-2.5 py-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+              className="hidden sm:flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
               <Download size={14} strokeWidth={2} aria-hidden="true" />
               Export CSV
@@ -286,7 +300,7 @@ export default function App() {
                   aria-expanded={showColumnPicker}
                   aria-haspopup="listbox"
                   aria-label="Toggle column visibility"
-                  className="text-[13px] px-2.5 py-1.5 rounded-md border border-chrome-border text-chrome-muted hover:bg-black/5 font-medium whitespace-nowrap transition-colors"
+                  className="text-[13px] px-2.5 py-1 rounded-md border border-chrome-border text-chrome-muted hover:bg-black/5 font-medium whitespace-nowrap transition-colors"
                 >
                   Columns ({visibleColumns.length})
                 </button>
@@ -295,7 +309,7 @@ export default function App() {
                     role="listbox"
                     aria-multiselectable="true"
                     aria-label="Visible columns"
-                    className="absolute right-0 top-9 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1.5 min-w-max"
+                    className="absolute right-0 top-8 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1.5 min-w-max"
                   >
                     {COLUMNS.map(col => (
                       <label
@@ -327,7 +341,7 @@ export default function App() {
                 onClick={() => setViewMode('columns')}
                 aria-label="Kanban view"
                 aria-pressed={viewMode === 'columns'}
-                className={`px-2.5 py-1.5 transition-colors ${
+                className={`px-2.5 py-1 transition-colors ${
                   viewMode === 'columns' ? 'bg-black/[0.07] text-chrome-text' : 'text-chrome-muted hover:bg-black/5'
                 }`}
               >
@@ -337,7 +351,7 @@ export default function App() {
                 onClick={() => setViewMode('list')}
                 aria-label="List view"
                 aria-pressed={viewMode === 'list'}
-                className={`px-2.5 py-1.5 border-l border-chrome-border transition-colors ${
+                className={`px-2.5 py-1 border-l border-chrome-border transition-colors ${
                   viewMode === 'list' ? 'bg-black/[0.07] text-chrome-text' : 'text-chrome-muted hover:bg-black/5'
                 }`}
               >
@@ -350,7 +364,7 @@ export default function App() {
               onClick={handleRefresh}
               disabled={isRefreshing}
               aria-label={isRefreshing ? 'Syncing data…' : 'Refresh data'}
-              className="flex items-center gap-1.5 text-[13px] px-2.5 py-1.5 rounded-md text-accent hover:text-accent-hover font-medium transition-colors disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+              className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-md text-accent hover:text-accent-hover font-medium transition-colors disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
               <RefreshCw size={14} strokeWidth={2} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
               <span className="hidden sm:inline">{isRefreshing ? 'Syncing…' : 'Refresh'}</span>
@@ -370,7 +384,7 @@ export default function App() {
               {showMobileMenu && (
                 <div
                   role="menu"
-                  className="absolute right-0 top-9 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1 min-w-[140px]"
+                  className="absolute right-0 top-8 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1 min-w-[140px]"
                 >
                   {['Active', 'Archived'].map(tab => (
                     <button
@@ -389,13 +403,6 @@ export default function App() {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Stats — desktop only, right-anchored */}
-          <div className="hidden sm:flex items-center gap-4 pl-3 border-l border-chrome-border flex-shrink-0" aria-label="Summary statistics">
-            <StatInline value={statSent}    label="sent" />
-            <StatInline value={statReplied} label="replied" />
-            <StatInline value={replyRate}   label="reply rate" />
           </div>
         </div>
       )}
