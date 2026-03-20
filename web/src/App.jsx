@@ -7,7 +7,6 @@ import EmptyState from './components/EmptyState';
 import TopNav from './components/TopNav';
 import HomePage from './components/HomePage';
 import HeartIcon from './components/icons/HeartIcon';
-import { DateRangePicker } from './components/DateRangePicker';
 import { COLUMNS } from '@shared/constants';
 import { STATUS_COLORS, formatShortDate } from './lib/utils';
 
@@ -142,7 +141,6 @@ export default function App() {
   }, [records, query, activeTab, showFavoritesOnly, dateFrom, dateTo]);
 
   const statSent    = useMemo(() => records.filter(r => !r.archived).length, [records]);
-  const activeCount = statSent;
   const statReplied = useMemo(
     () => records.filter(r => !r.archived && ['Replied', 'Interviewing', 'Offer'].includes(r.status)).length,
     [records]
@@ -345,10 +343,21 @@ export default function App() {
             <div className="flex-1 sm:flex-none">
               <SearchBar query={query} onSearch={setQuery} />
             </div>
-            <DateRangePicker
-              dateFrom={dateFrom}
-              dateTo={dateTo}
-              onRangeChange={({ from, to }) => { setDateFrom(from); setDateTo(to); }}
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              aria-label="Filter from date"
+              title="Sent from"
+              className="hidden sm:block font-mono text-[12px] px-3 py-2 border border-chrome-border rounded-md text-chrome-muted bg-chrome-bg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-[130px] [color-scheme:light]"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              aria-label="Filter to date"
+              title="Sent until"
+              className="hidden sm:block font-mono text-[12px] px-3 py-2 border border-chrome-border rounded-md text-chrome-muted bg-chrome-bg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-[130px] [color-scheme:light]"
             />
           </div>
 
