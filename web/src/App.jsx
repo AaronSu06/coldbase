@@ -200,7 +200,7 @@ export default function App() {
 
       {/* ── Row A: navigation + stats ───────────────────────────── */}
       {activeSection === 'tracker' && (
-        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-stretch h-10 flex-shrink-0">
+        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-stretch h-11 flex-shrink-0">
 
           {/* Active / Archived tabs */}
           <div className="flex items-stretch" role="tablist" aria-label="Tracker navigation">
@@ -221,11 +221,8 @@ export default function App() {
             ))}
           </div>
 
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Stats — desktop only */}
-          <div className="hidden sm:flex items-center gap-5" aria-label="Summary statistics">
+          {/* Stats — desktop only, left-anchored after a divider */}
+          <div className="hidden sm:flex items-center gap-5 ml-6 pl-6 border-l border-chrome-border" aria-label="Summary statistics">
             <StatInline value={statSent}    label="sent" />
             <StatInline value={statReplied} label="replied" />
             <StatInline value={replyRate}   label="reply rate" />
@@ -235,7 +232,7 @@ export default function App() {
 
       {/* ── Row B: filters + actions ─────────────────────────────── */}
       {activeSection === 'tracker' && (
-        <div className="bg-chrome-surface border-b border-chrome-border px-4 sm:px-8 flex items-center gap-2 sm:gap-3 h-9 flex-shrink-0">
+        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-center gap-2 sm:gap-3 h-9 flex-shrink-0">
 
           {/* Search + date range */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
