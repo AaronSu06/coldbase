@@ -35,14 +35,14 @@ function NotificationsCard() {
           aria-label={enabled ? 'Disable email digests' : 'Enable email digests'}
           onClick={() => setEnabled(v => !v)}
           className={`
-            relative flex-shrink-0 w-10 h-5.5 rounded-full border transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50
+            relative flex-shrink-0 w-10 h-[22px] rounded-full border transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50
             ${enabled ? 'bg-accent border-accent' : 'bg-chrome-deep border-chrome-border'}
           `}
         >
           <span
             className={`
               absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200
-              ${enabled ? 'translate-x-4.5' : 'translate-x-0'}
+              ${enabled ? 'translate-x-[18px]' : 'translate-x-0'}
             `}
           />
         </button>
@@ -77,9 +77,7 @@ function CompleteProfileCard() {
 function UpgradeCard() {
   return (
     <ActionCard className="border-accent/20 bg-accent/[0.03]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 mb-0.5">
+      <div className="flex items-center gap-2 mb-0.5">
             <p className="font-sans font-semibold text-[14px] text-chrome-text">
               Reach Pro
             </p>
@@ -87,11 +85,9 @@ function UpgradeCard() {
               Coming soon
             </span>
           </div>
-          <p className="text-[12px] text-chrome-muted leading-relaxed">
-            Unlock AI-drafted follow-ups, advanced analytics, and priority support.
-          </p>
-        </div>
-      </div>
+      <p className="text-[12px] text-chrome-muted leading-relaxed mt-0.5">
+        Unlock AI-drafted follow-ups, advanced analytics, and priority support.
+      </p>
     </ActionCard>
   );
 }
@@ -102,7 +98,7 @@ export default function HomePage() {
   return (
     <div className="flex-1 overflow-y-auto">
       {/* Insights section — full-width at top */}
-      <div className="border-b border-chrome-border">
+      <div className="border-b border-chrome-border min-h-[280px]">
         <InsightsPanel />
       </div>
 
