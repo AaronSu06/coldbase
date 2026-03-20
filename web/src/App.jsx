@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { Archive, Download, RefreshCw, Columns3, List, MoreVertical, Heart } from 'lucide-react';
 import { useOutreach } from './hooks/useOutreach';
 import KanbanBoard from './components/KanbanBoard';
 import SearchBar from './components/SearchBar';
@@ -6,70 +7,9 @@ import Sidebar from './components/Sidebar';
 import EmptyState from './components/EmptyState';
 import TopNav from './components/TopNav';
 import HomePage from './components/HomePage';
-import HeartIcon from './components/icons/HeartIcon';
 import { DateRangePicker } from './components/DateRangePicker';
 import { COLUMNS } from '@shared/constants';
 import { STATUS_COLORS, formatShortDate } from './lib/utils';
-
-// ── Toolbar icons ─────────────────────────────────────────────────────────
-
-function ArchiveBoxIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="w-3.5 h-3.5">
-      <path d="M3.5 7.5h17v3h-17z" />
-      <path d="M5.5 10.5v7a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-7" />
-      <path d="M10 13h4" />
-    </svg>
-  );
-}
-
-function KanbanIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
-      <rect x="3" y="3" width="5" height="18" rx="1" />
-      <rect x="10" y="3" width="5" height="18" rx="1" />
-      <rect x="17" y="3" width="4" height="18" rx="1" />
-    </svg>
-  );
-}
-
-function ListIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
-      <line x1="4" y1="6" x2="20" y2="6" />
-      <line x1="4" y1="12" x2="20" y2="12" />
-      <line x1="4" y1="18" x2="20" y2="18" />
-    </svg>
-  );
-}
-
-function RefreshIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-      <path d="M23 4v6h-6" />
-      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-    </svg>
-  );
-}
-
-function DownloadIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="w-3.5 h-3.5">
-      <path d="M12 3v13M7 11l5 5 5-5" />
-      <path d="M3 19h18" />
-    </svg>
-  );
-}
-
-function DotsVerticalIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-      <circle cx="12" cy="5" r="1.5" />
-      <circle cx="12" cy="12" r="1.5" />
-      <circle cx="12" cy="19" r="1.5" />
-    </svg>
-  );
-}
 
 // ── Status dot for list view ───────────────────────────────────────────────
 
@@ -85,18 +25,14 @@ function StatusDot({ status }) {
   );
 }
 
-// ── Stat pill ──────────────────────────────────────────────────────────────
+// ── Compact inline stat ────────────────────────────────────────────────────
 
-function StatPill({ value, label }) {
+function StatInline({ value, label }) {
   return (
-    <div className="flex flex-col items-center">
-      <span className="font-mono text-[18px] font-semibold text-chrome-text leading-none">
-        {value}
-      </span>
-      <span className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.12em] mt-1">
-        {label}
-      </span>
-    </div>
+    <span className="flex items-baseline gap-1">
+      <span className="font-mono text-[13px] font-semibold text-chrome-text leading-none">{value}</span>
+      <span className="font-sans text-[10px] font-medium text-chrome-muted uppercase tracking-[0.1em]">{label}</span>
+    </span>
   );
 }
 
@@ -262,86 +198,34 @@ export default function App() {
       {/* ── Top Nav ─────────────────────────────────────────────────── */}
       <TopNav activeSection={activeSection} onSectionChange={setActiveSection} />
 
-      {/* ── Job tracker sub-nav (Active / Archived + stats) ─────── */}
+      {/* ── Unified tracker bar (tabs + filters + actions + stats) ── */}
       {activeSection === 'tracker' && (
-        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 pt-4 sm:pt-5 flex-shrink-0">
-          <nav className="flex mt-0 items-end justify-between" aria-label="Tracker navigation">
-            {/* Desktop sub-tabs */}
-            <div className="hidden sm:flex gap-6" role="tablist">
-              {['Active', 'Archived'].map(tab => (
-                <button
-                  key={tab}
-                  role="tab"
-                  aria-selected={activeTab === tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-3 text-[13px] font-display font-semibold border-b-2 transition-all duration-150 ${
-                    activeTab === tab
-                      ? 'border-accent text-chrome-text'
-                      : 'border-transparent text-chrome-muted hover:text-chrome-text'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-center gap-2 sm:gap-3 h-11 flex-shrink-0">
 
-            {/* Mobile: current tab indicator + hamburger */}
-            <div className="sm:hidden flex items-center justify-between w-full pb-3">
-              <span className="font-display text-[13px] font-semibold text-chrome-text border-b-2 border-accent pb-3">
-                {activeTab}
-              </span>
-              <div className="relative" ref={mobileMenuRef}>
-                <button
-                  onClick={() => setShowMobileMenu(v => !v)}
-                  aria-label="Switch view"
-                  aria-expanded={showMobileMenu}
-                  aria-haspopup="menu"
-                  className="p-2 rounded-lg text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors"
-                >
-                  <DotsVerticalIcon />
-                </button>
-                {showMobileMenu && (
-                  <div
-                    role="menu"
-                    className="absolute right-0 top-9 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1 min-w-[140px]"
-                  >
-                    {['Active', 'Archived'].map(tab => (
-                      <button
-                        key={tab}
-                        role="menuitem"
-                        onClick={() => { setActiveTab(tab); setShowMobileMenu(false); }}
-                        className={`w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors ${
-                          activeTab === tab
-                            ? 'text-accent font-semibold bg-accent/5'
-                            : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
-                        }`}
-                      >
-                        {tab}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+          {/* Active / Archived tabs */}
+          <div className="flex items-stretch h-full" role="tablist" aria-label="Tracker navigation">
+            {['Active', 'Archived'].map(tab => (
+              <button
+                key={tab}
+                role="tab"
+                aria-selected={activeTab === tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-3 text-[13px] font-display font-semibold border-b-2 transition-all duration-150 ${
+                  activeTab === tab
+                    ? 'border-accent text-chrome-text'
+                    : 'border-transparent text-chrome-muted hover:text-chrome-text'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
 
-            {/* ── Stat strip (desktop only) ── */}
-            <div className="hidden sm:flex items-center pb-3" aria-label="Summary statistics">
-              <StatPill value={statSent}    label="SENT" />
-              <div className="w-px h-8 bg-chrome-border mx-7" />
-              <StatPill value={statReplied} label="REPLIED" />
-              <div className="w-px h-8 bg-chrome-border mx-7" />
-              <StatPill value={replyRate}   label="REPLY RATE" />
-            </div>
-          </nav>
-        </div>
-      )}
+          <div className="w-px h-5 bg-chrome-border flex-shrink-0 hidden sm:block" aria-hidden="true" />
 
-      {/* ── Toolbar ─────────────────────────────────────────────────── */}
-      {activeSection === 'tracker' && (
-        <div className="bg-chrome-surface border-b border-chrome-border px-4 sm:px-8 py-2.5 flex items-center justify-between flex-shrink-0 gap-2 sm:gap-4">
-          {/* Left: filters */}
-          <div className="flex items-center gap-2 flex-1 sm:flex-none">
-            <div className="flex-1 sm:flex-none">
+          {/* Search + date range */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="flex-1 sm:flex-none min-w-0">
               <SearchBar query={query} onSearch={setQuery} />
             </div>
             <div className="hidden sm:block">
@@ -353,20 +237,20 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right: actions */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Actions */}
+          <div className="flex items-center gap-0.5 flex-shrink-0">
             {/* Favorites toggle */}
             <button
               onClick={() => setShowFavoritesOnly(prev => !prev)}
               aria-label={showFavoritesOnly ? 'Show all contacts' : 'Show favorites only'}
               aria-pressed={showFavoritesOnly}
-              className={`flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 ${
+              className={`flex items-center gap-1.5 text-[13px] px-2.5 py-1.5 rounded-md transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 ${
                 showFavoritesOnly
                   ? 'text-rose-500 bg-rose-500/10'
                   : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
               }`}
             >
-              <HeartIcon filled={showFavoritesOnly} />
+              <Heart size={14} strokeWidth={2} fill={showFavoritesOnly ? 'currentColor' : 'none'} aria-hidden="true" />
               <span className="hidden sm:inline">Favorites</span>
             </button>
 
@@ -375,9 +259,9 @@ export default function App() {
               type="button"
               onClick={handleArchiveAll}
               aria-label="Archive all visible contacts"
-              className="hidden sm:flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+              className="hidden sm:flex items-center gap-1.5 text-[13px] px-2.5 py-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
-              <ArchiveBoxIcon />
+              <Archive size={14} strokeWidth={2} aria-hidden="true" />
               Archive all
             </button>
 
@@ -386,9 +270,9 @@ export default function App() {
               type="button"
               onClick={exportCSV}
               aria-label="Export current view as CSV"
-              className="hidden sm:flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+              className="hidden sm:flex items-center gap-1.5 text-[13px] px-2.5 py-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
-              <DownloadIcon />
+              <Download size={14} strokeWidth={2} aria-hidden="true" />
               Export CSV
             </button>
 
@@ -402,7 +286,7 @@ export default function App() {
                   aria-expanded={showColumnPicker}
                   aria-haspopup="listbox"
                   aria-label="Toggle column visibility"
-                  className="text-[13px] px-3 py-1.5 rounded-md border border-chrome-border text-chrome-muted hover:bg-black/5 font-medium whitespace-nowrap transition-colors"
+                  className="text-[13px] px-2.5 py-1.5 rounded-md border border-chrome-border text-chrome-muted hover:bg-black/5 font-medium whitespace-nowrap transition-colors"
                 >
                   Columns ({visibleColumns.length})
                 </button>
@@ -435,7 +319,7 @@ export default function App() {
 
             {/* View toggle */}
             <div
-              className="flex border border-chrome-border rounded-md overflow-hidden sm:ml-1"
+              className="flex border border-chrome-border rounded-md overflow-hidden ml-0.5"
               role="group"
               aria-label="View mode"
             >
@@ -447,7 +331,7 @@ export default function App() {
                   viewMode === 'columns' ? 'bg-black/[0.07] text-chrome-text' : 'text-chrome-muted hover:bg-black/5'
                 }`}
               >
-                <KanbanIcon />
+                <Columns3 size={14} strokeWidth={1.75} aria-hidden="true" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
@@ -457,7 +341,7 @@ export default function App() {
                   viewMode === 'list' ? 'bg-black/[0.07] text-chrome-text' : 'text-chrome-muted hover:bg-black/5'
                 }`}
               >
-                <ListIcon />
+                <List size={14} strokeWidth={1.75} aria-hidden="true" />
               </button>
             </div>
 
@@ -466,13 +350,52 @@ export default function App() {
               onClick={handleRefresh}
               disabled={isRefreshing}
               aria-label={isRefreshing ? 'Syncing data…' : 'Refresh data'}
-              className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md text-accent hover:text-accent-hover font-medium transition-colors disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+              className="flex items-center gap-1.5 text-[13px] px-2.5 py-1.5 rounded-md text-accent hover:text-accent-hover font-medium transition-colors disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
-              <span className={`inline-flex ${isRefreshing ? 'animate-spin' : ''}`} aria-hidden="true">
-                <RefreshIcon />
-              </span>
+              <RefreshCw size={14} strokeWidth={2} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
               <span className="hidden sm:inline">{isRefreshing ? 'Syncing…' : 'Refresh'}</span>
             </button>
+
+            {/* Mobile: overflow menu */}
+            <div className="sm:hidden relative" ref={mobileMenuRef}>
+              <button
+                onClick={() => setShowMobileMenu(v => !v)}
+                aria-label="More options"
+                aria-expanded={showMobileMenu}
+                aria-haspopup="menu"
+                className="p-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors"
+              >
+                <MoreVertical size={16} strokeWidth={2} aria-hidden="true" />
+              </button>
+              {showMobileMenu && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-9 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1 min-w-[140px]"
+                >
+                  {['Active', 'Archived'].map(tab => (
+                    <button
+                      key={tab}
+                      role="menuitem"
+                      onClick={() => { setActiveTab(tab); setShowMobileMenu(false); }}
+                      className={`w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors ${
+                        activeTab === tab
+                          ? 'text-accent font-semibold bg-accent/5'
+                          : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Stats — desktop only, right-anchored */}
+          <div className="hidden sm:flex items-center gap-4 pl-3 border-l border-chrome-border flex-shrink-0" aria-label="Summary statistics">
+            <StatInline value={statSent}    label="sent" />
+            <StatInline value={statReplied} label="replied" />
+            <StatInline value={replyRate}   label="reply rate" />
           </div>
         </div>
       )}

@@ -59,9 +59,9 @@ const RDP_VARS = {
 const RDP_STYLES = {
   root: RDP_VARS,
   // Override the default `font-size: large; font-weight: bold` on month_caption
-  month_caption: { fontSize: '13px', fontWeight: '500', letterSpacing: '-0.01em' },
-  // Day numbers use IBM Plex Mono
-  day_button: { fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px' },
+  month_caption: { fontSize: '13px', fontWeight: '500', letterSpacing: '-0.01em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  caption_label: { fontSize: '13px', fontWeight: '500', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  day_button: { fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px' },
   // Weekday headers: smaller, spaced, uppercase
   weekday: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em' },
 };

@@ -663,7 +663,7 @@ export default function Sidebar({
                     <p className="text-xs text-chrome-muted">Set a reminder</p>
                   )}
                   {(!nextActionDate || showDatePicker) && (
-                    <div className="mt-2 border border-chrome-border rounded-lg bg-chrome-surface w-full p-3">
+                    <div className="mt-2 border border-chrome-border rounded-lg bg-chrome-surface w-fit sm:w-full p-0 sm:p-3">
                       <DayPicker
                         mode="single"
                         navLayout="around"
@@ -686,10 +686,10 @@ export default function Sidebar({
                             '--rdp-today-color': '#b85212',
                             '--rdp-selected-border': '2px solid #b85212',
                             fontFamily: "'Plus Jakarta Sans', sans-serif",
-                            width: '100%',
                           },
                           month_caption: { fontSize: '13px', fontWeight: '500', letterSpacing: '-0.01em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
-                          day_button: { fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px' },
+                          caption_label: { fontSize: '13px', fontWeight: '500', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+                          day_button: { fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px' },
                           weekday: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
                         }}
                       />

@@ -1,10 +1,11 @@
 // web/src/components/TopNav.jsx
 import { useState, useRef, useEffect } from 'react';
+import { Home, Briefcase } from 'lucide-react';
 import ProfileMenu from './ProfileMenu';
 
 const NAV_SECTIONS = [
-  { id: 'home',    label: 'Home' },
-  { id: 'tracker', label: 'Job Tracker' },
+  { id: 'home',    label: 'Home',        Icon: Home },
+  { id: 'tracker', label: 'Job Tracker', Icon: Briefcase },
 ];
 
 export default function TopNav({ activeSection, onSectionChange }) {
@@ -44,18 +45,19 @@ export default function TopNav({ activeSection, onSectionChange }) {
 
         {/* Center: Section tabs */}
         <nav aria-label="Main sections" className="flex items-stretch h-full gap-1">
-          {NAV_SECTIONS.map(({ id, label }) => (
+          {NAV_SECTIONS.map(({ id, label, Icon }) => (
             <button
               key={id}
               onClick={() => onSectionChange(id)}
               aria-current={activeSection === id ? 'page' : undefined}
               className={`
-                flex items-center px-3 text-[13px] font-display font-semibold border-b-2 transition-all duration-150
+                flex items-center gap-1.5 px-3 text-[13px] font-display font-semibold border-b-2 transition-all duration-150
                 ${activeSection === id
                   ? 'border-accent text-chrome-text'
                   : 'border-transparent text-chrome-muted hover:text-chrome-text'}
               `}
             >
+              <Icon size={14} strokeWidth={2.5} aria-hidden="true" />
               {label}
             </button>
           ))}

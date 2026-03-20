@@ -50,6 +50,15 @@
 
     const shadow = host.attachShadow({ mode: 'closed' });
 
+    // Load brand fonts into the host document (font faces are not shadow-scoped)
+    if (!document.getElementById('reach-panel-fonts')) {
+      const fontLink = document.createElement('link');
+      fontLink.id = 'reach-panel-fonts';
+      fontLink.rel = 'stylesheet';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap';
+      document.head.appendChild(fontLink);
+    }
+
     const style = document.createElement('style');
     style.textContent = `
       :host, * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -66,11 +75,11 @@
           0 8px 32px rgba(0, 0, 0, 0.14),
           0 2px 8px rgba(0, 0, 0, 0.08),
           0 0 0 1px rgba(0, 0, 0, 0.04);
-        font-family: system-ui, -apple-system, sans-serif;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         font-size: 13px;
-        color: #0a0a0a;
+        color: #1c1917;
         overflow: hidden;
-        animation: reach-slide-in 200ms cubic-bezier(0.34, 1.4, 0.64, 1);
+        animation: reach-slide-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       @keyframes reach-slide-in {
@@ -83,8 +92,8 @@
         align-items: center;
         gap: 8px;
         padding: 14px 16px;
-        background: #f9fafb;
-        border-bottom: 1px solid #e5e7eb;
+        background: #f6f5f1;
+        border-bottom: 1px solid #e6e3db;
       }
       .header img {
         width: 20px;
@@ -99,21 +108,22 @@
         flex: 1;
       }
       .header h1 {
+        font-family: 'Syne', sans-serif;
         font-size: 15px;
         font-weight: 700;
-        color: #0a0a0a;
+        color: #1c1917;
         letter-spacing: -0.02em;
       }
       .header .subtitle {
         font-size: 11px;
-        color: #9ca3af;
+        color: #78716c;
         font-weight: 400;
       }
       .close-btn {
         background: none;
         border: none;
         cursor: pointer;
-        color: #9ca3af;
+        color: #78716c;
         font-size: 18px;
         line-height: 1;
         padding: 2px 4px;
@@ -121,27 +131,27 @@
         transition: color 120ms ease, background 120ms ease;
       }
       .close-btn:hover {
-        color: #374151;
-        background: #f3f4f6;
+        color: #1c1917;
+        background: #ede9e3;
       }
 
       .stats {
         display: flex;
         padding: 20px 16px;
-        border-bottom: 1px solid #f3f4f6;
+        border-bottom: 1px solid #e6e3db;
       }
       .stat {
         flex: 1;
         text-align: center;
       }
       .stat + .stat {
-        border-left: 1px solid #f3f4f6;
+        border-left: 1px solid #e6e3db;
       }
       .stat-value {
-        font-family: ui-monospace, 'Cascadia Code', monospace;
+        font-family: 'IBM Plex Mono', ui-monospace, monospace;
         font-size: 28px;
-        font-weight: 600;
-        color: #4f46e5;
+        font-weight: 500;
+        color: #b85212;
         line-height: 1;
         letter-spacing: -0.02em;
       }
@@ -150,7 +160,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: #9ca3af;
+        color: #78716c;
         margin-top: 6px;
       }
 
@@ -163,19 +173,19 @@
         justify-content: center;
         gap: 6px;
         width: 100%;
-        background: #4f46e5;
+        background: #b85212;
         color: #ffffff;
         border: none;
         border-radius: 8px;
         padding: 10px 14px;
-        font-family: system-ui, -apple-system, sans-serif;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         letter-spacing: -0.01em;
         transition: background 150ms ease;
       }
-      .open-btn:hover { background: #4338ca; }
+      .open-btn:hover { background: #9a4310; }
       .open-btn svg {
         width: 14px;
         height: 14px;
