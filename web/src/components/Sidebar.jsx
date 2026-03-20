@@ -6,6 +6,8 @@ import ChatIcon from './icons/ChatIcon';
 import EyeIcon from './icons/EyeIcon';
 import { generateConversationFeedback } from '../lib/gemini';
 import { getDaysSince, formatShortDate, STATUS_COLORS } from '../lib/utils';
+import { DayPicker } from 'react-day-picker';
+import { parseLocalDate, toDateString } from './DateRangePicker';
 
 const STEPPER_STEPS = ['Sent', 'Replied', 'Interviewing', 'Offer'];
 
@@ -648,7 +650,7 @@ export default function Sidebar({
                   {nextActionDate ? (
                     <div className="flex items-center gap-2">
                       <button onClick={() => setShowDatePicker(v => !v)}
-                        className="inline-flex items-center gap-1.5 bg-accent/10 text-accent text-[12px] font-medium px-3 py-1 rounded-full hover:bg-accent/20 transition-colors">
+                        className="inline-flex items-center gap-1.5 bg-accent/10 text-accent text-[12px] font-medium px-3 py-1 rounded-lg hover:bg-accent/20 transition-colors">
                         Follow up by {formatShortDate(nextActionDate + 'T12:00:00.000Z')}
                       </button>
                       <button onClick={() => { setNextActionDate(''); setShowDatePicker(false); }}
@@ -661,11 +663,37 @@ export default function Sidebar({
                     <p className="text-xs text-chrome-muted">Set a reminder</p>
                   )}
                   {(!nextActionDate || showDatePicker) && (
-                    <input type="date" value={nextActionDate}
-                      min={new Date().toISOString().split('T')[0]}
-                      onChange={e => { setNextActionDate(e.target.value); setShowDatePicker(false); }}
-                      aria-label="Follow-up reminder date"
-                      className="mt-2 text-[12px] font-mono px-3 py-1.5 border border-chrome-border rounded-md text-chrome-muted bg-chrome-surface focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-full [color-scheme:light]" />
+                    <div className="mt-2 border border-chrome-border rounded-lg bg-chrome-surface w-full p-3">
+                      <DayPicker
+                        mode="single"
+                        navLayout="around"
+                        selected={parseLocalDate(nextActionDate)}
+                        disabled={{ before: new Date() }}
+                        onSelect={(date) => {
+                          setNextActionDate(toDateString(date));
+                          setShowDatePicker(false);
+                        }}
+                        styles={{
+                          root: {
+                            '--rdp-accent-color': '#b85212',
+                            '--rdp-accent-background-color': 'rgba(184, 82, 18, 0.1)',
+                            '--rdp-day-height': '32px',
+                            '--rdp-day-width': '32px',
+                            '--rdp-day_button-height': '30px',
+                            '--rdp-day_button-width': '30px',
+                            '--rdp-day_button-border-radius': '6px',
+                            '--rdp-nav-height': '2rem',
+                            '--rdp-today-color': '#b85212',
+                            '--rdp-selected-border': '2px solid #b85212',
+                            fontFamily: "'Plus Jakarta Sans', sans-serif",
+                            width: '100%',
+                          },
+                          month_caption: { fontSize: '13px', fontWeight: '500', letterSpacing: '-0.01em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+                          day_button: { fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px' },
+                          weekday: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+                        }}
+                      />
+                    </div>
                   )}
                 </div>
 
