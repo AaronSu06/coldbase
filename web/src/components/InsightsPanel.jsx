@@ -62,10 +62,55 @@ export default function InsightsPanel() {
   if (!data) return null;
 
   if (data.insufficient) {
+    const ghostHeights = Array.from({ length: 24 }, (_, i) => {
+      const morning = Math.exp(-Math.pow(i - 10, 2) / 8);
+      const afternoon = Math.exp(-Math.pow(i - 14, 2) / 8);
+      return Math.max(morning, afternoon) * 75 + 8;
+    });
+
     return (
       <div className="p-4 sm:p-8 max-w-4xl mx-auto">
         <StatsRow sent={data.sent} replied={data.replied} />
-        {/* ghost chart goes here in Task 2 */}
+        <div className="flex items-baseline justify-between mb-6">
+          <div>
+            <h2 className="font-display text-[18px] font-bold text-chrome-text mb-0.5">Best Time to Send</h2>
+            <p className="text-xs text-chrome-muted">Hours shown in UTC</p>
+          </div>
+        </div>
+
+        {/* Ghost chart with overlay */}
+        <div className="relative">
+          {/* Dimmed ghost bars */}
+          <div className="flex items-end gap-1 h-40 mb-2 opacity-25 pointer-events-none select-none">
+            {ghostHeights.map((h, i) => (
+              <div key={i} className="flex-1">
+                <div
+                  className="w-full rounded-t bg-chrome-surface"
+                  style={{ height: `${h}%` }}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* X-axis labels (also dimmed) */}
+          <div className="flex gap-1 text-[9px] text-chrome-muted font-mono opacity-25 pointer-events-none select-none mb-2">
+            {ghostHeights.map((_, i) => (
+              <div key={i} className="flex-1 text-center">
+                {i % 6 === 0 ? formatHour(i) : ''}
+              </div>
+            ))}
+          </div>
+
+          {/* Centered overlay */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+            <p className="font-sans font-semibold text-[13px] text-chrome-text">
+              Unlock send-time insights
+            </p>
+            <p className="text-[11px] text-chrome-muted font-mono">
+              {data.sent} / 20 emails sent · {data.replied} / 5 replies
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
