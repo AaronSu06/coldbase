@@ -4,8 +4,10 @@ import KanbanBoard from './components/KanbanBoard';
 import SearchBar from './components/SearchBar';
 import Sidebar from './components/Sidebar';
 import EmptyState from './components/EmptyState';
-import InsightsPanel from './components/InsightsPanel';
+import TopNav from './components/TopNav';
+import HomePage from './components/HomePage';
 import HeartIcon from './components/icons/HeartIcon';
+import { DateRangePicker } from './components/DateRangePicker';
 import { COLUMNS } from '@shared/constants';
 import { STATUS_COLORS, formatShortDate } from './lib/utils';
 
@@ -113,6 +115,7 @@ export default function App() {
   const [dateTo, setDateTo] = useState('');
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [activeSection, setActiveSection] = useState('tracker');
   const columnPickerRef = useRef(null);
   const mobileMenuRef = useRef(null);
 
@@ -257,115 +260,95 @@ export default function App() {
   return (
     <div className="h-screen flex flex-col bg-chrome-bg">
 
-      {/* ── Header ─────────────────────────────────────────────────── */}
-      <header className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 pt-4 sm:pt-5 flex-shrink-0">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="font-display text-[22px] font-bold text-chrome-text leading-tight tracking-tight">
-              Reach
-            </h1>
-            <p className="font-mono text-[10px] text-chrome-muted tracking-[0.08em] uppercase mt-0.5">
-              {activeCount} contacts
-            </p>
-          </div>
+      {/* ── Top Nav ─────────────────────────────────────────────────── */}
+      <TopNav activeSection={activeSection} onSectionChange={setActiveSection} />
 
-          {/* Mobile-only tab menu — top right */}
-          <div className="sm:hidden relative mt-1" ref={mobileMenuRef}>
-            <button
-              onClick={() => setShowMobileMenu(v => !v)}
-              aria-label="Switch view"
-              aria-expanded={showMobileMenu}
-              aria-haspopup="menu"
-              className="p-2 rounded-lg text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors"
-            >
-              <DotsVerticalIcon />
-            </button>
-            {showMobileMenu && (
-              <div
-                role="menu"
-                className="absolute right-0 top-9 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1 min-w-[140px]"
-              >
-                {['Active', 'Archived', 'Insights'].map(tab => (
-                  <button
-                    key={tab}
-                    role="menuitem"
-                    onClick={() => { setActiveTab(tab); setShowMobileMenu(false); }}
-                    className={`w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors ${
-                      activeTab === tab
-                        ? 'text-accent font-semibold bg-accent/5'
-                        : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
-                    }`}
+      {/* ── Job tracker sub-nav (Active / Archived + stats) ─────── */}
+      {activeSection === 'tracker' && (
+        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 pt-4 sm:pt-5 flex-shrink-0">
+          <nav className="flex mt-0 items-end justify-between" aria-label="Tracker navigation">
+            {/* Desktop sub-tabs */}
+            <div className="hidden sm:flex gap-6" role="tablist">
+              {['Active', 'Archived'].map(tab => (
+                <button
+                  key={tab}
+                  role="tab"
+                  aria-selected={activeTab === tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`pb-3 text-[13px] font-display font-semibold border-b-2 transition-all duration-150 ${
+                    activeTab === tab
+                      ? 'border-accent text-chrome-text'
+                      : 'border-transparent text-chrome-muted hover:text-chrome-text'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Mobile: current tab indicator + hamburger */}
+            <div className="sm:hidden flex items-center justify-between w-full pb-3">
+              <span className="font-display text-[13px] font-semibold text-chrome-text border-b-2 border-accent pb-3">
+                {activeTab}
+              </span>
+              <div className="relative" ref={mobileMenuRef}>
+                <button
+                  onClick={() => setShowMobileMenu(v => !v)}
+                  aria-label="Switch view"
+                  aria-expanded={showMobileMenu}
+                  aria-haspopup="menu"
+                  className="p-2 rounded-lg text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors"
+                >
+                  <DotsVerticalIcon />
+                </button>
+                {showMobileMenu && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-9 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1 min-w-[140px]"
                   >
-                    {tab}
-                  </button>
-                ))}
+                    {['Active', 'Archived'].map(tab => (
+                      <button
+                        key={tab}
+                        role="menuitem"
+                        onClick={() => { setActiveTab(tab); setShowMobileMenu(false); }}
+                        className={`w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors ${
+                          activeTab === tab
+                            ? 'text-accent font-semibold bg-accent/5'
+                            : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
+                        }`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+
+            {/* ── Stat strip (desktop only) ── */}
+            <div className="hidden sm:flex items-center pb-3" aria-label="Summary statistics">
+              <StatPill value={statSent}    label="SENT" />
+              <div className="w-px h-8 bg-chrome-border mx-7" />
+              <StatPill value={statReplied} label="REPLIED" />
+              <div className="w-px h-8 bg-chrome-border mx-7" />
+              <StatPill value={replyRate}   label="REPLY RATE" />
+            </div>
+          </nav>
         </div>
-
-        {/* Tabs + stat strip */}
-        <nav className="flex mt-4 items-end justify-between" aria-label="Main navigation">
-          {/* Desktop tabs */}
-          <div className="hidden sm:flex gap-6" role="tablist">
-            {['Active', 'Archived', 'Insights'].map(tab => (
-              <button
-                key={tab}
-                role="tab"
-                aria-selected={activeTab === tab}
-                onClick={() => setActiveTab(tab)}
-                className={`pb-3 text-[13px] font-display font-semibold border-b-2 transition-all duration-150 ${
-                  activeTab === tab
-                    ? 'border-accent text-chrome-text'
-                    : 'border-transparent text-chrome-muted hover:text-chrome-text'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {/* Mobile: current tab indicator */}
-          <div className="sm:hidden pb-3">
-            <span className="font-display text-[13px] font-semibold text-chrome-text border-b-2 border-accent pb-3">
-              {activeTab}
-            </span>
-          </div>
-
-          {/* ── Stat strip (desktop only) ── */}
-          <div className="hidden sm:flex items-center pb-3" aria-label="Summary statistics">
-            <StatPill value={statSent}    label="SENT" />
-            <div className="w-px h-8 bg-chrome-border mx-7" />
-            <StatPill value={statReplied} label="REPLIED" />
-            <div className="w-px h-8 bg-chrome-border mx-7" />
-            <StatPill value={replyRate}   label="REPLY RATE" />
-          </div>
-        </nav>
-      </header>
+      )}
 
       {/* ── Toolbar ─────────────────────────────────────────────────── */}
-      {activeTab !== 'Insights' && (
+      {activeSection === 'tracker' && (
         <div className="bg-chrome-surface border-b border-chrome-border px-4 sm:px-8 py-2.5 flex items-center justify-between flex-shrink-0 gap-2 sm:gap-4">
           {/* Left: filters */}
           <div className="flex items-center gap-2 flex-1 sm:flex-none">
             <div className="flex-1 sm:flex-none">
               <SearchBar query={query} onSearch={setQuery} />
             </div>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={e => setDateFrom(e.target.value)}
-              aria-label="Filter from date"
-              title="Sent from"
-              className="hidden sm:block font-mono text-[12px] px-3 py-2 border border-chrome-border rounded-md text-chrome-muted bg-chrome-bg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-[130px] [color-scheme:light]"
-            />
-            <input
-              type="date"
-              value={dateTo}
-              onChange={e => setDateTo(e.target.value)}
-              aria-label="Filter to date"
-              title="Sent until"
-              className="hidden sm:block font-mono text-[12px] px-3 py-2 border border-chrome-border rounded-md text-chrome-muted bg-chrome-bg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-[130px] [color-scheme:light]"
+            <DateRangePicker
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onRangeChange={({ from, to }) => { setDateFrom(from); setDateTo(to); }}
             />
           </div>
 
@@ -496,8 +479,8 @@ export default function App() {
       {/* ── Main content ────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-hidden">
-          {activeTab === 'Insights' ? (
-            <InsightsPanel />
+          {activeSection === 'home' ? (
+            <HomePage />
           ) : error && records.length === 0 ? (
             <div className="flex items-center justify-center flex-1 h-full text-red-500 text-sm">
               Failed to load data. Please refresh.
