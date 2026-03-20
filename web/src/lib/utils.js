@@ -3,7 +3,7 @@ export const STATUS_COLORS = {
   Sent:         '#3b82f6',
   Replied:      '#8b5cf6',
   Applied:      '#8b5cf6',
-  Interviewing: '#f59e0b',
+  Interviewing: '#eab308',
   Offer:        '#10b981',
   Ghosted:      '#ef4444',
 };

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const COLORS = ['bg-indigo-500', 'bg-violet-500', 'bg-teal-500', 'bg-amber-500', 'bg-rose-500', 'bg-sky-500'];
+const COLORS = ['bg-teal-600', 'bg-violet-500', 'bg-teal-500', 'bg-amber-500', 'bg-rose-500', 'bg-sky-500'];
 
 const GENERIC_DOMAINS = new Set([
   'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com',
@@ -17,6 +17,7 @@ function inferDomain(domain, company) {
 export default function CompanyAvatar({ domain, company, size = 'small' }) {
   const resolvedDomain = inferDomain(domain, company);
   const [imgFailed, setImgFailed] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const initial = company?.[0]?.toUpperCase() || '?';
   const hash = company.split('').reduce((acc, c) => acc * 31 + c.charCodeAt(0), 0);
   const color = COLORS[Math.abs(hash) % COLORS.length];
@@ -34,11 +35,18 @@ export default function CompanyAvatar({ domain, company, size = 'small' }) {
   }
 
   return (
-    <div className={`${sizeClasses} flex-shrink-0 overflow-hidden`}>
+    <div className={`${sizeClasses} flex-shrink-0 overflow-hidden relative`}>
+      {!imgLoaded && (
+        <div className={`absolute inset-0 ${color} flex items-center justify-center`}>
+          <span className="text-white font-bold">{initial}</span>
+        </div>
+      )}
       <img
-        src={`https://www.google.com/s2/favicons?domain=${resolvedDomain}&sz=128`}
+        src={`https://www.google.com/s2/favicons?domain=${resolvedDomain}&sz=64`}
+        onLoad={() => setImgLoaded(true)}
         onError={() => setImgFailed(true)}
-        className="w-full h-full object-cover"
+        loading="lazy"
+        className={`w-full h-full object-cover transition-opacity duration-150 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
         alt={company}
       />
     </div>

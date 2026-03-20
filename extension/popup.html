@@ -4,15 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       width: 300px;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       font-size: 13px;
-      color: #0a0a0a;
-      background: #ffffff;
+      color: #1c1917;
+      background: #f6f5f1;
     }
 
     .header {
@@ -20,8 +23,8 @@
       align-items: center;
       gap: 8px;
       padding: 14px 16px;
-      background: #f9fafb;
-      border-bottom: 1px solid #e5e7eb;
+      background: #f6f5f1;
+      border-bottom: 1px solid #e6e3db;
     }
     .header img {
       width: 20px;
@@ -35,49 +38,53 @@
       gap: 6px;
     }
     .header h1 {
-      font-size: 15px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
       font-weight: 700;
-      color: #0a0a0a;
+      color: #1c1917;
       letter-spacing: -0.02em;
     }
     .header .subtitle {
       font-size: 11px;
-      color: #9ca3af;
+      color: #78716c;
       font-weight: 400;
     }
 
     .stats {
       display: flex;
       padding: 20px 16px;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid #e6e3db;
+      background: #ffffff;
     }
     .stat {
       flex: 1;
       text-align: center;
     }
     .stat + .stat {
-      border-left: 1px solid #f3f4f6;
+      border-left: 1px solid #e6e3db;
     }
     .stat-value {
-      font-family: ui-monospace, 'Cascadia Code', monospace;
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
       font-size: 28px;
-      font-weight: 600;
-      color: #4f46e5;
+      font-weight: 500;
+      color: #b85212;
       line-height: 1;
       letter-spacing: -0.02em;
     }
     .stat-label {
-      font-size: 9px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #9ca3af;
+      color: #78716c;
       margin-top: 6px;
     }
 
     .footer {
       padding: 14px 16px;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid #e6e3db;
+      background: #ffffff;
     }
     .open-btn {
       display: flex;
@@ -85,52 +92,56 @@
       justify-content: center;
       gap: 6px;
       width: 100%;
-      background: #4f46e5;
+      background: #b85212;
       color: #ffffff;
       border: none;
       border-radius: 8px;
       padding: 10px 14px;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       letter-spacing: -0.01em;
       transition: background 150ms ease;
     }
-    .open-btn:hover { background: #4338ca; }
+    .open-btn:hover { background: #9a4310; }
     .open-btn svg {
       width: 14px;
       height: 14px;
       flex-shrink: 0;
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .open-btn { transition: none; }
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <img src="Reach.png" alt="Reach" />
+    <img src="Reach.png" alt="Reach logo" />
     <div class="header-text">
       <h1>Reach</h1>
       <span class="subtitle">outreach tracker</span>
     </div>
   </div>
-  <div class="stats">
+  <div class="stats" role="region" aria-label="Outreach statistics">
     <div class="stat">
-      <div class="stat-value" id="stat-sent">—</div>
+      <div class="stat-value" id="stat-sent" aria-label="Sent emails">—</div>
       <div class="stat-label">Sent</div>
     </div>
     <div class="stat">
-      <div class="stat-value" id="stat-replied">—</div>
+      <div class="stat-value" id="stat-replied" aria-label="Replies received">—</div>
       <div class="stat-label">Replied</div>
     </div>
     <div class="stat">
-      <div class="stat-value" id="stat-rate">—</div>
+      <div class="stat-value" id="stat-rate" aria-label="Reply rate">—</div>
       <div class="stat-label">Reply Rate</div>
     </div>
   </div>
   <div class="footer">
-    <button class="open-btn" id="open-btn">
+    <button class="open-btn" id="open-btn" aria-label="Open Reach dashboard">
       Open Dashboard
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M3 8h10M9 4l4 4-4 4"/>
       </svg>
     </button>

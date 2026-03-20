@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useOutreach } from './hooks/useOutreach';
 import KanbanBoard from './components/KanbanBoard';
 import SearchBar from './components/SearchBar';
@@ -59,6 +59,16 @@ function DownloadIcon() {
   );
 }
 
+function DotsVerticalIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+      <circle cx="12" cy="5" r="1.5" />
+      <circle cx="12" cy="12" r="1.5" />
+      <circle cx="12" cy="19" r="1.5" />
+    </svg>
+  );
+}
+
 // ── Status dot for list view ───────────────────────────────────────────────
 
 function StatusDot({ status }) {
@@ -68,7 +78,7 @@ function StatusDot({ status }) {
         className="w-1.5 h-1.5 rounded-full flex-shrink-0"
         style={{ backgroundColor: STATUS_COLORS[status] || '#9ca3af' }}
       />
-      <span className="text-[12px] text-gray-600">{status}</span>
+      <span className="text-[12px] text-chrome-muted">{status}</span>
     </div>
   );
 }
@@ -78,10 +88,10 @@ function StatusDot({ status }) {
 function StatPill({ value, label }) {
   return (
     <div className="flex flex-col items-center">
-      <span className="font-mono text-[18px] font-semibold text-[#0a0a0a] leading-none">
+      <span className="font-mono text-[18px] font-semibold text-chrome-text leading-none">
         {value}
       </span>
-      <span className="font-mono text-[10px] font-medium text-[#9ca3af] uppercase tracking-[0.08em] mt-1">
+      <span className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.12em] mt-1">
         {label}
       </span>
     </div>
@@ -101,6 +111,11 @@ export default function App() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const columnPickerRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+
   const selectedRecord = useMemo(() => {
     if (!selectedThreadId) return null;
     return records.find(r => r.threadId === selectedThreadId) || null;
@@ -136,13 +151,11 @@ export default function App() {
   async function handleRefresh() {
     if (isRefreshing) return;
     setIsRefreshing(true);
-    // Yield so React paints the spinner before we start async work
     await new Promise(resolve => setTimeout(resolve, 0));
     try {
-      // relay.js (content script on localhost) bridges postMessage → chrome.runtime
       const request = (type) => new Promise(resolve => {
         const requestId = `${type}-${Date.now()}`;
-        const timeout = setTimeout(resolve, 12_000); // give up after 12s
+        const timeout = setTimeout(resolve, 12_000);
         function handler(e) {
           if (e.data?.source === 'outreachiq-relay' && e.data?.requestId === requestId) {
             window.removeEventListener('message', handler);
@@ -153,7 +166,6 @@ export default function App() {
         window.addEventListener('message', handler);
         window.postMessage({ source: 'outreachiq-webapp', type, requestId }, '*');
       });
-      // RECHECK_REPLIES resolves only after checkReplies() finishes writing to DB
       await Promise.all([request('RESCAN'), request('RECHECK_REPLIES')]);
     } finally {
       refresh();
@@ -196,53 +208,116 @@ export default function App() {
 
   const showEmptySearch = query.trim() && filtered.length === 0;
 
+  // Close column picker on outside click or Escape
+  useEffect(() => {
+    if (!showColumnPicker) return;
+    function handleOutside(e) {
+      if (columnPickerRef.current && !columnPickerRef.current.contains(e.target)) {
+        setShowColumnPicker(false);
+      }
+    }
+    function handleEscape(e) {
+      if (e.key === 'Escape') setShowColumnPicker(false);
+    }
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showColumnPicker]);
+
+  // Close mobile menu on outside click
+  useEffect(() => {
+    if (!showMobileMenu) return;
+    function handleOutside(e) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+        setShowMobileMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [showMobileMenu]);
+
   // Visibility-based extension trigger
   useEffect(() => {
     function onVisibilityChange() {
       if (document.visibilityState !== 'visible') return;
-
-      // Fire-and-forget RECHECK_REPLIES via relay.js
       const requestId = `RECHECK_REPLIES-${Date.now()}`;
       window.postMessage(
         { source: 'outreachiq-webapp', type: 'RECHECK_REPLIES', requestId },
         '*'
       );
-
-      // Re-fetch after extension has had time to patch the server
       setTimeout(refresh, 3_500);
     }
-
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, [refresh]);
 
   return (
-    <div className="h-screen flex flex-col bg-[#f9fafb]">
+    <div className="h-screen flex flex-col bg-chrome-bg">
 
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <header className="bg-white border-b border-gray-200 px-8 pt-5 flex-shrink-0">
-        <div>
-          <h1 className="text-[20px] font-bold text-[#0a0a0a] leading-tight tracking-tight">
-            Reach
-            <span className="text-gray-300 font-light mx-2">|</span>
-            <span className="font-medium text-gray-500">Your Tracker</span>
-          </h1>
-          <p className="font-mono text-[11px] text-gray-400 tracking-[0.06em] uppercase mt-0.5">
-            {activeCount} total contacts
-          </p>
+      <header className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 pt-4 sm:pt-5 flex-shrink-0">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="font-display text-[22px] font-bold text-chrome-text leading-tight tracking-tight">
+              Reach
+            </h1>
+            <p className="font-mono text-[10px] text-chrome-muted tracking-[0.08em] uppercase mt-0.5">
+              {activeCount} contacts
+            </p>
+          </div>
+
+          {/* Mobile-only tab menu — top right */}
+          <div className="sm:hidden relative mt-1" ref={mobileMenuRef}>
+            <button
+              onClick={() => setShowMobileMenu(v => !v)}
+              aria-label="Switch view"
+              aria-expanded={showMobileMenu}
+              aria-haspopup="menu"
+              className="p-2 rounded-lg text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors"
+            >
+              <DotsVerticalIcon />
+            </button>
+            {showMobileMenu && (
+              <div
+                role="menu"
+                className="absolute right-0 top-9 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1 min-w-[140px]"
+              >
+                {['Active', 'Archived', 'Insights'].map(tab => (
+                  <button
+                    key={tab}
+                    role="menuitem"
+                    onClick={() => { setActiveTab(tab); setShowMobileMenu(false); }}
+                    className={`w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors ${
+                      activeTab === tab
+                        ? 'text-accent font-semibold bg-accent/5'
+                        : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Tabs + stat strip */}
-        <nav className="flex mt-4 items-end justify-between">
-          <div className="flex gap-6">
+        <nav className="flex mt-4 items-end justify-between" aria-label="Main navigation">
+          {/* Desktop tabs */}
+          <div className="hidden sm:flex gap-6" role="tablist">
             {['Active', 'Archived', 'Insights'].map(tab => (
               <button
                 key={tab}
+                role="tab"
+                aria-selected={activeTab === tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-3 text-[14px] border-b-[3px] transition-all duration-150 ${
+                className={`pb-3 text-[13px] font-display font-semibold border-b-2 transition-all duration-150 ${
                   activeTab === tab
-                    ? 'border-[#4f46e5] text-[#0a0a0a] font-bold'
-                    : 'border-transparent text-gray-400 font-medium hover:text-gray-600'
+                    ? 'border-accent text-chrome-text'
+                    : 'border-transparent text-chrome-muted hover:text-chrome-text'
                 }`}
               >
                 {tab}
@@ -250,134 +325,173 @@ export default function App() {
             ))}
           </div>
 
-          {/* ── Stat strip ── */}
-          <div className="flex items-center pb-3">
+          {/* Mobile: current tab indicator */}
+          <div className="sm:hidden pb-3">
+            <span className="font-display text-[13px] font-semibold text-chrome-text border-b-2 border-accent pb-3">
+              {activeTab}
+            </span>
+          </div>
+
+          {/* ── Stat strip (desktop only) ── */}
+          <div className="hidden sm:flex items-center pb-3" aria-label="Summary statistics">
             <StatPill value={statSent}    label="SENT" />
-            <div className="w-px h-8 bg-[#e5e7eb] mx-7" />
+            <div className="w-px h-8 bg-chrome-border mx-7" />
             <StatPill value={statReplied} label="REPLIED" />
-            <div className="w-px h-8 bg-[#e5e7eb] mx-7" />
+            <div className="w-px h-8 bg-chrome-border mx-7" />
             <StatPill value={replyRate}   label="REPLY RATE" />
           </div>
         </nav>
       </header>
 
       {/* ── Toolbar ─────────────────────────────────────────────────── */}
-      {activeTab !== 'Insights' && <div className="bg-white border-b border-gray-200 px-8 py-2.5 flex items-center justify-between flex-shrink-0 gap-4">
-        {/* Left: filters */}
-        <div className="flex items-center gap-2">
-          <SearchBar query={query} onSearch={setQuery} />
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-            title="Sent from"
-            className="font-mono text-[12px] px-3 py-2 border border-gray-200 rounded-md text-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-[130px]"
-          />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={e => setDateTo(e.target.value)}
-            title="Sent until"
-            className="font-mono text-[12px] px-3 py-2 border border-gray-200 rounded-md text-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-[130px]"
-          />
-        </div>
-
-        {/* Right: actions */}
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {/* Favorites toggle */}
-          <button
-            onClick={() => setShowFavoritesOnly(prev => !prev)}
-            className={`flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md transition-colors font-medium ${
-              showFavoritesOnly
-                ? 'text-rose-500 bg-rose-50'
-                : 'text-gray-600 hover:text-[#0a0a0a] hover:bg-gray-100'
-            }`}
-            title="Toggle favorites"
-          >
-            <HeartIcon filled={showFavoritesOnly} />
-            Favorites
-          </button>
-
-          {/* Archive all */}
-          <button
-            type="button"
-            onClick={handleArchiveAll}
-            className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md text-gray-600 hover:text-[#0a0a0a] hover:bg-gray-100 transition-colors font-medium"
-          >
-            <ArchiveBoxIcon />
-            Archive all
-          </button>
-
-          {/* Export CSV */}
-          <button
-            type="button"
-            onClick={exportCSV}
-            className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md text-gray-600 hover:text-[#0a0a0a] hover:bg-gray-100 transition-colors font-medium"
-            title="Export current view as CSV"
-          >
-            <DownloadIcon />
-            Export CSV
-          </button>
-
-          <div className="w-px h-4 bg-gray-200 mx-1" />
-
-          {/* Columns picker */}
-          {viewMode === 'columns' && (
-            <div className="relative group">
-              <button className="text-[13px] px-3 py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium whitespace-nowrap transition-colors">
-                Columns ({visibleColumns.length})
-              </button>
-              <div className="absolute right-0 top-9 bg-white border border-gray-200 rounded-lg shadow-lg z-10 p-1.5 hidden group-hover:block min-w-max">
-                {COLUMNS.map(col => (
-                  <label key={col} className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-gray-50 rounded-md cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={visibleColumns.includes(col)}
-                      onChange={() => toggleColumnVisible(col)}
-                      className="rounded accent-accent w-3.5 h-3.5"
-                    />
-                    <span className="text-[13px] text-gray-700">{col}</span>
-                  </label>
-                ))}
-              </div>
+      {activeTab !== 'Insights' && (
+        <div className="bg-chrome-surface border-b border-chrome-border px-4 sm:px-8 py-2.5 flex items-center justify-between flex-shrink-0 gap-2 sm:gap-4">
+          {/* Left: filters */}
+          <div className="flex items-center gap-2 flex-1 sm:flex-none">
+            <div className="flex-1 sm:flex-none">
+              <SearchBar query={query} onSearch={setQuery} />
             </div>
-          )}
-
-          {/* View toggle */}
-          <div className="flex border border-gray-200 rounded-md overflow-hidden ml-1">
-            <button
-              onClick={() => setViewMode('columns')}
-              title="Kanban view"
-              className={`px-2.5 py-1.5 transition-colors ${
-                viewMode === 'columns' ? 'bg-gray-100 text-[#0a0a0a]' : 'text-gray-400 hover:bg-gray-50'
-              }`}
-            >
-              <KanbanIcon />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              title="List view"
-              className={`px-2.5 py-1.5 border-l border-gray-200 transition-colors ${
-                viewMode === 'list' ? 'bg-gray-100 text-[#0a0a0a]' : 'text-gray-400 hover:bg-gray-50'
-              }`}
-            >
-              <ListIcon />
-            </button>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              aria-label="Filter from date"
+              title="Sent from"
+              className="hidden sm:block font-mono text-[12px] px-3 py-2 border border-chrome-border rounded-md text-chrome-muted bg-chrome-bg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-[130px] [color-scheme:light]"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              aria-label="Filter to date"
+              title="Sent until"
+              className="hidden sm:block font-mono text-[12px] px-3 py-2 border border-chrome-border rounded-md text-chrome-muted bg-chrome-bg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-[130px] [color-scheme:light]"
+            />
           </div>
 
-          {/* Refresh */}
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md text-accent hover:text-accent-hover font-medium transition-colors disabled:opacity-60"
-          >
-            <span className={`inline-flex ${isRefreshing ? 'animate-spin' : ''}`}>
-              <RefreshIcon />
-            </span>
-            {isRefreshing ? 'Syncing…' : 'Refresh'}
-          </button>
+          {/* Right: actions */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {/* Favorites toggle */}
+            <button
+              onClick={() => setShowFavoritesOnly(prev => !prev)}
+              aria-label={showFavoritesOnly ? 'Show all contacts' : 'Show favorites only'}
+              aria-pressed={showFavoritesOnly}
+              className={`flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 ${
+                showFavoritesOnly
+                  ? 'text-rose-500 bg-rose-500/10'
+                  : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
+              }`}
+            >
+              <HeartIcon filled={showFavoritesOnly} />
+              <span className="hidden sm:inline">Favorites</span>
+            </button>
+
+            {/* Archive all (desktop only) */}
+            <button
+              type="button"
+              onClick={handleArchiveAll}
+              aria-label="Archive all visible contacts"
+              className="hidden sm:flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+            >
+              <ArchiveBoxIcon />
+              Archive all
+            </button>
+
+            {/* Export CSV (desktop only) */}
+            <button
+              type="button"
+              onClick={exportCSV}
+              aria-label="Export current view as CSV"
+              className="hidden sm:flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+            >
+              <DownloadIcon />
+              Export CSV
+            </button>
+
+            <div className="hidden sm:block w-px h-4 bg-chrome-border mx-1" aria-hidden="true" />
+
+            {/* Columns picker — desktop only */}
+            {viewMode === 'columns' && (
+              <div className="hidden sm:block relative" ref={columnPickerRef}>
+                <button
+                  onClick={() => setShowColumnPicker(prev => !prev)}
+                  aria-expanded={showColumnPicker}
+                  aria-haspopup="listbox"
+                  aria-label="Toggle column visibility"
+                  className="text-[13px] px-3 py-1.5 rounded-md border border-chrome-border text-chrome-muted hover:bg-black/5 font-medium whitespace-nowrap transition-colors"
+                >
+                  Columns ({visibleColumns.length})
+                </button>
+                {showColumnPicker && (
+                  <div
+                    role="listbox"
+                    aria-multiselectable="true"
+                    aria-label="Visible columns"
+                    className="absolute right-0 top-9 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1.5 min-w-max"
+                  >
+                    {COLUMNS.map(col => (
+                      <label
+                        key={col}
+                        className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-black/5 rounded-md cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns.includes(col)}
+                          onChange={() => toggleColumnVisible(col)}
+                          aria-label={`Show ${col} column`}
+                          className="rounded accent-accent w-3.5 h-3.5"
+                        />
+                        <span className="text-[13px] text-chrome-muted">{col}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* View toggle */}
+            <div
+              className="flex border border-chrome-border rounded-md overflow-hidden sm:ml-1"
+              role="group"
+              aria-label="View mode"
+            >
+              <button
+                onClick={() => setViewMode('columns')}
+                aria-label="Kanban view"
+                aria-pressed={viewMode === 'columns'}
+                className={`px-2.5 py-1.5 transition-colors ${
+                  viewMode === 'columns' ? 'bg-black/[0.07] text-chrome-text' : 'text-chrome-muted hover:bg-black/5'
+                }`}
+              >
+                <KanbanIcon />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                aria-label="List view"
+                aria-pressed={viewMode === 'list'}
+                className={`px-2.5 py-1.5 border-l border-chrome-border transition-colors ${
+                  viewMode === 'list' ? 'bg-black/[0.07] text-chrome-text' : 'text-chrome-muted hover:bg-black/5'
+                }`}
+              >
+                <ListIcon />
+              </button>
+            </div>
+
+            {/* Refresh */}
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              aria-label={isRefreshing ? 'Syncing data…' : 'Refresh data'}
+              className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-md text-accent hover:text-accent-hover font-medium transition-colors disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+            >
+              <span className={`inline-flex ${isRefreshing ? 'animate-spin' : ''}`} aria-hidden="true">
+                <RefreshIcon />
+              </span>
+              <span className="hidden sm:inline">{isRefreshing ? 'Syncing…' : 'Refresh'}</span>
+            </button>
+          </div>
         </div>
-      </div>}
+      )}
 
       {/* ── Main content ────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
@@ -385,48 +499,58 @@ export default function App() {
           {activeTab === 'Insights' ? (
             <InsightsPanel />
           ) : error && records.length === 0 ? (
-            <div className="flex items-center justify-center flex-1 h-full text-red-400 text-sm">
-              Failed to load data: {error}
+            <div className="flex items-center justify-center flex-1 h-full text-red-500 text-sm">
+              Failed to load data. Please refresh.
             </div>
           ) : showEmptySearch ? (
             <div className="flex items-center justify-center h-full">
               <EmptyState context="search" query={query} />
             </div>
           ) : viewMode === 'list' ? (
-            <div className="p-8 overflow-y-auto h-full">
+            <div className="p-4 sm:p-8 overflow-y-auto h-full">
               {filtered.length === 0 ? (
                 <EmptyState context="board" />
               ) : (
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left border-b border-gray-200">
-                      <th className="pb-2.5 font-semibold text-[11px] text-gray-400 uppercase tracking-[0.06em]">Company</th>
-                      <th className="pb-2.5 font-semibold text-[11px] text-gray-400 uppercase tracking-[0.06em]">Contact</th>
-                      <th className="pb-2.5 font-semibold text-[11px] text-gray-400 uppercase tracking-[0.06em]">Subject</th>
-                      <th className="pb-2.5 font-semibold text-[11px] text-gray-400 uppercase tracking-[0.06em]">Status</th>
-                      <th className="pb-2.5 font-semibold text-[11px] text-gray-400 uppercase tracking-[0.06em]">Sent</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map(r => (
-                      <tr
-                        key={r.threadId}
-                        onClick={() => setSelectedThreadId(r.threadId)}
-                        className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
-                      >
-                        <td className="py-2.5 font-semibold text-[13px] text-[#0a0a0a]">{r.company}</td>
-                        <td className="py-2.5 text-[13px] text-gray-500">{r.contactName}</td>
-                        <td className="py-2.5 text-[13px] text-gray-500 max-w-xs truncate">{r.subject}</td>
-                        <td className="py-2.5">
-                          <StatusDot status={r.status} />
-                        </td>
-                        <td className="py-2.5 font-mono text-[12px] text-gray-400">
-                          {formatShortDate(r.sentDate)}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[480px]">
+                    <thead>
+                      <tr className="text-left border-b border-chrome-border">
+                        <th scope="col" className="pb-2.5 font-sans font-semibold text-[10px] text-chrome-muted uppercase tracking-[0.08em]">Company</th>
+                        <th scope="col" className="pb-2.5 font-sans font-semibold text-[10px] text-chrome-muted uppercase tracking-[0.08em] hidden sm:table-cell">Contact</th>
+                        <th scope="col" className="pb-2.5 font-sans font-semibold text-[10px] text-chrome-muted uppercase tracking-[0.08em] hidden md:table-cell">Subject</th>
+                        <th scope="col" className="pb-2.5 font-sans font-semibold text-[10px] text-chrome-muted uppercase tracking-[0.08em]">Status</th>
+                        <th scope="col" className="pb-2.5 font-sans font-semibold text-[10px] text-chrome-muted uppercase tracking-[0.08em] hidden sm:table-cell">Sent</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filtered.map(r => (
+                        <tr
+                          key={r.threadId}
+                          tabIndex={0}
+                          aria-label={`Open ${r.company} — ${r.contactName}`}
+                          onClick={() => setSelectedThreadId(r.threadId)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setSelectedThreadId(r.threadId);
+                            }
+                          }}
+                          className="border-b border-chrome-border hover:bg-black/5 cursor-pointer transition-colors focus:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent/50"
+                        >
+                          <td className="py-2.5 font-semibold text-[13px] text-chrome-text">{r.company}</td>
+                          <td className="py-2.5 text-[13px] text-chrome-muted hidden sm:table-cell">{r.contactName}</td>
+                          <td className="py-2.5 text-[13px] text-chrome-muted max-w-xs truncate hidden md:table-cell">{r.subject}</td>
+                          <td className="py-2.5">
+                            <StatusDot status={r.status} />
+                          </td>
+                          <td className="py-2.5 font-mono text-[12px] text-chrome-muted hidden sm:table-cell">
+                            {formatShortDate(r.sentDate)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           ) : (

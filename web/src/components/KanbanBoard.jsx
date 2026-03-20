@@ -1,14 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   DndContext, DragOverlay, closestCorners,
-  MouseSensor, TouchSensor, useSensor, useSensors
+  MouseSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
 } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { arrayMove } from '@dnd-kit/sortable';
 import { COLUMNS } from '@shared/constants';
 import KanbanColumn from './KanbanColumn';
 import OutreachCard from './OutreachCard';
 
 const ORDER_KEY = 'outreachiq-card-order';
+
 
 function loadOrder() {
   try { return JSON.parse(localStorage.getItem(ORDER_KEY)) || {}; }
@@ -21,6 +23,7 @@ function saveOrder(columns) {
     order[col] = recs.map(r => r.threadId);
   }
   localStorage.setItem(ORDER_KEY, JSON.stringify(order));
+  return order;
 }
 
 function buildColumns(recs, savedOrder = {}) {
@@ -43,16 +46,18 @@ function buildColumns(recs, savedOrder = {}) {
 }
 
 export default function KanbanBoard({ records, onStatusChange, onCardClick, visibleColumns, onToggleFavorite }) {
-  const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 8 } });
-  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } });
-  const sensors = useSensors(mouseSensor, touchSensor);
+  const mouseSensor    = useSensor(MouseSensor,    { activationConstraint: { distance: 8 } });
+  const touchSensor    = useSensor(TouchSensor,    { activationConstraint: { delay: 250, tolerance: 5 } });
+  const keyboardSensor = useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates });
+  const sensors = useSensors(mouseSensor, touchSensor, keyboardSensor);
 
+  const savedOrderRef = useRef(loadOrder());
   const [activeId, setActiveId] = useState(null);
-  const [localColumns, setLocalColumns] = useState(() => buildColumns(records, loadOrder()));
+  const [localColumns, setLocalColumns] = useState(() => buildColumns(records, savedOrderRef.current));
 
   // Sync from props when not dragging — preserves saved order
   useEffect(() => {
-    if (!activeId) setLocalColumns(buildColumns(records, loadOrder()));
+    if (!activeId) setLocalColumns(buildColumns(records, savedOrderRef.current));
   }, [records, activeId]);
 
   function findColumn(id) {
@@ -91,14 +96,14 @@ export default function KanbanBoard({ records, onStatusChange, onCardClick, visi
 
     if (!over) {
       // Cancelled — revert to last saved order
-      setLocalColumns(buildColumns(records, loadOrder()));
+      setLocalColumns(buildColumns(records, savedOrderRef.current));
       return;
     }
 
     if (endCol && endCol !== originalStatus) {
       // Cross-column drop — persist status + save new order
       onStatusChange(active.id, endCol);
-      saveOrder(localColumns);
+      savedOrderRef.current = saveOrder(localColumns);
     } else if (endCol === originalStatus) {
       // Same-column reorder
       const items = localColumns[endCol];
@@ -106,10 +111,10 @@ export default function KanbanBoard({ records, onStatusChange, onCardClick, visi
       const newIdx = items.findIndex(r => r.threadId === over.id);
       if (oldIdx !== newIdx && newIdx >= 0) {
         const next = { ...localColumns, [endCol]: arrayMove(localColumns[endCol], oldIdx, newIdx) };
-        saveOrder(next);
+        savedOrderRef.current = saveOrder(next);
         setLocalColumns(next);
       } else {
-        saveOrder(localColumns);
+        savedOrderRef.current = saveOrder(localColumns);
       }
     }
   }
@@ -129,8 +134,8 @@ export default function KanbanBoard({ records, onStatusChange, onCardClick, visi
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="h-full overflow-x-auto overflow-y-hidden">
-        <div className="h-full min-w-full flex items-stretch justify-center">
+      <div className="h-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory sm:snap-none">
+        <div className="h-full min-w-full flex items-stretch sm:justify-center">
           {COLUMNS.filter(col => cols.includes(col)).map(col => (
             <KanbanColumn
               key={col}

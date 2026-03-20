@@ -5,11 +5,22 @@ import BellIcon from './icons/BellIcon';
 import ChatIcon from './icons/ChatIcon';
 import EyeIcon from './icons/EyeIcon';
 import { generateConversationFeedback } from '../lib/gemini';
-import { getDaysSince, formatShortDate } from '../lib/utils';
+import { getDaysSince, formatShortDate, STATUS_COLORS } from '../lib/utils';
 
 const STEPPER_STEPS = ['Sent', 'Replied', 'Interviewing', 'Offer'];
 
-const IS_PAID_USER = false;
+// Design token mirrors for inline styles (Tailwind can't interpolate into style={})
+const T = {
+  ACCENT:        '#b85212',
+  CHROME_BG:     '#f8f7f5',
+  CHROME_DEEP:   '#f0ede8',
+  CHROME_RIM:    '#e4e2dd',
+  CHROME_TEXT:   '#1a1917',
+  CHROME_SUBTLE: '#9c9189', // inactive step labels — enough contrast on light bg
+  GRAY_400:      '#9ca3af', // ghosted state
+};
+
+const SHOW_FEEDBACK_UPSELL = true;
 
 const TIPS = {
   Sent:         ["Personalize your follow-up if no reply within 5 days. Mention something specific from their work.", "Keep the subject line identical in your follow-up so it threads correctly."],
@@ -73,7 +84,6 @@ function parseThread(record) {
   if (raw.includes('\n\n')) {
     const hasMarkers = raw.includes('[OUT]') || raw.includes('[IN]');
     if (!hasMarkers) {
-      // Single email body — paragraph breaks are not message boundaries
       return [{ from: '', text: raw, fromMe: true }];
     }
     const parts = raw.split('\n\n').map((part, idx) => {
@@ -165,15 +175,6 @@ function ChevronIcon({ open }) {
   );
 }
 
-function LockIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  );
-}
-
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function Sidebar({
@@ -196,9 +197,11 @@ export default function Sidebar({
   const [feedback, setFeedback] = useState('');
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const latestRef = useRef({ notes: '', record: null });
+  const panelRef = useRef(null);
+  const returnFocusRef = useRef(null);
 
-  // Reset local state when switching to a different record
   useEffect(() => {
     if (record) {
       setNotes(record.notes || '');
@@ -207,6 +210,7 @@ export default function Sidebar({
       setConversationExpanded(true);
       setShowFullThread(false);
       setShowDatePicker(false);
+      setConfirmingDelete(false);
       setNextActionDate(
         record.nextActionDate
           ? new Date(record.nextActionDate).toISOString().split('T')[0]
@@ -215,12 +219,10 @@ export default function Sidebar({
     }
   }, [record?.threadId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keep latestRef in sync for the flush-on-close effect below
   useEffect(() => {
     latestRef.current = { notes, record };
   });
 
-  // Auto-save notes 800ms after the user stops typing.
   useEffect(() => {
     if (!record) return;
     if (notes === (record.notes || '')) return;
@@ -231,7 +233,6 @@ export default function Sidebar({
     return () => clearTimeout(timer);
   }, [notes]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-save nextActionDate 800ms after change.
   useEffect(() => {
     if (!record) return;
     const stored = record.nextActionDate
@@ -249,7 +250,6 @@ export default function Sidebar({
     return () => clearTimeout(timer);
   }, [nextActionDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Flush unsaved notes when the sidebar closes or switches to a different record.
   useEffect(() => {
     return () => {
       const { notes, record } = latestRef.current;
@@ -274,10 +274,8 @@ export default function Sidebar({
 
   const handleDelete = useCallback(() => {
     if (!record) return;
-    if (window.confirm(`Delete ${record.company}? This cannot be undone.`)) {
-      onDelete(record.threadId);
-      onClose();
-    }
+    onDelete(record.threadId);
+    onClose();
   }, [record, onDelete, onClose]);
 
   const handleNotesBlur = useCallback(() => {
@@ -285,7 +283,46 @@ export default function Sidebar({
     onUpdateRecord(record.threadId, { notes });
   }, [record, notes, onUpdateRecord]);
 
-  // Stepper helpers
+  // Capture trigger element before opening, restore on close
+  useEffect(() => {
+    if (isOpen) {
+      returnFocusRef.current = document.activeElement;
+    } else {
+      returnFocusRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  // Move focus into panel when it opens
+  useEffect(() => {
+    if (!isOpen || !panelRef.current) return;
+    const first = panelRef.current.querySelector(
+      'button:not([disabled]), [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'
+    );
+    first?.focus();
+  }, [isOpen]);
+
+  // Focus trap: cycle Tab within panel, close on Escape
+  useEffect(() => {
+    if (!isOpen || !panelRef.current) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const focusable = Array.from(panelRef.current.querySelectorAll(
+        'button:not([disabled]), [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'
+      ));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const currentStepIndex = record ? STEPPER_STEPS.indexOf(record.status) : -1;
   const isGhosted = record?.status === 'Ghosted';
   const gmailUrl =
@@ -297,7 +334,7 @@ export default function Sidebar({
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/[0.15] z-30 transition-opacity duration-200 ${
+        className={`fixed inset-0 bg-black/40 z-30 transition-opacity duration-200 ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
@@ -305,92 +342,116 @@ export default function Sidebar({
 
       {/* Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-[560px] max-w-full bg-white z-40 flex flex-col transform transition-transform duration-200 ease-out shadow-panel ${
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={record ? `${record.company} — contact details` : 'Contact details'}
+        className={`fixed top-0 right-0 h-full w-full sm:w-[560px] bg-chrome-bg z-40 flex flex-col transform transition-transform duration-200 ease-out shadow-panel ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {record && (
           <>
             {/* ── Header ──────────────────────────────────────── */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200 flex-shrink-0">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-chrome-border flex-shrink-0">
               <CompanyAvatar domain={record.domain} company={record.company} size="large" />
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[16px] text-[#0a0a0a] leading-tight truncate">{record.company}</p>
-                <p className="text-[13px] text-gray-500 truncate">
+                <p className="font-semibold text-[16px] text-chrome-text leading-tight truncate">{record.company}</p>
+                <p className="text-[13px] text-chrome-muted truncate">
                   {record.contactName}{record.contactEmail ? ` · ${record.contactEmail}` : ''}
                 </p>
               </div>
-              <div className="flex items-center gap-0.5 flex-shrink-0">
-                <button
-                  onClick={() => onToggleFavorite(record.threadId)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    record.favorite
-                      ? 'text-rose-500 bg-rose-50'
-                      : 'text-gray-400 hover:text-rose-400 hover:bg-gray-100'
-                  }`}
-                  title={record.favorite ? 'Unfavorite' : 'Favorite'}
-                >
-                  <HeartIcon filled={!!record.favorite} className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => onToggleArchived(record.threadId)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    record.archived
-                      ? 'text-sky-500 bg-sky-50'
-                      : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
-                  }`}
-                  title={record.archived ? 'Unarchive' : 'Archive'}
-                >
-                  <ArchiveIcon />
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                  title="Delete"
-                >
-                  <TrashIcon />
-                </button>
-                <div className="w-px h-5 bg-gray-200 mx-1" />
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                  title="Close"
-                >
-                  <CloseIcon />
-                </button>
-              </div>
+              {confirmingDelete ? (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-[12px] text-red-500 font-medium">Delete forever?</span>
+                  <button
+                    onClick={handleDelete}
+                    autoFocus
+                    className="text-[12px] font-semibold px-3 py-1.5 rounded-md bg-red-500/15 text-red-500 hover:bg-red-500/25 transition-colors"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setConfirmingDelete(false)}
+                    className="text-[12px] font-medium px-3 py-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  <button
+                    onClick={() => onToggleFavorite(record.threadId)}
+                    aria-label={record.favorite ? 'Remove from favorites' : 'Add to favorites'}
+                    className={`p-2 rounded-lg transition-colors ${
+                      record.favorite
+                        ? 'text-rose-500 bg-rose-500/10'
+                        : 'text-chrome-muted hover:text-rose-500 hover:bg-black/5'
+                    }`}
+                  >
+                    <HeartIcon filled={!!record.favorite} className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => onToggleArchived(record.threadId)}
+                    aria-label={record.archived ? 'Unarchive' : 'Archive'}
+                    className={`p-2 rounded-lg transition-colors ${
+                      record.archived
+                        ? 'text-sky-600 bg-sky-500/10'
+                        : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
+                    }`}
+                  >
+                    <ArchiveIcon />
+                  </button>
+                  <button
+                    onClick={() => setConfirmingDelete(true)}
+                    aria-label="Delete this record"
+                    className="p-2 rounded-lg text-chrome-muted hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                  >
+                    <TrashIcon />
+                  </button>
+                  <div className="w-px h-5 bg-chrome-border mx-1" aria-hidden="true" />
+                  <button
+                    onClick={onClose}
+                    aria-label="Close panel"
+                    className="p-2 rounded-lg text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors"
+                  >
+                    <CloseIcon />
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* ── Body: two-column grid ────────────────────────── */}
-            <div className="grid grid-cols-2 divide-x divide-gray-200 flex-1 overflow-hidden">
+            {/* ── Body: two-column grid (single column on mobile) ─── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 sm:divide-x divide-chrome-border flex-1 overflow-y-auto sm:overflow-hidden">
 
               {/* Left — scrollable content */}
-              <div className="flex flex-col overflow-hidden">
-                {/* SCROLLABLE: subject + conversation + AI feedback */}
-                <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
-                  <h3 className="font-semibold text-sm text-gray-900 leading-snug">{record.subject}</h3>
+              <div className="flex flex-col sm:overflow-hidden">
+                <div className="sm:flex-1 sm:overflow-y-auto p-5 flex flex-col gap-4">
+                  <h3 className="font-semibold text-sm text-chrome-text leading-snug">{record.subject}</h3>
 
                   {/* Date + badges */}
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-2 text-xs text-chrome-muted">
                       <span>{formatShortDate(record.sentDate)}</span>
-                      <span className="text-gray-300">·</span>
+                      <span className="text-chrome-rim">·</span>
                       <span>{getDaysSince(record.sentDate)}d ago</span>
                     </div>
                     <div className="flex items-center gap-1.5 flex-nowrap">
                       {getDaysSince(record.sentDate) >= 3 && (
-                        <span className="flex items-center gap-1 bg-orange-50 text-orange-500 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap">
+                        <span className="flex items-center gap-1 bg-sky-500/10 text-sky-600 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap">
                           <BellIcon className="w-3 h-3" /> Follow up
                         </span>
                       )}
                       {!(isGhosted && !record.isOpened) && (
-                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap ${record.isOpened ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'}`}>
+                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap ${
+                          record.isOpened ? 'bg-emerald-500/10 text-emerald-600' : 'bg-black/5 text-chrome-muted'
+                        }`}>
                           <EyeIcon className="w-3 h-3" />
                           {record.isOpened ? `${Math.min(record.openCount, 3)}${record.openCount > 3 ? '+' : 'x'} opens` : 'Not opened'}
                         </span>
                       )}
                       {(record.messageCount || 1) > 1 && (
-                        <span className="flex items-center gap-1 bg-violet-50 text-violet-500 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap">
+                        <span className="flex items-center gap-1 bg-violet-500/10 text-violet-600 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap">
                           <ChatIcon className="w-3 h-3" /> {Math.min(record.messageCount, 3)}{record.messageCount > 3 ? '+' : ''} msgs
                         </span>
                       )}
@@ -399,7 +460,7 @@ export default function Sidebar({
 
                   {gmailUrl && (
                     <a href={gmailUrl} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover font-medium w-fit">
+                      className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover font-medium w-fit transition-colors">
                       Open in Gmail <ExternalLinkIcon />
                     </a>
                   )}
@@ -408,8 +469,8 @@ export default function Sidebar({
                   <div>
                     <button onClick={() => setConversationExpanded(v => !v)}
                       className="flex items-center justify-between w-full mb-2 group">
-                      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em]">Conversation</p>
-                      <span className="text-gray-400 group-hover:text-gray-600 transition-colors">
+                      <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em]">Conversation</p>
+                      <span className="text-chrome-muted group-hover:text-chrome-text transition-colors">
                         <ChevronIcon open={conversationExpanded} />
                       </span>
                     </button>
@@ -418,14 +479,14 @@ export default function Sidebar({
                       (() => {
                         const messages = parseThread(record);
                         if (messages.length === 0) {
-                          return <p className="text-xs text-gray-400 italic">No messages in this thread yet.</p>;
+                          return <p className="text-xs text-chrome-muted italic">No messages in this thread yet.</p>;
                         }
                         const visibleMsgs = showFullThread ? messages : messages.slice(-2);
                         return (
                           <div className="flex flex-col gap-2">
                             {!showFullThread && messages.length > 2 && (
                               <button onClick={() => setShowFullThread(true)}
-                                className="text-xs text-accent hover:text-accent-hover font-medium self-start">
+                                className="text-xs text-accent hover:text-accent-hover font-medium self-start transition-colors">
                                 Show full thread ({messages.length} messages)
                               </button>
                             )}
@@ -436,7 +497,7 @@ export default function Sidebar({
                                   <div key={i} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                                     {msg.from && (
                                       <p className={`text-[10px] font-semibold uppercase tracking-wider mb-1 px-1 ${
-                                        isMe ? 'text-indigo-400' : 'text-gray-400'
+                                        isMe ? 'text-accent/70' : 'text-chrome-muted'
                                       }`}>
                                         {msg.from}
                                       </p>
@@ -444,8 +505,8 @@ export default function Sidebar({
                                     <div className="relative" style={{ maxWidth: '85%' }}>
                                       <div className={`px-3 py-2 ${
                                         isMe
-                                          ? 'bg-indigo-500 text-white rounded-2xl rounded-br-sm'
-                                          : 'bg-gray-100 text-gray-800 rounded-2xl rounded-bl-sm'
+                                          ? 'bg-accent text-white rounded-2xl rounded-br-sm'
+                                          : 'bg-chrome-deep text-chrome-subtle border border-chrome-border rounded-2xl rounded-bl-sm'
                                       }`}>
                                         <p className="text-xs leading-relaxed">{msg.text}</p>
                                       </div>
@@ -455,7 +516,7 @@ export default function Sidebar({
                                         ...(isMe ? { right: -9 } : { left: -9 }),
                                         width: 10,
                                         height: 12,
-                                        background: isMe ? '#6366f1' : '#f3f4f6',
+                                        background: isMe ? T.ACCENT : T.CHROME_DEEP,
                                         clipPath: isMe
                                           ? 'polygon(0 0, 0 100%, 100% 100%)'
                                           : 'polygon(100% 0, 100% 100%, 0 100%)',
@@ -473,7 +534,7 @@ export default function Sidebar({
                         const messages = parseThread(record);
                         const lastDate = record.repliedAt || record.sentDate;
                         return (
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-chrome-muted">
                             {messages.length} message{messages.length !== 1 ? 's' : ''} · last on {formatShortDate(lastDate)}
                           </p>
                         );
@@ -483,43 +544,43 @@ export default function Sidebar({
 
                   {/* AI Conversation Feedback */}
                   <div>
-                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em] mb-2">
+                    <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-2">
                       Conversation Feedback
                     </p>
 
-                    {IS_PAID_USER ? (
-                      <div>
-                        {!feedback && !feedbackLoading && (
-                          <button onClick={handleFeedback} disabled={feedbackLoading}
-                            className="w-full flex items-center justify-center gap-1.5 bg-[#4f46e5] text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-[#4338ca] disabled:opacity-50 transition-colors">
-                            <GeminiIcon />
-                            ✦ Generate Feedback
-                          </button>
-                        )}
-                        {feedbackLoading && <p className="text-xs text-gray-400 italic">Generating feedback...</p>}
-                        {feedbackError && <p className="text-red-500 text-xs mt-1">{feedbackError}</p>}
-                        {feedback && (
-                          <div className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 rounded-lg p-3 border border-gray-100">
-                            {feedback}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
+                    {SHOW_FEEDBACK_UPSELL ? (
                       <div className="relative rounded-lg overflow-hidden">
                         {/* Blurred fake feedback */}
-                        <div aria-hidden="true" className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap p-3 bg-gray-50 border border-gray-100 rounded-lg select-none"
+                        <div aria-hidden="true" className="text-xs text-chrome-subtle leading-relaxed whitespace-pre-wrap p-3 bg-chrome-surface border border-chrome-border rounded-lg select-none"
                           style={{ filter: 'blur(5px)', userSelect: 'none' }}>
                           {generateFakeFeedback(record.threadId)}
                         </div>
                         {/* Gradient fade at bottom */}
                         <div className="absolute bottom-0 left-0 right-0 h-16 rounded-b-lg pointer-events-none"
-                          style={{ background: 'linear-gradient(to bottom, transparent, rgba(249,250,251,0.95))' }} />
+                          style={{ background: `linear-gradient(to bottom, transparent, ${T.CHROME_BG})` }} />
                         {/* CTA overlay */}
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <button className="flex items-center gap-1.5 bg-[#4f46e5] text-white text-[12px] font-semibold px-4 py-2 rounded-full shadow-lg hover:bg-[#4338ca] transition-colors">
+                          <button className="flex items-center gap-1.5 bg-accent text-white text-[12px] font-semibold px-4 py-2 rounded-md shadow-lg hover:bg-accent-hover transition-colors">
                             ✦ View Personalized Feedback
                           </button>
                         </div>
+                      </div>
+                    ) : (
+                      <div>
+                        {!feedback && !feedbackLoading && (
+                          <button onClick={handleFeedback} disabled={feedbackLoading}
+                            className="w-full flex items-center justify-center gap-1.5 bg-accent text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-accent-hover disabled:opacity-50 transition-colors">
+                            <GeminiIcon />
+                            ✦ Generate Feedback
+                          </button>
+                        )}
+                        {feedbackLoading && <p className="text-xs text-chrome-muted italic">Generating feedback...</p>}
+                        {feedbackError && <p className="text-red-500 text-xs mt-1">{feedbackError}</p>}
+                        {feedback && (
+                          <div className="text-xs text-chrome-subtle leading-relaxed whitespace-pre-wrap bg-chrome-surface rounded-lg p-3 border border-chrome-border">
+                            {feedback}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -527,35 +588,36 @@ export default function Sidebar({
               </div>
 
               {/* Right — Metadata + Status + Next Action + Notes + Tips */}
-              <div className="flex flex-col overflow-y-auto p-5 gap-6">
+              <div className="flex flex-col sm:overflow-y-auto p-5 gap-6 border-t sm:border-t-0 border-chrome-border">
 
                 {/* ── Status Stepper ── */}
                 <div>
-                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em] mb-2">Status</p>
+                  <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-3">Status</p>
                   <div className="relative">
-                    <div className="absolute left-[10px] top-3 bottom-3 w-px bg-gray-200" />
+                    <div className="absolute left-[10px] top-3 bottom-3 w-px bg-chrome-border" />
 
                     {[...STEPPER_STEPS, 'Ghosted'].map((step, i) => {
                       const isGhostedStep = step === 'Ghosted';
                       const isCompleted = !isGhosted && !isGhostedStep && i < currentStepIndex;
                       const isActive = (!isGhosted && !isGhostedStep && i === currentStepIndex) ||
                                        (isGhosted && isGhostedStep);
-                      const dotColor = isActive
-                        ? (isGhostedStep ? '#6b7280' : '#4f46e5')
-                        : isCompleted ? '#4f46e5' : 'white';
-                      const dotBorder = isCompleted || isActive
-                        ? (isGhostedStep && isActive ? '#6b7280' : '#4f46e5')
-                        : '#d1d5db';
+
+                      // Active: use the status's own color for the dot
+                      // Completed: accent
+                      // Inactive: transparent with rim border
+                      const activeColor = isGhostedStep ? T.GRAY_400 : (STATUS_COLORS[step] || T.ACCENT);
+                      const dotBg = isActive ? activeColor : isCompleted ? T.ACCENT : 'transparent';
+                      const dotBorder = isActive ? activeColor : isCompleted ? T.ACCENT : T.CHROME_RIM;
 
                       return (
                         <button
                           key={step}
                           onClick={() => onStatusChange(record.threadId, step)}
-                          className="relative flex items-center gap-3 w-full text-left py-1.5 px-2 rounded-md transition-colors hover:bg-gray-50"
+                          className="relative flex items-center gap-3 w-full text-left py-1.5 px-2 rounded-md transition-colors hover:bg-black/5"
                         >
                           <div
-                            className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 z-10 bg-white"
-                            style={{ backgroundColor: dotColor, borderColor: dotBorder }}
+                            className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 z-10 bg-chrome-bg"
+                            style={{ backgroundColor: dotBg, borderColor: dotBorder }}
                           >
                             {isCompleted && <CheckIcon />}
                             {isActive && !isGhostedStep && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
@@ -564,7 +626,9 @@ export default function Sidebar({
                           <span
                             className="text-[13px]"
                             style={{
-                              color: isActive ? (isGhostedStep ? '#374151' : '#4f46e5') : isCompleted ? '#374151' : '#9ca3af',
+                              color: isActive
+                                ? (isGhostedStep ? T.GRAY_400 : T.CHROME_TEXT)
+                                : isCompleted ? T.CHROME_TEXT : T.CHROME_SUBTLE,
                               fontWeight: isActive ? 600 : 400,
                             }}
                           >
@@ -576,42 +640,45 @@ export default function Sidebar({
                   </div>
                 </div>
 
-                {/* ── Follow-up Reminder (Next Action Date) ── */}
+                {/* ── Follow-up Reminder ── */}
                 <div>
-                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em] mb-2">
+                  <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-2">
                     Follow-up Reminder
                   </p>
                   {nextActionDate ? (
                     <div className="flex items-center gap-2">
                       <button onClick={() => setShowDatePicker(v => !v)}
-                        className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 text-[12px] font-medium px-3 py-1 rounded-full hover:bg-indigo-100 transition-colors">
+                        className="inline-flex items-center gap-1.5 bg-accent/10 text-accent text-[12px] font-medium px-3 py-1 rounded-full hover:bg-accent/20 transition-colors">
                         Follow up by {formatShortDate(nextActionDate + 'T12:00:00.000Z')}
                       </button>
                       <button onClick={() => { setNextActionDate(''); setShowDatePicker(false); }}
-                        className="text-gray-400 hover:text-gray-600 transition-colors" title="Clear reminder">
+                        aria-label="Clear reminder"
+                        className="text-chrome-muted hover:text-chrome-text transition-colors">
                         <CloseIcon />
                       </button>
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-400">Set a reminder</p>
+                    <p className="text-xs text-chrome-muted">Set a reminder</p>
                   )}
                   {(!nextActionDate || showDatePicker) && (
                     <input type="date" value={nextActionDate}
                       min={new Date().toISOString().split('T')[0]}
                       onChange={e => { setNextActionDate(e.target.value); setShowDatePicker(false); }}
-                      className="mt-2 text-[12px] font-mono px-3 py-1.5 border border-gray-200 rounded-md text-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-full" />
+                      aria-label="Follow-up reminder date"
+                      className="mt-2 text-[12px] font-mono px-3 py-1.5 border border-chrome-border rounded-md text-chrome-muted bg-chrome-surface focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors w-full [color-scheme:light]" />
                   )}
                 </div>
 
                 {/* ── Notes ── */}
                 <div>
-                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em] mb-2">Notes</p>
+                  <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-2">Notes</p>
                   <textarea
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                     onBlur={handleNotesBlur}
                     placeholder="Add notes about this outreach..."
-                    className="w-full h-24 text-sm text-gray-700 border border-gray-200 rounded-lg p-2 resize-none focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    aria-label="Notes about this outreach"
+                    className="w-full h-24 text-sm text-chrome-subtle bg-chrome-surface border border-chrome-border rounded-lg p-2 resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 placeholder-stone-300 transition-colors"
                   />
                 </div>
 
@@ -620,10 +687,10 @@ export default function Sidebar({
                   <button onClick={() => setTipsExpanded(v => !v)}
                     className="flex items-center justify-between w-full mb-2 group">
                     <div className="flex items-center gap-2">
-                      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.08em]">Tips</p>
-                      <span className="text-[11px] text-gray-300">{record.status} stage</span>
+                      <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em]">Tips</p>
+                      <span className="text-[11px] text-chrome-subtle">{record.status} stage</span>
                     </div>
-                    <span className="text-gray-400 group-hover:text-gray-600 transition-colors">
+                    <span className="text-chrome-muted group-hover:text-chrome-text transition-colors">
                       <ChevronIcon open={tipsExpanded} />
                     </span>
                   </button>
@@ -631,8 +698,8 @@ export default function Sidebar({
                     <ul className="flex flex-col gap-2">
                       {(TIPS[record.status] || TIPS['Sent']).map((tip, i) => (
                         <li key={i} className="flex items-start gap-2">
-                          <span className="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-300 flex-shrink-0" />
-                          <p className="text-[12px] text-gray-600 leading-relaxed">{tip}</p>
+                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-accent/40 flex-shrink-0" />
+                          <p className="text-[12px] text-chrome-subtle leading-relaxed">{tip}</p>
                         </li>
                       ))}
                     </ul>
