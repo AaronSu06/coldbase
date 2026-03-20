@@ -135,7 +135,7 @@ export function DateRangePicker({ dateFrom, dateTo, onRangeChange }) {
           aria-label="Date range picker"
           // left-0 on mobile (calendar ~270px, fine for 360px+ screens)
           // max-w prevents overflow on very small screens
-          className="absolute top-full left-0 mt-1.5 z-50 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg p-3 max-w-[calc(100vw-1rem)]"
+          className="absolute top-full right-0 mt-1.5 z-50 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg p-3 max-w-[calc(100vw-2rem)]"
         >
           <DayPicker
             mode="range"

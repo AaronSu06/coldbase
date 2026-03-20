@@ -286,7 +286,7 @@ export default function App() {
                     role="listbox"
                     aria-multiselectable="true"
                     aria-label="Visible columns"
-                    className="absolute right-0 top-9 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1.5 min-w-max"
+                    className="absolute right-0 top-full mt-1 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1.5 min-w-max"
                   >
                     {COLUMNS.map(col => (
                       <label
