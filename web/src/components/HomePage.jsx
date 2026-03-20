@@ -103,9 +103,13 @@ export default function HomePage() {
       </div>
 
       {/* Action cards grid */}
-      <div className="p-4 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
-        <NotificationsCard />
-        <CompleteProfileCard />
+      <div className="p-4 sm:p-8 max-w-4xl space-y-4">
+        {/* Top row: utility cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <NotificationsCard />
+          <CompleteProfileCard />
+        </div>
+        {/* Bottom row: subscription */}
         <UpgradeCard />
       </div>
     </div>
