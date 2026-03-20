@@ -8,6 +8,29 @@ function formatHour(h) {
   return `${h - 12}pm`;
 }
 
+function StatsRow({ sent, replied }) {
+  const rate = sent > 0 ? Math.round((replied / sent) * 100) : 0;
+  const stats = [
+    { label: 'Total Sent', value: sent },
+    { label: 'Reply Rate', value: `${rate}%` },
+    { label: 'Replies', value: replied },
+  ];
+  return (
+    <div className="flex gap-4 mb-6">
+      {stats.map(s => (
+        <div key={s.label} className="flex flex-col gap-0.5">
+          <span className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted">
+            {s.label}
+          </span>
+          <span className="font-display text-[22px] font-bold text-chrome-text leading-none">
+            {s.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function InsightsPanel() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,40 +62,10 @@ export default function InsightsPanel() {
   if (!data) return null;
 
   if (data.insufficient) {
-    const sentPct = Math.min(100, Math.round((data.sent / 20) * 100));
-    const repliedPct = Math.min(100, Math.round((data.replied / 5) * 100));
     return (
-      <div className="p-5 sm:p-10 max-w-lg mx-auto">
-        <h2 className="font-display text-[18px] font-bold text-chrome-text mb-1">Best Time to Send</h2>
-        <p className="text-sm text-chrome-muted mb-8">
-          Not enough data yet. Send more emails to unlock send-time insights.
-        </p>
-        <div className="flex flex-col gap-6">
-          <div>
-            <div className="flex justify-between text-xs text-chrome-muted mb-1.5">
-              <span>Emails sent</span>
-              <span className="font-mono">{data.sent} / 20</span>
-            </div>
-            <div className="h-2 bg-chrome-surface rounded-full overflow-hidden">
-              <div
-                className="h-full bg-accent rounded-full transition-all duration-500"
-                style={{ width: `${sentPct}%` }}
-              />
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between text-xs text-chrome-muted mb-1.5">
-              <span>Replies received</span>
-              <span className="font-mono">{data.replied} / 5</span>
-            </div>
-            <div className="h-2 bg-chrome-surface rounded-full overflow-hidden">
-              <div
-                className="h-full bg-accent rounded-full transition-all duration-500"
-                style={{ width: `${repliedPct}%` }}
-              />
-            </div>
-          </div>
-        </div>
+      <div className="p-4 sm:p-8 max-w-4xl mx-auto">
+        <StatsRow sent={data.sent} replied={data.replied} />
+        {/* ghost chart goes here in Task 2 */}
       </div>
     );
   }
@@ -87,10 +80,11 @@ export default function InsightsPanel() {
 
   return (
     <div className="p-4 sm:p-8 max-w-4xl mx-auto overflow-y-auto h-full">
+      <StatsRow sent={data.sent} replied={data.replied} />
       <div className="flex items-baseline justify-between mb-6">
         <div>
           <h2 className="font-display text-[18px] font-bold text-chrome-text mb-0.5">Best Time to Send</h2>
-          <p className="text-xs text-chrome-muted">Hours shown in UTC · Based on {data.sent} sent, {data.replied} replies</p>
+          <p className="text-xs text-chrome-muted">Hours shown in UTC</p>
         </div>
       </div>
 
