@@ -198,9 +198,9 @@ export default function App() {
       {/* ── Top Nav ─────────────────────────────────────────────────── */}
       <TopNav activeSection={activeSection} onSectionChange={setActiveSection} />
 
-      {/* ── Row A: navigation + stats ───────────────────────────── */}
+      {/* ── Row A: tabs + stats + actions (no bottom border — merges with Row B) ── */}
       {activeSection === 'tracker' && (
-        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-stretch h-11 flex-shrink-0">
+        <div className="bg-chrome-bg px-4 sm:px-8 flex items-stretch h-11 flex-shrink-0">
 
           {/* Active / Archived tabs */}
           <div className="flex items-stretch" role="tablist" aria-label="Tracker navigation">
@@ -221,36 +221,18 @@ export default function App() {
             ))}
           </div>
 
-          {/* Stats — desktop only, left-anchored after a divider */}
+          {/* Stats — desktop only */}
           <div className="hidden sm:flex items-center gap-5 ml-6 pl-6 border-l border-chrome-border" aria-label="Summary statistics">
             <StatInline value={statSent}    label="sent" />
             <StatInline value={statReplied} label="replied" />
             <StatInline value={replyRate}   label="reply rate" />
           </div>
-        </div>
-      )}
 
-      {/* ── Row B: filters + actions ─────────────────────────────── */}
-      {activeSection === 'tracker' && (
-        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-center gap-2 sm:gap-3 h-9 flex-shrink-0">
+          {/* Spacer */}
+          <div className="flex-1" />
 
-          {/* Search + date range */}
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <div className="flex-1 sm:flex-none min-w-0">
-              <SearchBar query={query} onSearch={setQuery} />
-            </div>
-            <div className="hidden sm:block">
-              <DateRangePicker
-                dateFrom={dateFrom}
-                dateTo={dateTo}
-                onRangeChange={({ from, to }) => { setDateFrom(from); setDateTo(to); }}
-              />
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            {/* Favorites toggle */}
+          {/* Actions — desktop only */}
+          <div className="hidden sm:flex items-center gap-0.5">
             <button
               onClick={() => setShowFavoritesOnly(prev => !prev)}
               aria-label={showFavoritesOnly ? 'Show all contacts' : 'Show favorites only'}
@@ -262,36 +244,34 @@ export default function App() {
               }`}
             >
               <Heart size={14} strokeWidth={2} fill={showFavoritesOnly ? 'currentColor' : 'none'} aria-hidden="true" />
-              <span className="hidden sm:inline">Favorites</span>
+              Favorites
             </button>
 
-            {/* Archive all (desktop only) */}
             <button
               type="button"
               onClick={handleArchiveAll}
               aria-label="Archive all visible contacts"
-              className="hidden sm:flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+              className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
               <Archive size={14} strokeWidth={2} aria-hidden="true" />
               Archive all
             </button>
 
-            {/* Export CSV (desktop only) */}
             <button
               type="button"
               onClick={exportCSV}
               aria-label="Export current view as CSV"
-              className="hidden sm:flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+              className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
               <Download size={14} strokeWidth={2} aria-hidden="true" />
               Export CSV
             </button>
 
-            <div className="hidden sm:block w-px h-4 bg-chrome-border mx-1" aria-hidden="true" />
+            <div className="w-px h-4 bg-chrome-border mx-1" aria-hidden="true" />
 
-            {/* Columns picker — desktop only */}
+            {/* Columns picker */}
             {viewMode === 'columns' && (
-              <div className="hidden sm:block relative" ref={columnPickerRef}>
+              <div className="relative" ref={columnPickerRef}>
                 <button
                   onClick={() => setShowColumnPicker(prev => !prev)}
                   aria-expanded={showColumnPicker}
@@ -306,7 +286,7 @@ export default function App() {
                     role="listbox"
                     aria-multiselectable="true"
                     aria-label="Visible columns"
-                    className="absolute right-0 top-8 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1.5 min-w-max"
+                    className="absolute right-0 top-9 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1.5 min-w-max"
                   >
                     {COLUMNS.map(col => (
                       <label
@@ -329,18 +309,12 @@ export default function App() {
             )}
 
             {/* View toggle */}
-            <div
-              className="flex border border-chrome-border rounded-md overflow-hidden ml-0.5"
-              role="group"
-              aria-label="View mode"
-            >
+            <div className="flex border border-chrome-border rounded-md overflow-hidden ml-0.5" role="group" aria-label="View mode">
               <button
                 onClick={() => setViewMode('columns')}
                 aria-label="Kanban view"
                 aria-pressed={viewMode === 'columns'}
-                className={`px-2.5 py-1 transition-colors ${
-                  viewMode === 'columns' ? 'bg-black/[0.07] text-chrome-text' : 'text-chrome-muted hover:bg-black/5'
-                }`}
+                className={`px-2.5 py-1 transition-colors ${viewMode === 'columns' ? 'bg-black/[0.07] text-chrome-text' : 'text-chrome-muted hover:bg-black/5'}`}
               >
                 <Columns3 size={14} strokeWidth={1.75} aria-hidden="true" />
               </button>
@@ -348,9 +322,7 @@ export default function App() {
                 onClick={() => setViewMode('list')}
                 aria-label="List view"
                 aria-pressed={viewMode === 'list'}
-                className={`px-2.5 py-1 border-l border-chrome-border transition-colors ${
-                  viewMode === 'list' ? 'bg-black/[0.07] text-chrome-text' : 'text-chrome-muted hover:bg-black/5'
-                }`}
+                className={`px-2.5 py-1 border-l border-chrome-border transition-colors ${viewMode === 'list' ? 'bg-black/[0.07] text-chrome-text' : 'text-chrome-muted hover:bg-black/5'}`}
               >
                 <List size={14} strokeWidth={1.75} aria-hidden="true" />
               </button>
@@ -364,43 +336,70 @@ export default function App() {
               className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-md text-accent hover:text-accent-hover font-medium transition-colors disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
               <RefreshCw size={14} strokeWidth={2} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
-              <span className="hidden sm:inline">{isRefreshing ? 'Syncing…' : 'Refresh'}</span>
+              {isRefreshing ? 'Syncing…' : 'Refresh'}
             </button>
-
-            {/* Mobile: overflow menu */}
-            <div className="sm:hidden relative" ref={mobileMenuRef}>
-              <button
-                onClick={() => setShowMobileMenu(v => !v)}
-                aria-label="More options"
-                aria-expanded={showMobileMenu}
-                aria-haspopup="menu"
-                className="p-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors"
-              >
-                <MoreVertical size={16} strokeWidth={2} aria-hidden="true" />
-              </button>
-              {showMobileMenu && (
-                <div
-                  role="menu"
-                  className="absolute right-0 top-8 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1 min-w-[140px]"
-                >
-                  {['Active', 'Archived'].map(tab => (
-                    <button
-                      key={tab}
-                      role="menuitem"
-                      onClick={() => { setActiveTab(tab); setShowMobileMenu(false); }}
-                      className={`w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors ${
-                        activeTab === tab
-                          ? 'text-accent font-semibold bg-accent/5'
-                          : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
-                      }`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
+
+          {/* Mobile: overflow menu */}
+          <div className="sm:hidden flex items-center" ref={mobileMenuRef}>
+            <button
+              onClick={() => setShowMobileMenu(v => !v)}
+              aria-label="More options"
+              aria-expanded={showMobileMenu}
+              aria-haspopup="menu"
+              className="p-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors"
+            >
+              <MoreVertical size={16} strokeWidth={2} aria-hidden="true" />
+            </button>
+            {showMobileMenu && (
+              <div
+                role="menu"
+                className="absolute right-4 mt-1 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1 min-w-[140px]"
+              >
+                {['Active', 'Archived'].map(tab => (
+                  <button
+                    key={tab}
+                    role="menuitem"
+                    onClick={() => { setActiveTab(tab); setShowMobileMenu(false); }}
+                    className={`w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors ${
+                      activeTab === tab
+                        ? 'text-accent font-semibold bg-accent/5'
+                        : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Row B: full-width search (border-b separates header from content) ── */}
+      {activeSection === 'tracker' && (
+        <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-center gap-3 py-2 flex-shrink-0">
+          <div className="flex-1 min-w-0">
+            <SearchBar query={query} onSearch={setQuery} />
+          </div>
+          <div className="hidden sm:block flex-shrink-0">
+            <DateRangePicker
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onRangeChange={({ from, to }) => { setDateFrom(from); setDateTo(to); }}
+            />
+          </div>
+          {/* Mobile favorites toggle */}
+          <button
+            onClick={() => setShowFavoritesOnly(prev => !prev)}
+            aria-label={showFavoritesOnly ? 'Show all contacts' : 'Show favorites only'}
+            aria-pressed={showFavoritesOnly}
+            className={`sm:hidden flex items-center p-1.5 rounded-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 ${
+              showFavoritesOnly ? 'text-rose-500 bg-rose-500/10' : 'text-chrome-muted hover:bg-black/5'
+            }`}
+          >
+            <Heart size={15} strokeWidth={2} fill={showFavoritesOnly ? 'currentColor' : 'none'} aria-hidden="true" />
+          </button>
         </div>
       )}
 

@@ -1,6 +1,6 @@
 export default function SearchBar({ query, onSearch }) {
   return (
-    <div className="relative w-full sm:w-auto">
+    <div className="relative w-full">
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -18,7 +18,7 @@ export default function SearchBar({ query, onSearch }) {
         onChange={e => onSearch(e.target.value)}
         placeholder="Search company, contact, subject…"
         aria-label="Search contacts"
-        className="w-full sm:w-60 pl-9 pr-3 py-2 border border-chrome-border rounded-md text-[13px] text-chrome-muted placeholder-chrome-muted/50 bg-chrome-bg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
+        className="w-full pl-9 pr-3 py-1.5 border border-chrome-border rounded-md text-[13px] text-chrome-muted placeholder-chrome-muted/50 bg-chrome-bg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
       />
     </div>
   );
