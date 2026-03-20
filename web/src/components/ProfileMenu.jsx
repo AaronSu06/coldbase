@@ -48,7 +48,7 @@ export default function ProfileMenu({ onClose }) {
     <div
       role="menu"
       aria-label="Account menu"
-      className="absolute right-0 top-10 bg-chrome-surface border border-chrome-border rounded-xl shadow-panel z-50 py-1.5 min-w-[180px]"
+      className="absolute right-0 top-10 bg-chrome-surface border border-chrome-border rounded-xl shadow-card-hover z-50 py-1.5 min-w-[180px]"
     >
       {MENU_ITEMS.map(({ icon: Icon, label, onClick }) => (
         <button
