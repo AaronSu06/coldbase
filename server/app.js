@@ -13,6 +13,8 @@ import outreachRoutes  from './routes/outreach.js';
 import trackingRoutes  from './routes/tracking.js';
 import emailRoutes     from './routes/email.js';
 import analyticsRoutes from './routes/analytics.js';
+import authRoutes      from './routes/auth.js';
+import requireAuth     from './middleware/requireAuth.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const { version } = JSON.parse(
@@ -40,19 +42,6 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// ─── Secret validation middleware ─────────────────────────────────────────────
-
-function requireSecret(req, res, next) {
-  const secret = process.env.REACH_SECRET;
-  if (!secret) {
-    return res.status(500).json({ error: 'Server misconfigured: REACH_SECRET not set' });
-  }
-  if (req.headers['x-reach-secret'] !== secret) {
-    return res.status(401).json({ error: 'Unauthorized', message: 'Missing or invalid x-reach-secret header' });
-  }
-  next();
-}
-
 app.get('/health', async (req, res) => {
   const uptime = process.uptime();
   try {
@@ -71,7 +60,11 @@ app.get('/health', async (req, res) => {
   }
 });
 
-app.use('/api', requireSecret);
+// Auth routes — public, must be mounted BEFORE requireAuth
+app.use('/api/auth', authRoutes);
+
+// All other /api/* routes require a valid JWT
+app.use('/api', requireAuth);
 
 // ─── Rate limiter for expensive AI/DNS endpoints ───────────────────────────────
 
