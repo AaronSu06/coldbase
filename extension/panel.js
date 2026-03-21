@@ -17,50 +17,7 @@
   let repliedEl = null;
   let rateEl = null;
 
-  function getRuntimeConfig() {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (response) => {
-        if (chrome.runtime.lastError || !response?.ok || !response.config) {
-          resolve();
-          return;
-        }
-        runtimeConfig = { ...runtimeConfig, ...response.config };
-        resolve();
-      });
-    });
-  }
-
-  async function loadStats() {
-    chrome.runtime.sendMessage({ type: 'GET_STATS' }, (response) => {
-      if (chrome.runtime.lastError || !response?.ok) {
-        if (sentEl) sentEl.textContent = '—';
-        if (repliedEl) repliedEl.textContent = '—';
-        if (rateEl) rateEl.textContent = '—';
-        return;
-      }
-      if (sentEl) sentEl.textContent = response.sent;
-      if (repliedEl) repliedEl.textContent = response.replied;
-      if (rateEl) rateEl.textContent = response.rate;
-    });
-  }
-
-  function buildPanel() {
-    host = document.createElement('div');
-    host.id = 'reach-panel-host';
-
-    const shadow = host.attachShadow({ mode: 'closed' });
-
-    // Load brand fonts into the host document (font faces are not shadow-scoped)
-    if (!document.getElementById('reach-panel-fonts')) {
-      const fontLink = document.createElement('link');
-      fontLink.id = 'reach-panel-fonts';
-      fontLink.rel = 'stylesheet';
-      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap';
-      document.head.appendChild(fontLink);
-    }
-
-    const style = document.createElement('style');
-    style.textContent = `
+  const PANEL_STYLE_TEXT = `
       :host, * { box-sizing: border-box; margin: 0; padding: 0; }
 
       .panel {
@@ -191,7 +148,132 @@
         height: 14px;
         flex-shrink: 0;
       }
+
+      /* ── Auth gate ───────────────────────────────── */
+      .auth-gate {
+        position: relative;
+        overflow: hidden;
+      }
+      .auth-ghost {
+        filter: blur(5px);
+        opacity: 0.12;
+        pointer-events: none;
+        user-select: none;
+      }
+      .auth-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 20px;
+        gap: 10px;
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(2px);
+      }
+      .auth-logo {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+      }
+      .auth-heading {
+        font-family: 'Syne', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        color: #1c1917;
+        letter-spacing: -0.02em;
+        text-align: center;
+        margin: 0;
+      }
+      .auth-sub {
+        font-size: 11px;
+        color: #78716c;
+        text-align: center;
+        line-height: 1.5;
+        margin: 0;
+      }
+      .auth-btn-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 6px;
+        width: 100%;
+      }
+      .auth-btn-primary {
+        flex: 1;
+        background: #b85212;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 9px 14px;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 150ms ease;
+      }
+      .auth-btn-primary:hover { background: #9a4310; }
+      .auth-btn-secondary {
+        flex: 1;
+        background: #f6f5f1;
+        color: #44403c;
+        border: 1px solid #e6e3db;
+        border-radius: 8px;
+        padding: 9px 14px;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 150ms ease;
+      }
+      .auth-btn-secondary:hover { background: #ede9e3; }
     `;
+
+  function getRuntimeConfig() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (response) => {
+        if (chrome.runtime.lastError || !response?.ok || !response.config) {
+          resolve();
+          return;
+        }
+        runtimeConfig = { ...runtimeConfig, ...response.config };
+        resolve();
+      });
+    });
+  }
+
+  async function loadStats() {
+    chrome.runtime.sendMessage({ type: 'GET_STATS' }, (response) => {
+      if (chrome.runtime.lastError || !response?.ok) {
+        if (sentEl) sentEl.textContent = '—';
+        if (repliedEl) repliedEl.textContent = '—';
+        if (rateEl) rateEl.textContent = '—';
+        return;
+      }
+      if (sentEl) sentEl.textContent = response.sent;
+      if (repliedEl) repliedEl.textContent = response.replied;
+      if (rateEl) rateEl.textContent = response.rate;
+    });
+  }
+
+  function buildPanel() {
+    host = document.createElement('div');
+    host.id = 'reach-panel-host';
+
+    const shadow = host.attachShadow({ mode: 'closed' });
+
+    // Load brand fonts into the host document (font faces are not shadow-scoped)
+    if (!document.getElementById('reach-panel-fonts')) {
+      const fontLink = document.createElement('link');
+      fontLink.id = 'reach-panel-fonts';
+      fontLink.rel = 'stylesheet';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap';
+      document.head.appendChild(fontLink);
+    }
+
+    const style = document.createElement('style');
+    style.textContent = PANEL_STYLE_TEXT;
 
     const ICON_URL = chrome.runtime.getURL('Reach.png');
 
@@ -245,12 +327,112 @@
     document.documentElement.appendChild(host);
   }
 
+  function buildAuthPanel() {
+    host = document.createElement('div');
+    host.id = 'reach-panel-host';
+
+    const shadow = host.attachShadow({ mode: 'closed' });
+
+    if (!document.getElementById('reach-panel-fonts')) {
+      const fontLink = document.createElement('link');
+      fontLink.id = 'reach-panel-fonts';
+      fontLink.rel = 'stylesheet';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap';
+      document.head.appendChild(fontLink);
+    }
+
+    const style = document.createElement('style');
+    style.textContent = PANEL_STYLE_TEXT;
+    shadow.appendChild(style);
+
+    const ICON_URL = chrome.runtime.getURL('Reach.png');
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    panel.innerHTML = `
+      <div class="header">
+        <img src="${ICON_URL}" alt="Reach" />
+        <div class="header-text">
+          <h1>Reach</h1>
+          <span class="subtitle">outreach tracker</span>
+        </div>
+        <button class="close-btn" aria-label="Close">&times;</button>
+      </div>
+      <div class="auth-gate">
+        <div class="auth-ghost">
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">—</div>
+              <div class="stat-label">Sent</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">—</div>
+              <div class="stat-label">Replied</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">—</div>
+              <div class="stat-label">Reply Rate</div>
+            </div>
+          </div>
+          <div class="footer">
+            <div style="height:38px;background:#b85212;border-radius:8px;opacity:0.6;"></div>
+          </div>
+        </div>
+        <div class="auth-overlay">
+          <img src="${ICON_URL}" class="auth-logo" alt="Reach" />
+          <p class="auth-heading">Sign in to unlock Reach</p>
+          <p class="auth-sub">Track outreach, find contacts,<br>and draft emails.</p>
+          <div class="auth-btn-row">
+            <button class="auth-btn-primary" id="auth-login-btn">Log in</button>
+            <button class="auth-btn-secondary" id="auth-signup-btn">Create account</button>
+          </div>
+        </div>
+      </div>
+    `;
+    shadow.appendChild(panel);
+
+    const dashUrl = runtimeConfig.dashboardUrl || 'http://localhost:5173';
+    shadow.getElementById('auth-login-btn').addEventListener('click', () => {
+      window.open(dashUrl + '/login', '_blank');
+    });
+    shadow.getElementById('auth-signup-btn').addEventListener('click', () => {
+      window.open(dashUrl + '/signup', '_blank');
+    });
+
+    // Auto-unlock: when JWT is written to storage, rebuild as normal panel
+    function onStorageChanged(changes, area) {
+      if (area !== 'local' || !changes.reach_jwt?.newValue) return;
+      chrome.storage.onChanged.removeListener(onStorageChanged);
+      host.remove();
+      host = null;
+      showPanel();
+    }
+    chrome.storage.onChanged.addListener(onStorageChanged);
+
+    shadow.querySelector('.close-btn').addEventListener('click', () => {
+      chrome.storage.onChanged.removeListener(onStorageChanged);
+      hidePanel();
+    });
+
+    document.documentElement.appendChild(host);
+  }
+
   function hidePanel() {
     if (host) host.style.display = 'none';
   }
 
-  function showPanel() {
-    if (!host) buildPanel();
+  async function showPanel() {
+    if (!host) {
+      await getRuntimeConfig();
+      const result = await new Promise(resolve =>
+        chrome.storage.local.get('reach_jwt', resolve)
+      );
+      if (!result.reach_jwt) {
+        buildAuthPanel();
+        host.style.display = '';
+        return;
+      }
+      buildPanel();
+    }
     host.style.display = '';
     getRuntimeConfig().then(loadStats);
   }
