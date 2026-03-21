@@ -1,14 +1,29 @@
+// web/src/lib/api.js
+import { TOKEN_KEY } from '../hooks/useAuth.js';
+
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
-const SECRET = import.meta.env.VITE_REACH_SECRET;
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
 
 async function apiFetch(url, options = {}) {
-  if (!SECRET) throw new Error('VITE_REACH_SECRET not configured — set it in web/.env');
+  const token = getToken();
+  if (!token) {
+    window.location.href = '/login';
+    throw new Error('Not authenticated — redirecting to login');
+  }
   const headers = {
     'Content-Type': 'application/json',
-    'x-reach-secret': SECRET,
+    'Authorization': `Bearer ${token}`,
     ...(options.headers || {}),
   };
   const res = await fetch(url, { ...options, headers });
+  if (res.status === 401) {
+    localStorage.removeItem(TOKEN_KEY);
+    window.location.href = '/login';
+    throw new Error('Session expired — redirecting to login');
+  }
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     throw new Error(`${options.method ?? 'GET'} ${url} failed (${res.status}): ${body || res.statusText}`);
@@ -30,3 +45,25 @@ export const deleteOutreach = (threadId) =>
 
 export const fetchBestTime = () =>
   apiFetch(`${BASE}/insights/best-time`).then(r => r.json());
+
+export async function authSignup(email, password) {
+  const res = await fetch(`${BASE}/auth/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Signup failed');
+  return data;
+}
+
+export async function authLogin(email, password) {
+  const res = await fetch(`${BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Login failed');
+  return data;
+}

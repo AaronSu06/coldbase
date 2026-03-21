@@ -1,7 +1,8 @@
 // MUST be before any imports that transitively load prisma
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 process.env.DIRECT_URL = process.env.TEST_DIRECT_URL;
-process.env.REACH_SECRET = 'test-secret';
+process.env.JWT_SECRET = 'test-jwt-secret';
+process.env.BCRYPT_ROUNDS = '1';
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,6 +15,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let server;
 let port;
+let token;
 let request; // http helper function
 
 before(async () => {
@@ -32,7 +34,26 @@ before(async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   port = server.address().port;
 
-  // HTTP request helper — always sends x-reach-secret
+  // Create a test user and get a JWT for all requests
+  const signupData = JSON.stringify({ email: 'test@example.com', password: 'password123' });
+  const signupRes = await new Promise((resolve, reject) => {
+    const req = http.request({
+      hostname: '127.0.0.1', port,
+      path: '/api/auth/signup',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(signupData) },
+    }, res => {
+      let raw = '';
+      res.on('data', c => (raw += c));
+      res.on('end', () => resolve(JSON.parse(raw)));
+    });
+    req.on('error', reject);
+    req.write(signupData);
+    req.end();
+  });
+  token = signupRes.token;
+
+  // HTTP request helper — always sends Authorization: Bearer token
   request = function(method, path, body, extraHeaders = {}) {
     return new Promise((resolve, reject) => {
       const data = body ? JSON.stringify(body) : null;
@@ -43,7 +64,7 @@ before(async () => {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-reach-secret': 'test-secret',
+          'Authorization': `Bearer ${token}`,
           'Content-Length': data ? Buffer.byteLength(data) : 0,
           ...extraHeaders,
         },
@@ -101,9 +122,9 @@ describe('POST /api/outreach', () => {
     assert.strictEqual(body.error, 'Validation Error');
   });
 
-  it('missing x-reach-secret returns 401', async () => {
+  it('missing Authorization header returns 401', async () => {
     const { status } = await request('POST', '/api/outreach', validPayload, {
-      'x-reach-secret': 'wrong-secret',
+      'Authorization': '',
     });
     assert.strictEqual(status, 401);
   });
@@ -128,7 +149,7 @@ describe('PATCH /api/outreach/:threadId', () => {
 });
 
 describe('GET /api/outreach', () => {
-  it('GET /api/outreach returns 401 without x-reach-secret header', async () => {
+  it('GET /api/outreach returns 401 without Authorization header', async () => {
     const res = await new Promise((resolve, reject) => {
       const req = http.request({
         hostname: '127.0.0.1',

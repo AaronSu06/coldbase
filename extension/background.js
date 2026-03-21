@@ -3,6 +3,7 @@ import { SERVER_URL, DASH_URL } from './config.js';
 import { getAuthToken } from './auth.js';
 import { serverFetch, fetchOutreach } from './api-client.js';
 import { checkReplies, trackLatestSent, trackFromPendingScan } from './reply-checker.js';
+import { setReachToken } from './reach-auth.js';
 import { makeLogger } from './logger-esm.js';
 
 const log = makeLogger('background');
@@ -210,4 +211,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
+});
+
+// ─── Dashboard token sync ──────────────────────────────────────────────────────
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === 'SYNC_REACH_TOKEN' && msg.token) {
+    setReachToken(msg.token);
+  }
 });

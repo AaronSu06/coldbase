@@ -1,0 +1,21 @@
+{
+  "planPath": "docs/plans/2026-03-20-user-auth.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Install server auth dependencies", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Update Prisma schema with User model and userId relations", "status": "pending", "blockedBy": [1]},
+    {"id": 3, "subject": "Task 3: Run database migration", "status": "pending", "blockedBy": [2]},
+    {"id": 4, "subject": "Task 4: Create requireAuth middleware", "status": "pending"},
+    {"id": 5, "subject": "Task 5: Write auth route tests (failing)", "status": "pending", "blockedBy": [4]},
+    {"id": 6, "subject": "Task 6: Create auth routes", "status": "pending", "blockedBy": [5]},
+    {"id": 7, "subject": "Task 7: Update app.js — swap requireSecret for requireAuth and mount auth routes", "status": "pending", "blockedBy": [6, 3]},
+    {"id": 8, "subject": "Task 8: Update outreach routes for per-user data scoping", "status": "pending", "blockedBy": [7]},
+    {"id": 9, "subject": "Task 9: Update tracking route and analytics route for userId", "status": "pending", "blockedBy": [7]},
+    {"id": 10, "subject": "Task 10: Update outreach.test.js to use JWT auth", "status": "pending", "blockedBy": [7]},
+    {"id": 11, "subject": "Task 11: Install react-router-dom", "status": "pending"},
+    {"id": 12, "subject": "Task 12: Create useAuth hook and update api.js", "status": "pending", "blockedBy": [11]},
+    {"id": 13, "subject": "Task 13: Create Login and Signup pages", "status": "pending", "blockedBy": [12]},
+    {"id": 14, "subject": "Task 14: Update main.jsx with routing and PrivateRoute", "status": "pending", "blockedBy": [13]},
+    {"id": 15, "subject": "Task 15: Update extension to use JWT instead of REACH_SECRET", "status": "pending", "blockedBy": [7]}
+  ],
+  "lastUpdated": "2026-03-20T00:00:00.000Z"
+}

@@ -2,7 +2,8 @@
 // Gmail API transport helpers + server API call helpers.
 
 import { logger } from './logger-esm.js';
-import { SERVER_URL, REACH_SECRET } from './config.js';
+import { SERVER_URL } from './config.js';
+import { getReachToken } from './reach-auth.js';
 
 const log = logger('api-client');
 
@@ -57,15 +58,16 @@ export async function apiFetchRetry(url, token, getAuthToken) {
 // ─── Server API helpers ───────────────────────────────────────────────────────
 
 /**
- * Base fetch helper for the Reach server. Attaches the x-reach-secret header
- * and prepends SERVER_URL to the path.
+ * Base fetch helper for the Reach server. Attaches the Authorization: Bearer
+ * token (from chrome.storage.local) and prepends SERVER_URL to the path.
  * @param {string} path - Path relative to SERVER_URL (e.g. '/outreach').
  * @param {RequestInit} options - Standard fetch options.
  */
 export async function serverFetch(path, options = {}) {
+  const token = await getReachToken();
   const headers = {
     'Content-Type': 'application/json',
-    'x-reach-secret': REACH_SECRET,
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
   return fetch(`${SERVER_URL}${path}`, { ...options, headers });

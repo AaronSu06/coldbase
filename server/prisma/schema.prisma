@@ -8,8 +8,21 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model User {
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  passwordHash   String
+  plan           String          @default("free")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  outreaches     Outreach[]
+  trackingPixels TrackingPixel[]
+}
+
 model Outreach {
   id             Int       @id @default(autoincrement())
+  userId         Int
+  user           User      @relation(fields: [userId], references: [id])
   threadId       String    @unique
   gmailUrl       String
   company        String
@@ -34,6 +47,7 @@ model Outreach {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  @@index([userId])
   @@index([status])
   @@index([sentDate])
   @@index([archived])
@@ -41,6 +55,8 @@ model Outreach {
 
 model TrackingPixel {
   id         String      @id @default(cuid())
+  userId     Int
+  user       User        @relation(fields: [userId], references: [id])
   threadId   String
   trackingId String      @unique
   createdAt  DateTime    @default(now())
