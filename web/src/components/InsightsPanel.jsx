@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { fetchBestTime } from '../lib/api';
+import { useState, useEffect, useRef } from 'react';
+import { fetchInsights } from '../lib/api';
 
 function formatHour(h) {
   if (h === 0) return '12am';
@@ -31,21 +31,50 @@ function StatsRow({ sent, replied }) {
   );
 }
 
+// Slide placeholders — replaced in Tasks 5, 6, 7
+function BestTimeSlide({ data }) {
+  return <div className="p-1 text-chrome-muted text-sm">Best Time slide — Task 5</div>;
+}
+
+function ResponseTimeSlide({ data }) {
+  return <div className="p-1 text-chrome-muted text-sm">Response Time slide — Task 6</div>;
+}
+
+function ReplyTrendSlide({ data }) {
+  return <div className="p-1 text-chrome-muted text-sm">Reply Trend slide — Task 7</div>;
+}
+
+const SLIDES = [
+  { key: 'bestTime',      label: 'Best Time to Send',     Component: BestTimeSlide },
+  { key: 'responseTime',  label: 'Avg Response Time',     Component: ResponseTimeSlide },
+  { key: 'replyTrend',    label: 'Reply Rate Trend',      Component: ReplyTrendSlide },
+];
+
 export default function InsightsPanel() {
+  const [index, setIndex] = useState(0);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const debounceRef = useRef(null);
 
   useEffect(() => {
-    fetchBestTime()
-      .then(setData)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+      fetchInsights({ from: dateFrom || undefined, to: dateTo || undefined })
+        .then(setData)
+        .catch(e => setError(e.message))
+        .finally(() => setLoading(false));
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [dateFrom, dateTo]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-chrome-muted text-sm">
+      <div className="flex items-center justify-center h-full text-chrome-muted text-sm min-h-[220px]">
         Loading insights…
       </div>
     );
@@ -53,7 +82,7 @@ export default function InsightsPanel() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full text-red-400 text-sm">
+      <div className="flex items-center justify-center h-full text-red-400 text-sm min-h-[220px]">
         Failed to load insights. Please refresh.
       </div>
     );
@@ -61,131 +90,83 @@ export default function InsightsPanel() {
 
   if (!data) return null;
 
-  if (data.insufficient) {
-    const ghostHeights = Array.from({ length: 24 }, (_, i) => {
-      const morning = Math.exp(-Math.pow(i - 10, 2) / 8);
-      const afternoon = Math.exp(-Math.pow(i - 14, 2) / 8);
-      return Math.max(morning, afternoon) * 75 + 8;
-    });
-
-    return (
-      <div className="p-4 sm:p-8 max-w-4xl mx-auto">
-        <StatsRow sent={data.sent} replied={data.replied} />
-        <div className="flex items-baseline justify-between mb-6">
-          <div>
-            <h2 className="font-display text-[18px] font-bold text-chrome-text mb-0.5">Best Time to Send</h2>
-            <p className="text-xs text-chrome-muted">Hours shown in UTC</p>
-          </div>
-        </div>
-
-        {/* Ghost chart with overlay */}
-        <div className="relative">
-          {/* Outlined ghost bars */}
-          <div className="flex items-end gap-1 h-40 mb-2 pointer-events-none select-none">
-            {ghostHeights.map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 rounded-t bg-chrome-deep border border-chrome-rim"
-                style={{ height: `${h}%` }}
-              />
-            ))}
-          </div>
-
-          {/* X-axis labels */}
-          <div className="flex gap-1 text-[9px] text-chrome-muted font-mono opacity-40 pointer-events-none select-none mb-2">
-            {ghostHeights.map((_, i) => (
-              <div key={i} className="flex-1 text-center">
-                {i % 6 === 0 ? formatHour(i) : ''}
-              </div>
-            ))}
-          </div>
-
-          {/* Centered overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
-            <p className="font-sans font-semibold text-[13px] text-chrome-text">
-              Unlock send-time insights
-            </p>
-            <p className="text-[11px] text-chrome-muted font-mono">
-              {data.sent} / 20 emails sent · {data.replied} / 5 replies
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const maxRate = Math.max(...data.data.map(d => d.replyRate), 0.001);
-  const sorted = [...data.data].sort((a, b) => b.replyRate - a.replyRate);
-  const top3Hours = new Set(sorted.slice(0, 3).map(d => d.hour));
-
-  // Build 24-slot array (fill missing hours with 0)
-  const hourMap = Object.fromEntries(data.data.map(d => [d.hour, d]));
-  const hours = Array.from({ length: 24 }, (_, i) => hourMap[i] || { hour: i, sentCount: 0, repliedCount: 0, replyRate: 0 });
+  const canPrev = index > 0;
+  const canNext = index < SLIDES.length - 1;
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl mx-auto overflow-y-auto h-full">
-      <StatsRow sent={data.sent} replied={data.replied} />
-      <div className="flex items-baseline justify-between mb-6">
-        <div>
-          <h2 className="font-display text-[18px] font-bold text-chrome-text mb-0.5">Best Time to Send</h2>
-          <p className="text-xs text-chrome-muted">Hours shown in UTC</p>
-        </div>
-      </div>
-
-      {/* Bar chart */}
-      <div className="flex items-end gap-1 h-40 mb-2">
-        {hours.map(h => {
-          const heightPct = maxRate > 0 ? (h.replyRate / maxRate) * 100 : 0;
-          const isTop = top3Hours.has(h.hour);
-          return (
-            <div
-              key={h.hour}
-              className="flex-1 flex flex-col items-center group relative"
-              title={`${formatHour(h.hour)}: ${h.sentCount} sent, ${h.repliedCount} replied (${Math.round(h.replyRate * 100)}%)`}
+    <div className="p-4 sm:p-8 max-w-4xl mx-auto">
+      {/* Top bar: stats + date picker + navigation */}
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <StatsRow sent={data.sent} replied={data.replied} />
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Date range */}
+          <div className="flex items-center gap-1.5">
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="text-[11px] text-chrome-muted bg-chrome-deep border border-chrome-border rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent/40"
+            />
+            <span className="text-[11px] text-chrome-muted">–</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="text-[11px] text-chrome-muted bg-chrome-deep border border-chrome-border rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent/40"
+            />
+          </div>
+          {/* Arrow navigation */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setIndex(i => Math.max(0, i - 1))}
+              disabled={!canPrev}
+              className="w-7 h-7 flex items-center justify-center rounded-lg border border-chrome-border text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              aria-label="Previous insight"
             >
-              <div
-                className={`w-full rounded-t transition-all duration-300 ${
-                  isTop && h.sentCount > 0 ? 'bg-accent' : 'bg-chrome-surface'
-                }`}
-                style={{ height: `${Math.max(heightPct, h.sentCount > 0 ? 4 : 0)}%` }}
-              />
-              {/* Tooltip */}
-              {h.sentCount > 0 && (
-                <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 bg-chrome-text text-chrome-bg text-[10px] rounded px-1.5 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-10 transition-opacity">
-                  {formatHour(h.hour)}<br />
-                  {h.sentCount} sent · {h.repliedCount} replied<br />
-                  {Math.round(h.replyRate * 100)}% rate
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* X-axis labels */}
-      <div className="flex gap-1 text-[9px] text-chrome-muted font-mono">
-        {hours.map((h, i) => (
-          <div key={h.hour} className="flex-1 text-center">
-            {i % 6 === 0 ? formatHour(h.hour) : ''}
-          </div>
-        ))}
-      </div>
-
-      {/* Top hours legend */}
-      {sorted.length > 0 && sorted[0].sentCount > 0 && (
-        <div className="mt-6">
-          <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-2">Top send windows</p>
-          <div className="flex gap-3 flex-wrap">
-            {sorted.slice(0, 3).filter(d => d.sentCount > 0).map((d, i) => (
-              <div key={d.hour} className="flex items-center gap-2 bg-accent/10 text-accent rounded-lg px-3 py-2">
-                <span className="font-mono text-[11px] text-accent/60">#{i + 1}</span>
-                <span className="font-semibold text-sm">{formatHour(d.hour)}</span>
-                <span className="text-[11px] text-accent/80">{Math.round(d.replyRate * 100)}% reply rate</span>
-              </div>
-            ))}
+              ‹
+            </button>
+            <span className="text-[11px] text-chrome-muted font-mono w-8 text-center">
+              {index + 1} / {SLIDES.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIndex(i => Math.min(SLIDES.length - 1, i + 1))}
+              disabled={!canNext}
+              className="w-7 h-7 flex items-center justify-center rounded-lg border border-chrome-border text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              aria-label="Next insight"
+            >
+              ›
+            </button>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Slide heading */}
+      <div className="mb-4">
+        <h2 className="font-display text-[18px] font-bold text-chrome-text mb-0.5">
+          {SLIDES[index].label}
+        </h2>
+        <p className="text-xs text-chrome-muted">
+          {dateFrom || dateTo
+            ? `${dateFrom || 'all time'} – ${dateTo || 'today'}`
+            : 'All time · UTC'}
+        </p>
+      </div>
+
+      {/* Carousel window */}
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+        >
+          {SLIDES.map(({ key, Component }) => (
+            <div key={key} className="w-full flex-shrink-0">
+              <Component data={data[key]} />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
