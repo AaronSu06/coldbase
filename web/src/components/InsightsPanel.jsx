@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { fetchInsights } from '../lib/api';
+import { DateRangePicker } from './DateRangePicker';
 
 function formatHour(h) {
   if (h === 0) return '12am';
@@ -16,13 +17,13 @@ function StatsRow({ sent, replied }) {
     { label: 'Replies', value: replied },
   ];
   return (
-    <div className="flex gap-4 mb-6">
+    <div className="flex gap-3 sm:gap-6">
       {stats.map(s => (
         <div key={s.label} className="flex flex-col gap-0.5">
-          <span className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted">
+          <span className="text-[9px] sm:text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted">
             {s.label}
           </span>
-          <span className="font-display text-[22px] font-bold text-chrome-text leading-none">
+          <span className="font-display text-[18px] sm:text-[22px] font-bold text-chrome-text leading-none">
             {s.value}
           </span>
         </div>
@@ -39,7 +40,7 @@ function GhostChart() {
   });
   return (
     <div className="relative">
-      <div className="flex items-end gap-1 h-40 mb-2 pointer-events-none select-none">
+      <div className="flex items-end gap-1 h-32 sm:h-40 mb-2 pointer-events-none select-none">
         {ghostHeights.map((h, i) => (
           <div
             key={i}
@@ -84,7 +85,7 @@ function BestTimeSlide({ data }) {
 
   return (
     <>
-      <div className="flex items-end gap-1 h-40 mb-2">
+      <div className="flex items-end gap-1 h-32 sm:h-40 mb-2">
         {hours.map(h => {
           const heightPct = maxRate > 0 ? (h.replyRate / maxRate) * 100 : 0;
           const isTop = top3Hours.has(h.hour);
@@ -111,7 +112,7 @@ function BestTimeSlide({ data }) {
           );
         })}
       </div>
-      <div className="flex gap-1 text-[9px] text-chrome-muted font-mono mb-6">
+      <div className="flex gap-1 text-[9px] text-chrome-muted font-mono mb-4 sm:mb-6">
         {hours.map((h, i) => (
           <div key={h.hour} className="flex-1 text-center">
             {i % 6 === 0 ? formatHour(h.hour) : ''}
@@ -121,12 +122,12 @@ function BestTimeSlide({ data }) {
       {sorted.length > 0 && sorted[0].sentCount > 0 && (
         <div>
           <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-2">Top send windows</p>
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-2 sm:gap-3 flex-wrap">
             {sorted.slice(0, 3).filter(d => d.sentCount > 0).map((d, i) => (
-              <div key={d.hour} className="flex items-center gap-2 bg-accent/10 text-accent rounded-lg px-3 py-2">
+              <div key={d.hour} className="flex items-center gap-1.5 sm:gap-2 bg-accent/10 text-accent rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
                 <span className="font-mono text-[11px] text-accent/60">#{i + 1}</span>
-                <span className="font-semibold text-sm">{formatHour(d.hour)}</span>
-                <span className="text-[11px] text-accent/80">{Math.round(d.replyRate * 100)}% reply rate</span>
+                <span className="font-semibold text-xs sm:text-sm">{formatHour(d.hour)}</span>
+                <span className="hidden sm:inline text-[11px] text-accent/80">{Math.round(d.replyRate * 100)}% reply rate</span>
               </div>
             ))}
           </div>
@@ -139,7 +140,7 @@ function BestTimeSlide({ data }) {
 function ResponseTimeSlide({ data }) {
   if (data.insufficient) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[180px] gap-2">
+      <div className="flex flex-col items-center justify-center min-h-[160px] sm:min-h-[180px] gap-2">
         <p className="font-display text-[40px] font-bold text-chrome-border leading-none">--</p>
         <p className="text-[12px] text-chrome-muted">avg. response time</p>
         <p className="text-[11px] text-chrome-muted font-mono mt-2">
@@ -155,8 +156,8 @@ function ResponseTimeSlide({ data }) {
     : `${(hours / 24).toFixed(1)}d`;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[180px] gap-2">
-      <p className="font-display text-[56px] font-bold text-chrome-text leading-none">
+    <div className="flex flex-col items-center justify-center min-h-[160px] sm:min-h-[180px] gap-2">
+      <p className="font-display text-[48px] sm:text-[56px] font-bold text-chrome-text leading-none">
         {display}
       </p>
       <p className="text-[12px] text-chrome-muted uppercase tracking-[0.08em] font-semibold">
@@ -171,7 +172,6 @@ function ResponseTimeSlide({ data }) {
 
 function ReplyTrendSlide({ data }) {
   if (data.insufficient) {
-    // Ghost SVG line
     const ghostPoints = Array.from({ length: 8 }, (_, i) => ({
       x: (i / 7) * 100,
       y: 50 + Math.sin(i * 0.9) * 20,
@@ -180,8 +180,8 @@ function ReplyTrendSlide({ data }) {
       .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
       .join(' ');
     return (
-      <div className="relative min-h-[180px]">
-        <svg viewBox="0 0 100 80" className="w-full h-40 opacity-15" preserveAspectRatio="none">
+      <div className="relative min-h-[160px] sm:min-h-[180px]">
+        <svg viewBox="0 0 100 80" className="w-full h-32 sm:h-40 opacity-15" preserveAspectRatio="none">
           <path d={ghostPath} fill="none" stroke="currentColor" strokeWidth="2" className="text-chrome-muted" />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
@@ -199,8 +199,8 @@ function ReplyTrendSlide({ data }) {
   const weeks = data.data;
   if (weeks.length === 0) return null;
 
-  const W = 300; // SVG internal width
-  const H = 120; // SVG internal height
+  const W = 300;
+  const H = 120;
   const PAD = { top: 8, right: 8, bottom: 24, left: 28 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
@@ -213,19 +213,16 @@ function ReplyTrendSlide({ data }) {
     .map((w, i) => `${i === 0 ? 'M' : 'L'} ${xScale(i).toFixed(1)} ${yScale(w.rate).toFixed(1)}`)
     .join(' ');
 
-  // Y-axis ticks at 0, 50%, 100% of maxRate
   const yTicks = [0, 0.5, 1].map(f => ({
     y: yScale(maxRate * f),
     label: `${Math.round(maxRate * f * 100)}%`,
   }));
 
-  // X-axis: show every Nth week label to avoid crowding
   const step = Math.ceil(weeks.length / 5);
 
   return (
-    <div className="min-h-[180px]">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-44">
-        {/* Y-axis grid lines + labels */}
+    <div className="min-h-[160px] sm:min-h-[180px]">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-36 sm:h-44">
         {yTicks.map(t => (
           <g key={t.label}>
             <line
@@ -237,25 +234,17 @@ function ReplyTrendSlide({ data }) {
             </text>
           </g>
         ))}
-
-        {/* Area fill */}
         <path
           d={`${pathD} L ${xScale(weeks.length - 1).toFixed(1)} ${yScale(0).toFixed(1)} L ${xScale(0).toFixed(1)} ${yScale(0).toFixed(1)} Z`}
           className="fill-accent/10"
         />
-
-        {/* Line */}
         <path d={pathD} fill="none" stroke="currentColor" strokeWidth="1.5" className="text-accent" strokeLinejoin="round" />
-
-        {/* Data points */}
         {weeks.map((w, i) => (
           <circle key={w.week} cx={xScale(i)} cy={yScale(w.rate)} r="2" className="fill-accent" />
         ))}
-
-        {/* X-axis labels */}
         {weeks.map((w, i) => i % step === 0 && (
           <text key={w.week} x={xScale(i)} y={H - 6} textAnchor="middle" fontSize="6" className="fill-chrome-muted font-mono">
-            {w.week.slice(5)} {/* MM-DD */}
+            {w.week.slice(5)}
           </text>
         ))}
       </svg>
@@ -268,6 +257,20 @@ const SLIDES = [
   { key: 'responseTime',  label: 'Avg Response Time',     Component: ResponseTimeSlide },
   { key: 'replyTrend',    label: 'Reply Rate Trend',      Component: ReplyTrendSlide },
 ];
+
+function NavArrow({ direction, onClick, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={direction === 'prev' ? 'Previous insight' : 'Next insight'}
+      className="flex-shrink-0 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-chrome-border text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors disabled:opacity-20 disabled:pointer-events-none text-lg leading-none"
+    >
+      {direction === 'prev' ? '‹' : '›'}
+    </button>
+  );
+}
 
 export default function InsightsPanel() {
   const [index, setIndex] = useState(0);
@@ -313,57 +316,20 @@ export default function InsightsPanel() {
   const canNext = index < SLIDES.length - 1;
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl mx-auto">
-      {/* Top bar: stats + date picker + navigation */}
-      <div className="flex items-start justify-between gap-4 mb-6">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+      {/* Top bar: stats (left) + date picker (right) */}
+      <div className="flex items-center justify-between gap-4 mb-4 sm:mb-6">
         <StatsRow sent={data.sent} replied={data.replied} />
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {/* Date range */}
-          <div className="flex items-center gap-1.5">
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={e => setDateFrom(e.target.value)}
-              className="text-[11px] text-chrome-muted bg-chrome-deep border border-chrome-border rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent/40"
-            />
-            <span className="text-[11px] text-chrome-muted">–</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={e => setDateTo(e.target.value)}
-              className="text-[11px] text-chrome-muted bg-chrome-deep border border-chrome-border rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent/40"
-            />
-          </div>
-          {/* Arrow navigation */}
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setIndex(i => Math.max(0, i - 1))}
-              disabled={!canPrev}
-              className="w-7 h-7 flex items-center justify-center rounded-lg border border-chrome-border text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors disabled:opacity-30 disabled:pointer-events-none"
-              aria-label="Previous insight"
-            >
-              ‹
-            </button>
-            <span className="text-[11px] text-chrome-muted font-mono w-8 text-center">
-              {index + 1} / {SLIDES.length}
-            </span>
-            <button
-              type="button"
-              onClick={() => setIndex(i => Math.min(SLIDES.length - 1, i + 1))}
-              disabled={!canNext}
-              className="w-7 h-7 flex items-center justify-center rounded-lg border border-chrome-border text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors disabled:opacity-30 disabled:pointer-events-none"
-              aria-label="Next insight"
-            >
-              ›
-            </button>
-          </div>
-        </div>
+        <DateRangePicker
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onRangeChange={({ from, to }) => { setDateFrom(from); setDateTo(to); }}
+        />
       </div>
 
       {/* Slide heading */}
-      <div className="mb-4">
-        <h2 className="font-display text-[18px] font-bold text-chrome-text mb-0.5">
+      <div className="mb-3 sm:mb-4">
+        <h2 className="font-display text-[16px] sm:text-[18px] font-bold text-chrome-text mb-0.5">
           {SLIDES[index].label}
         </h2>
         <p className="text-xs text-chrome-muted">
@@ -373,18 +339,24 @@ export default function InsightsPanel() {
         </p>
       </div>
 
-      {/* Carousel window */}
-      <div className="overflow-hidden">
-        <div
-          className="flex transition-transform duration-300 ease-in-out"
-          style={{ transform: `translateX(-${index * 100}%)` }}
-        >
-          {SLIDES.map(({ key, Component }) => (
-            <div key={key} className="w-full flex-shrink-0">
-              <Component data={data[key]} />
-            </div>
-          ))}
+      {/* Carousel: arrow — window — arrow */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        <NavArrow direction="prev" onClick={() => setIndex(i => Math.max(0, i - 1))} disabled={!canPrev} />
+
+        <div className="flex-1 overflow-hidden">
+          <div
+            className="flex transition-transform duration-300 ease-in-out"
+            style={{ transform: `translateX(-${index * 100}%)` }}
+          >
+            {SLIDES.map(({ key, Component }) => (
+              <div key={key} className="w-full flex-shrink-0">
+                <Component data={data[key]} />
+              </div>
+            ))}
+          </div>
         </div>
+
+        <NavArrow direction="next" onClick={() => setIndex(i => Math.min(SLIDES.length - 1, i + 1))} disabled={!canNext} />
       </div>
     </div>
   );

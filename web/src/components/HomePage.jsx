@@ -111,14 +111,14 @@ function ProModal({ onClose }) {
         </button>
 
         {/* Header */}
-        <div className="px-8 pt-8 pb-6 text-center">
+        <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 text-center">
           <p className="font-display text-[19px] font-bold text-chrome-text leading-snug">
             Reach Pro users send smarter and get <span className="text-accent">more replies</span>.
           </p>
         </div>
 
         {/* Feature comparison */}
-        <div className="px-6 pb-6 grid grid-cols-2 gap-4">
+        <div className="px-4 sm:px-6 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Free */}
           <div className="bg-chrome-bg rounded-xl p-5">
             <p className="font-sans font-bold text-[14px] text-chrome-text mb-1">Free</p>
@@ -154,7 +154,7 @@ function ProModal({ onClose }) {
         </div>
 
         {/* Pricing */}
-        <div className="px-6 pb-6 grid grid-cols-2 gap-4">
+        <div className="px-4 sm:px-6 pb-6 grid grid-cols-2 gap-4">
           {/* Monthly */}
           <div className="rounded-xl p-4 border border-chrome-border bg-chrome-bg">
             <p className="text-[11px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted mb-1">Monthly</p>
