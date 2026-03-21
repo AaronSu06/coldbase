@@ -370,10 +370,10 @@ window.ReachWidget = (function () {
       border-radius: 6px; flex-shrink: 0;
       text-transform: uppercase; letter-spacing: 0.04em;
     }
-    .status-sent        { background: #fdf3ec; color: #b85212; }
+    .status-sent        { background: #eff6ff; color: #3b82f6; }
     .status-replied,
-    .status-applied     { background: #f0fdf4; color: #16a34a; }
-    .status-interviewing{ background: #fffbeb; color: #d97706; }
+    .status-applied     { background: #f5f3ff; color: #8b5cf6; }
+    .status-interviewing{ background: #fefce8; color: #ca8a04; }
     .status-offer       { background: #ecfdf5; color: #10b981; }
     .status-ghosted     { background: #fef2f2; color: #ef4444; }
     .recent-date { font-size: 10px; color: #78716c; flex-shrink: 0; }
