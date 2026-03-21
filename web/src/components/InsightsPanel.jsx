@@ -170,7 +170,97 @@ function ResponseTimeSlide({ data }) {
 }
 
 function ReplyTrendSlide({ data }) {
-  return <div className="p-1 text-chrome-muted text-sm">Reply Trend slide — Task 7</div>;
+  if (data.insufficient) {
+    // Ghost SVG line
+    const ghostPoints = Array.from({ length: 8 }, (_, i) => ({
+      x: (i / 7) * 100,
+      y: 50 + Math.sin(i * 0.9) * 20,
+    }));
+    const ghostPath = ghostPoints
+      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+      .join(' ');
+    return (
+      <div className="relative min-h-[180px]">
+        <svg viewBox="0 0 100 80" className="w-full h-40 opacity-15" preserveAspectRatio="none">
+          <path d={ghostPath} fill="none" stroke="currentColor" strokeWidth="2" className="text-chrome-muted" />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+          <p className="font-sans font-semibold text-[13px] text-chrome-text">
+            Unlock reply rate trend
+          </p>
+          <p className="text-[11px] text-chrome-muted font-mono">
+            Need 30 days of data · {data.sent} / 10 emails sent
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const weeks = data.data;
+  if (weeks.length === 0) return null;
+
+  const W = 300; // SVG internal width
+  const H = 120; // SVG internal height
+  const PAD = { top: 8, right: 8, bottom: 24, left: 28 };
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+
+  const maxRate = Math.max(...weeks.map(w => w.rate), 0.01);
+  const xScale = i => PAD.left + (i / Math.max(weeks.length - 1, 1)) * innerW;
+  const yScale = r => PAD.top + innerH - (r / maxRate) * innerH;
+
+  const pathD = weeks
+    .map((w, i) => `${i === 0 ? 'M' : 'L'} ${xScale(i).toFixed(1)} ${yScale(w.rate).toFixed(1)}`)
+    .join(' ');
+
+  // Y-axis ticks at 0, 50%, 100% of maxRate
+  const yTicks = [0, 0.5, 1].map(f => ({
+    y: yScale(maxRate * f),
+    label: `${Math.round(maxRate * f * 100)}%`,
+  }));
+
+  // X-axis: show every Nth week label to avoid crowding
+  const step = Math.ceil(weeks.length / 5);
+
+  return (
+    <div className="min-h-[180px]">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-44">
+        {/* Y-axis grid lines + labels */}
+        {yTicks.map(t => (
+          <g key={t.label}>
+            <line
+              x1={PAD.left} y1={t.y} x2={W - PAD.right} y2={t.y}
+              stroke="currentColor" strokeWidth="0.5" className="text-chrome-border"
+            />
+            <text x={PAD.left - 3} y={t.y + 3} textAnchor="end" fontSize="6" className="fill-chrome-muted font-mono">
+              {t.label}
+            </text>
+          </g>
+        ))}
+
+        {/* Area fill */}
+        <path
+          d={`${pathD} L ${xScale(weeks.length - 1).toFixed(1)} ${yScale(0).toFixed(1)} L ${xScale(0).toFixed(1)} ${yScale(0).toFixed(1)} Z`}
+          className="fill-accent/10"
+        />
+
+        {/* Line */}
+        <path d={pathD} fill="none" stroke="currentColor" strokeWidth="1.5" className="text-accent" strokeLinejoin="round" />
+
+        {/* Data points */}
+        {weeks.map((w, i) => (
+          <circle key={w.week} cx={xScale(i)} cy={yScale(w.rate)} r="2" className="fill-accent" />
+        ))}
+
+        {/* X-axis labels */}
+        {weeks.map((w, i) => i % step === 0 && (
+          <text key={w.week} x={xScale(i)} y={H - 6} textAnchor="middle" fontSize="6" className="fill-chrome-muted font-mono">
+            {w.week.slice(5)} {/* MM-DD */}
+          </text>
+        ))}
+      </svg>
+    </div>
+  );
 }
 
 const SLIDES = [
