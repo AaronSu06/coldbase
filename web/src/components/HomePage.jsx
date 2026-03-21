@@ -72,9 +72,130 @@ function CompleteProfileCard() {
   );
 }
 
+// ── Reach Pro modal ────────────────────────────────────────────────────────
+
+function ProModal({ onClose }) {
+  const freeFeatures = [
+    'Unlimited contact tracking',
+    'Basic email templates',
+    'Reply tracking',
+    'Send-time insights (limited)',
+    'CSV export',
+  ];
+
+  const proFeatures = [
+    { title: 'Everything in Free', desc: null },
+    { title: 'AI-drafted follow-up emails', desc: 'Generate personalised follow-ups in one click based on your prior conversation.' },
+    { title: 'Advanced send-time analytics', desc: 'Full hourly breakdown once you hit the data threshold.' },
+    { title: 'Advanced reporting', desc: 'Track reply rates and pipeline health over time.' },
+    { title: 'Priority support', desc: null },
+  ];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-chrome-surface rounded-2xl shadow-card-drag w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-4 right-5 text-chrome-muted hover:text-chrome-text text-lg leading-none transition-colors"
+        >
+          ✕
+        </button>
+
+        {/* Header */}
+        <div className="px-8 pt-8 pb-6 text-center">
+          <p className="font-display text-[19px] font-bold text-chrome-text leading-snug">
+            Reach Pro users send smarter and get <span className="text-accent">more replies</span>.
+          </p>
+        </div>
+
+        {/* Feature comparison */}
+        <div className="px-6 pb-6 grid grid-cols-2 gap-4">
+          {/* Free */}
+          <div className="bg-chrome-bg rounded-xl p-5">
+            <p className="font-sans font-bold text-[14px] text-chrome-text mb-1">Free</p>
+            <p className="text-[11px] text-chrome-muted mb-4 leading-relaxed">Everything you need to get started. Free forever.</p>
+            <ul className="space-y-2.5">
+              {freeFeatures.map(f => (
+                <li key={f} className="flex items-start gap-2 text-[12px] text-chrome-text">
+                  <span className="mt-px text-chrome-muted text-[13px]">○</span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Pro */}
+          <div className="bg-accent/[0.03] border border-accent/20 rounded-xl p-5">
+            <p className="font-sans font-bold text-[14px] text-accent mb-1">Reach Pro</p>
+            <p className="text-[11px] text-chrome-muted mb-4 leading-relaxed">The full suite, to help you close more opportunities.</p>
+            <ul className="space-y-3">
+              {proFeatures.map(f => (
+                <li key={f.title} className="flex items-start gap-2.5">
+                  <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-accent flex items-center justify-center">
+                    <span className="text-white text-[9px] leading-none">✓</span>
+                  </span>
+                  <div>
+                    <p className="text-[12px] font-semibold text-chrome-text">{f.title}</p>
+                    {f.desc && <p className="text-[11px] text-chrome-muted leading-relaxed mt-0.5">{f.desc}</p>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Pricing */}
+        <div className="px-6 pb-6 grid grid-cols-2 gap-4">
+          {/* Monthly */}
+          <div className="rounded-xl p-4 border border-chrome-border bg-chrome-bg">
+            <p className="text-[11px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted mb-1">Monthly</p>
+            <p className="font-display text-[26px] font-bold text-chrome-text leading-none mb-0.5">
+              $19<span className="text-[13px] font-sans font-normal text-chrome-muted"> / mo</span>
+            </p>
+            <p className="text-[10px] text-chrome-muted">billed monthly</p>
+          </div>
+
+          {/* Annual */}
+          <div className="rounded-xl p-4 border border-accent/40 bg-accent/[0.04] relative">
+            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold font-sans uppercase tracking-[0.08em] bg-accent text-white px-2.5 py-0.5 rounded-full whitespace-nowrap">
+              Save 21%
+            </span>
+            <p className="text-[11px] font-semibold font-sans uppercase tracking-[0.1em] text-accent mb-1">Annual</p>
+            <p className="font-display text-[26px] font-bold text-chrome-text leading-none mb-0.5">
+              $15<span className="text-[13px] font-sans font-normal text-chrome-muted"> / mo</span>
+            </p>
+            <p className="text-[10px] text-chrome-muted">billed $180 / yr</p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="px-6 pb-8">
+          <button
+            type="button"
+            className="w-full py-3 bg-accent text-white font-semibold text-[14px] rounded-xl hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+          >
+            Get Started
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Reach Pro pricing card ─────────────────────────────────────────────────
 
 function UpgradeCard() {
+  const [open, setOpen] = useState(false);
+
   const features = [
     'AI-drafted follow-up emails',
     'Advanced analytics & reporting',
@@ -82,58 +203,64 @@ function UpgradeCard() {
   ];
 
   return (
-    <ActionCard className="border-accent/20 bg-accent/[0.03]">
-      <p className="font-sans font-semibold text-[15px] text-chrome-text mb-3">
-        Reach Pro
-      </p>
-      <ul className="space-y-1 mb-4">
-        {features.map(f => (
-          <li key={f} className="flex items-center gap-2 text-[12px] text-chrome-muted">
-            <span className="text-accent text-[10px]">✦</span>
-            {f}
-          </li>
-        ))}
-      </ul>
-      <div className="flex gap-3">
-        {/* Monthly */}
-        <div className="flex flex-col items-center gap-2 border border-chrome-border rounded-xl p-3 flex-1">
-          <p className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted">
-            Monthly
-          </p>
-          <div className="text-center">
-            <span className="font-display text-[22px] font-bold text-chrome-text">$19</span>
-            <span className="text-[11px] text-chrome-muted"> / mo</span>
+    <>
+      <ActionCard className="border-accent/20 bg-accent/[0.03]">
+        <p className="font-sans font-semibold text-[15px] text-chrome-text mb-3">
+          Reach Pro
+        </p>
+        <ul className="space-y-1 mb-4">
+          {features.map(f => (
+            <li key={f} className="flex items-center gap-2 text-[12px] text-chrome-muted">
+              <span className="text-accent text-[10px]">✦</span>
+              {f}
+            </li>
+          ))}
+        </ul>
+        <div className="flex gap-3">
+          {/* Monthly */}
+          <div className="flex flex-col items-center gap-2 border border-chrome-border rounded-xl p-3 flex-1">
+            <p className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted">
+              Monthly
+            </p>
+            <div className="text-center">
+              <span className="font-display text-[22px] font-bold text-chrome-text">$19</span>
+              <span className="text-[11px] text-chrome-muted"> / mo</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="w-full text-[11px] font-semibold text-accent border border-accent/40 rounded-lg py-1.5 hover:bg-accent/10 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+            >
+              Subscribe
+            </button>
           </div>
-          <button
-            type="button"
-            className="w-full text-[11px] font-semibold text-accent border border-accent/40 rounded-lg py-1.5 hover:bg-accent/10 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
-          >
-            Subscribe
-          </button>
-        </div>
 
-        {/* Annual */}
-        <div className="flex flex-col items-center gap-2 border border-accent/40 bg-accent/[0.04] rounded-xl p-3 flex-1 relative">
-          <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold font-sans uppercase tracking-[0.08em] bg-accent text-white px-2 py-0.5 rounded-full whitespace-nowrap">
-            Save 21%
-          </span>
-          <p className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted">
-            Annual
-          </p>
-          <div className="text-center">
-            <span className="font-display text-[22px] font-bold text-chrome-text">$15</span>
-            <span className="text-[11px] text-chrome-muted"> / mo</span>
+          {/* Annual */}
+          <div className="flex flex-col items-center gap-2 border border-accent/40 bg-accent/[0.04] rounded-xl p-3 flex-1 relative">
+            <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold font-sans uppercase tracking-[0.08em] bg-accent text-white px-2 py-0.5 rounded-full whitespace-nowrap">
+              Save 21%
+            </span>
+            <p className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted">
+              Annual
+            </p>
+            <div className="text-center">
+              <span className="font-display text-[22px] font-bold text-chrome-text">$15</span>
+              <span className="text-[11px] text-chrome-muted"> / mo</span>
+            </div>
+            <p className="text-[9px] text-chrome-muted text-center">billed $180 / yr</p>
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="w-full text-[11px] font-semibold text-white bg-accent rounded-lg py-1.5 hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+            >
+              Subscribe
+            </button>
           </div>
-          <p className="text-[9px] text-chrome-muted text-center">billed $180 / yr</p>
-          <button
-            type="button"
-            className="w-full text-[11px] font-semibold text-white bg-accent rounded-lg py-1.5 hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
-          >
-            Subscribe
-          </button>
         </div>
-      </div>
-    </ActionCard>
+      </ActionCard>
+
+      {open && <ProModal onClose={() => setOpen(false)} />}
+    </>
   );
 }
 
