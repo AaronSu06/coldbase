@@ -31,9 +31,109 @@ function StatsRow({ sent, replied }) {
   );
 }
 
-// Slide placeholders — replaced in Tasks 5, 6, 7
+function GhostChart() {
+  const ghostHeights = Array.from({ length: 24 }, (_, i) => {
+    const morning = Math.exp(-Math.pow(i - 10, 2) / 8);
+    const afternoon = Math.exp(-Math.pow(i - 14, 2) / 8);
+    return Math.max(morning, afternoon) * 75 + 8;
+  });
+  return (
+    <div className="relative">
+      <div className="flex items-end gap-1 h-40 mb-2 pointer-events-none select-none">
+        {ghostHeights.map((h, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-t bg-chrome-deep border border-chrome-rim"
+            style={{ height: `${h}%` }}
+          />
+        ))}
+      </div>
+      <div className="flex gap-1 text-[9px] text-chrome-muted font-mono opacity-40 pointer-events-none select-none mb-2">
+        {ghostHeights.map((_, i) => (
+          <div key={i} className="flex-1 text-center">
+            {i % 6 === 0 ? formatHour(i) : ''}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function BestTimeSlide({ data }) {
-  return <div className="p-1 text-chrome-muted text-sm">Best Time slide — Task 5</div>;
+  if (data.insufficient) {
+    return (
+      <div className="relative">
+        <GhostChart />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+          <p className="font-sans font-semibold text-[13px] text-chrome-text">
+            Unlock send-time insights
+          </p>
+          <p className="text-[11px] text-chrome-muted font-mono">
+            {data.sent} / 20 emails sent · {data.replied} / 5 replies
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const maxRate = Math.max(...data.data.map(d => d.replyRate), 0.001);
+  const sorted = [...data.data].sort((a, b) => b.replyRate - a.replyRate);
+  const top3Hours = new Set(sorted.slice(0, 3).map(d => d.hour));
+  const hourMap = Object.fromEntries(data.data.map(d => [d.hour, d]));
+  const hours = Array.from({ length: 24 }, (_, i) => hourMap[i] || { hour: i, sentCount: 0, repliedCount: 0, replyRate: 0 });
+
+  return (
+    <>
+      <div className="flex items-end gap-1 h-40 mb-2">
+        {hours.map(h => {
+          const heightPct = maxRate > 0 ? (h.replyRate / maxRate) * 100 : 0;
+          const isTop = top3Hours.has(h.hour);
+          return (
+            <div
+              key={h.hour}
+              className="flex-1 flex flex-col items-center group relative"
+              title={`${formatHour(h.hour)}: ${h.sentCount} sent, ${h.repliedCount} replied (${Math.round(h.replyRate * 100)}%)`}
+            >
+              <div
+                className={`w-full rounded-t transition-all duration-300 ${
+                  isTop && h.sentCount > 0 ? 'bg-accent' : 'bg-chrome-surface'
+                }`}
+                style={{ height: `${Math.max(heightPct, h.sentCount > 0 ? 4 : 0)}%` }}
+              />
+              {h.sentCount > 0 && (
+                <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 bg-chrome-text text-chrome-bg text-[10px] rounded px-1.5 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-10 transition-opacity">
+                  {formatHour(h.hour)}<br />
+                  {h.sentCount} sent · {h.repliedCount} replied<br />
+                  {Math.round(h.replyRate * 100)}% rate
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex gap-1 text-[9px] text-chrome-muted font-mono mb-6">
+        {hours.map((h, i) => (
+          <div key={h.hour} className="flex-1 text-center">
+            {i % 6 === 0 ? formatHour(h.hour) : ''}
+          </div>
+        ))}
+      </div>
+      {sorted.length > 0 && sorted[0].sentCount > 0 && (
+        <div>
+          <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-2">Top send windows</p>
+          <div className="flex gap-3 flex-wrap">
+            {sorted.slice(0, 3).filter(d => d.sentCount > 0).map((d, i) => (
+              <div key={d.hour} className="flex items-center gap-2 bg-accent/10 text-accent rounded-lg px-3 py-2">
+                <span className="font-mono text-[11px] text-accent/60">#{i + 1}</span>
+                <span className="font-semibold text-sm">{formatHour(d.hour)}</span>
+                <span className="text-[11px] text-accent/80">{Math.round(d.replyRate * 100)}% reply rate</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 function ResponseTimeSlide({ data }) {
