@@ -80,20 +80,20 @@ export default function InsightsPanel() {
 
         {/* Ghost chart with overlay */}
         <div className="relative">
-          {/* Dimmed ghost bars */}
-          <div className="flex items-end gap-1 h-40 mb-2 opacity-25 pointer-events-none select-none">
+          {/* Outlined ghost bars */}
+          <div className="flex items-end gap-1 h-40 mb-2 pointer-events-none select-none">
             {ghostHeights.map((h, i) => (
               <div key={i} className="flex-1">
                 <div
-                  className="w-full rounded-t bg-chrome-surface"
+                  className="w-full rounded-t border border-chrome-border"
                   style={{ height: `${h}%` }}
                 />
               </div>
             ))}
           </div>
 
-          {/* X-axis labels (also dimmed) */}
-          <div className="flex gap-1 text-[9px] text-chrome-muted font-mono opacity-25 pointer-events-none select-none mb-2">
+          {/* X-axis labels */}
+          <div className="flex gap-1 text-[9px] text-chrome-muted font-mono opacity-40 pointer-events-none select-none mb-2">
             {ghostHeights.map((_, i) => (
               <div key={i} className="flex-1 text-center">
                 {i % 6 === 0 ? formatHour(i) : ''}
