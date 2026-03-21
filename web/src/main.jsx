@@ -6,9 +6,10 @@ import App from './App';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
 import './index.css';
+import { TOKEN_KEY } from './hooks/useAuth.js';
 
 function PrivateRoute({ children }) {
-  const token = localStorage.getItem('reach_token');
+  const token = localStorage.getItem(TOKEN_KEY);
   return token ? children : <Navigate to="/login" replace />;
 }
 

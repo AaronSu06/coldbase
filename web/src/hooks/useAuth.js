@@ -1,5 +1,5 @@
 // web/src/hooks/useAuth.js
-const TOKEN_KEY = 'reach_token';
+export const TOKEN_KEY = 'reach_token';
 
 export function useAuth() {
   function login(token) {

@@ -1,13 +1,18 @@
 // web/src/lib/api.js
+import { TOKEN_KEY } from '../hooks/useAuth.js';
+
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 
 function getToken() {
-  return localStorage.getItem('reach_token');
+  return localStorage.getItem(TOKEN_KEY);
 }
 
 async function apiFetch(url, options = {}) {
   const token = getToken();
-  if (!token) throw new Error('Not authenticated — please log in');
+  if (!token) {
+    window.location.href = '/login';
+    throw new Error('Not authenticated — redirecting to login');
+  }
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
@@ -15,7 +20,7 @@ async function apiFetch(url, options = {}) {
   };
   const res = await fetch(url, { ...options, headers });
   if (res.status === 401) {
-    localStorage.removeItem('reach_token');
+    localStorage.removeItem(TOKEN_KEY);
     window.location.href = '/login';
     throw new Error('Session expired — redirecting to login');
   }
