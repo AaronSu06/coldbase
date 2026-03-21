@@ -85,7 +85,7 @@ export default function InsightsPanel() {
             {ghostHeights.map((h, i) => (
               <div key={i} className="flex-1">
                 <div
-                  className="w-full rounded-t border border-chrome-border"
+                  className="w-full rounded-t bg-chrome-deep border border-chrome-rim"
                   style={{ height: `${h}%` }}
                 />
               </div>
