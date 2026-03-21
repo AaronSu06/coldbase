@@ -170,10 +170,10 @@ export default function HomePage() {
             <NotificationsCard />
             <CompleteProfileCard />
           </div>
-          {/* Right: pricing + developer note */}
+          {/* Right: developer note + pricing */}
           <div className="flex flex-col gap-4">
-            <UpgradeCard />
             <DeveloperNote />
+            <UpgradeCard />
           </div>
         </div>
       </div>
