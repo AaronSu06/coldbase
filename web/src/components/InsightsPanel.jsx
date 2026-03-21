@@ -137,7 +137,36 @@ function BestTimeSlide({ data }) {
 }
 
 function ResponseTimeSlide({ data }) {
-  return <div className="p-1 text-chrome-muted text-sm">Response Time slide — Task 6</div>;
+  if (data.insufficient) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[180px] gap-2">
+        <p className="font-display text-[40px] font-bold text-chrome-border leading-none">--</p>
+        <p className="text-[12px] text-chrome-muted">avg. response time</p>
+        <p className="text-[11px] text-chrome-muted font-mono mt-2">
+          Need {10 - data.replied} more {10 - data.replied === 1 ? 'reply' : 'replies'} to unlock
+        </p>
+      </div>
+    );
+  }
+
+  const hours = data.avgHours;
+  const display = hours < 24
+    ? `${Math.round(hours)}h`
+    : `${(hours / 24).toFixed(1)}d`;
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[180px] gap-2">
+      <p className="font-display text-[56px] font-bold text-chrome-text leading-none">
+        {display}
+      </p>
+      <p className="text-[12px] text-chrome-muted uppercase tracking-[0.08em] font-semibold">
+        avg. response time
+      </p>
+      <p className="text-[11px] text-chrome-muted mt-1">
+        based on {data.sampleSize} {data.sampleSize === 1 ? 'reply' : 'replies'}
+      </p>
+    </div>
+  );
 }
 
 function ReplyTrendSlide({ data }) {
