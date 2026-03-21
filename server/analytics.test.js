@@ -75,3 +75,42 @@ describe('GET /api/insights/best-time', () => {
     assert.strictEqual(status, 401);
   });
 });
+
+describe('GET /api/insights', () => {
+  it('returns 200 with all three insight keys when db is empty', async () => {
+    const { status, body } = await request('GET', '/api/insights');
+    assert.strictEqual(status, 200);
+    assert.strictEqual(typeof body.sent, 'number');
+    assert.strictEqual(typeof body.replied, 'number');
+    assert.ok('bestTime' in body, 'missing bestTime');
+    assert.ok('responseTime' in body, 'missing responseTime');
+    assert.ok('replyTrend' in body, 'missing replyTrend');
+  });
+
+  it('bestTime is insufficient when db is empty', async () => {
+    const { body } = await request('GET', '/api/insights');
+    assert.strictEqual(body.bestTime.insufficient, true);
+  });
+
+  it('responseTime is insufficient when db is empty', async () => {
+    const { body } = await request('GET', '/api/insights');
+    assert.strictEqual(body.responseTime.insufficient, true);
+  });
+
+  it('replyTrend is insufficient when db is empty', async () => {
+    const { body } = await request('GET', '/api/insights');
+    assert.strictEqual(body.replyTrend.insufficient, true);
+  });
+
+  it('accepts from and to query params without error', async () => {
+    const { status } = await request('GET', '/api/insights?from=2026-01-01&to=2026-12-31');
+    assert.strictEqual(status, 200);
+  });
+
+  it('requires x-reach-secret', async () => {
+    const { status } = await request('GET', '/api/insights', null, {
+      'x-reach-secret': 'wrong',
+    });
+    assert.strictEqual(status, 401);
+  });
+});
