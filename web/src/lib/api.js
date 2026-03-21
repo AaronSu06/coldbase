@@ -30,3 +30,11 @@ export const deleteOutreach = (threadId) =>
 
 export const fetchBestTime = () =>
   apiFetch(`${BASE}/insights/best-time`).then(r => r.json());
+
+export const fetchInsights = ({ from, to } = {}) => {
+  const params = new URLSearchParams();
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const qs = params.toString();
+  return apiFetch(`${BASE}/insights${qs ? `?${qs}` : ''}`).then(r => r.json());
+};
