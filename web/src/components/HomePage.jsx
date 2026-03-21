@@ -197,55 +197,43 @@ function UpgradeCard() {
   const [open, setOpen] = useState(false);
 
   const features = [
-    { icon: '✉️', label: 'AI-drafted follow-up emails' },
-    { icon: '📊', label: 'Advanced analytics & reporting' },
-    { icon: '⚡', label: 'Priority support' },
-    { icon: '🔍', label: 'Advanced send-time insights' },
+    'AI-drafted follow-up emails',
+    'Advanced analytics & reporting',
+    'Priority support',
+    'Advanced send-time insights',
   ];
 
   return (
     <>
-      <div>
-        <p className="text-[13px] font-semibold text-chrome-muted mb-2 px-1">Upgrade to Reach Pro</p>
-        <div className="bg-chrome-surface border border-accent/20 rounded-xl shadow-card bg-accent/[0.03] overflow-hidden">
-          {/* Header */}
-          <div className="px-5 pt-5 pb-4">
-            <p className="text-[11px] text-chrome-muted mb-1">Upgrade to Reach Pro</p>
-            <p className="font-display text-[20px] font-bold text-chrome-text mb-3">
-              Reach Pro
-            </p>
-            <p className="text-[13px] text-chrome-muted leading-relaxed">
-              Supercharge your cold outreach with AI-powered follow-ups and deep analytics.
-            </p>
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-chrome-border mx-5" />
-
-          {/* Feature list */}
-          <ul className="px-5 py-4 space-y-3">
-            {features.map(f => (
-              <li key={f.label} className="flex items-center gap-3">
-                <span className="w-8 h-8 flex items-center justify-center bg-chrome-surface border border-chrome-border rounded-lg text-[15px] flex-shrink-0">
-                  {f.icon}
-                </span>
-                <span className="text-[13px] text-chrome-text">{f.label}</span>
-              </li>
-            ))}
-          </ul>
-
-          {/* CTA */}
-          <div className="px-5 pb-5">
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="w-full py-2.5 bg-accent text-white font-semibold text-[13px] rounded-xl hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
-            >
-              Subscribe to Reach Pro
-            </button>
-          </div>
+      <ActionCard className="border-accent/20 bg-accent/[0.03] flex flex-col">
+        <div className="mb-3">
+          <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
+            Reach Pro
+          </p>
+          <p className="text-[12px] text-chrome-muted leading-relaxed">
+            AI-powered follow-ups, deep analytics, and priority support — for serious outreach.
+          </p>
         </div>
-      </div>
+
+        <div className="border-t border-chrome-border -mx-5 mb-4" />
+
+        <ul className="space-y-2 mb-4 flex-1">
+          {features.map(f => (
+            <li key={f} className="flex items-center gap-2 text-[12px] text-chrome-muted">
+              <span className="text-accent text-[10px]">✦</span>
+              {f}
+            </li>
+          ))}
+        </ul>
+
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="w-full py-2 bg-accent text-white font-semibold text-[12px] rounded-lg hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+        >
+          Subscribe to Reach Pro
+        </button>
+      </ActionCard>
 
       {open && <ProModal onClose={() => setOpen(false)} />}
     </>
