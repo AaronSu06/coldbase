@@ -32,8 +32,9 @@ router.get('/track/:trackingId', async (req, res) => {
 
 router.post('/api/track', async (req, res, next) => {
   const { trackingId, threadId } = req.body;
+  const { userId } = req.user;
   try {
-    await prisma.trackingPixel.create({ data: { trackingId, threadId } });
+    await prisma.trackingPixel.create({ data: { trackingId, threadId, userId } });
   } catch (e) {
     if (e.code === 'P2002') return res.status(200).json({ ok: true });
     return next(e);
