@@ -1,7 +1,125 @@
 import { Router } from 'express';
-import { prisma } from '../lib/prisma.js';
+import { prisma, Prisma } from '../lib/prisma.js';
 
 const router = Router();
+
+// Thresholds — tune these once you have real user data
+const BEST_TIME_MIN_SENT = 20;
+const BEST_TIME_MIN_REPLIED = 5;
+const RESPONSE_TIME_MIN_REPLIED = 10;
+const REPLY_TREND_MIN_SENT = 10;
+const REPLY_TREND_MIN_DAYS = 30;
+
+// GET / — unified insights endpoint
+// Mounted at /api/insights, so full path is GET /api/insights
+// Query params: from=YYYY-MM-DD, to=YYYY-MM-DD (both optional, default = all-time)
+router.get('/', async (req, res, next) => {
+  try {
+    const { from, to } = req.query;
+    const fromDate = from ? new Date(from) : null;
+    const toDate = to ? new Date(to + 'T23:59:59.999Z') : null;
+
+    // Build reusable date clauses for $queryRaw
+    const fromClause = fromDate ? Prisma.sql`AND "sentDate" >= ${fromDate}` : Prisma.sql``;
+    const toClause = toDate ? Prisma.sql`AND "sentDate" <= ${toDate}` : Prisma.sql``;
+
+    // ── Totals (always reflect the date window) ───────────────────────────
+    const whereDate = {
+      archived: false,
+      ...(fromDate && { sentDate: { gte: fromDate } }),
+      ...(toDate && { sentDate: { lte: toDate } }),
+    };
+    const totalSent = await prisma.outreach.count({ where: whereDate });
+    const totalReplied = await prisma.outreach.count({
+      where: { ...whereDate, repliedAt: { not: null } },
+    });
+
+    // ── Best Time to Send ─────────────────────────────────────────────────
+    let bestTime;
+    if (totalSent < BEST_TIME_MIN_SENT || totalReplied < BEST_TIME_MIN_REPLIED) {
+      bestTime = { insufficient: true, sent: totalSent, replied: totalReplied };
+    } else {
+      const rows = await prisma.$queryRaw`
+        SELECT
+          EXTRACT(HOUR FROM "sentDate")::INTEGER AS hour,
+          COUNT(*) AS sent_count,
+          SUM(CASE WHEN "repliedAt" IS NOT NULL THEN 1 ELSE 0 END)::INTEGER AS replied_count
+        FROM "Outreach"
+        WHERE archived = false ${fromClause} ${toClause}
+        GROUP BY hour
+        ORDER BY hour
+      `;
+      bestTime = {
+        insufficient: false,
+        data: rows.map(r => ({
+          hour: Number(r.hour),
+          sentCount: Number(r.sent_count),
+          repliedCount: Number(r.replied_count),
+          replyRate: Number(r.sent_count) > 0 ? Number(r.replied_count) / Number(r.sent_count) : 0,
+        })),
+      };
+    }
+
+    // ── Average Response Time ─────────────────────────────────────────────
+    let responseTime;
+    if (totalReplied < RESPONSE_TIME_MIN_REPLIED) {
+      responseTime = { insufficient: true, sent: totalSent, replied: totalReplied };
+    } else {
+      const [rtRow] = await prisma.$queryRaw`
+        SELECT AVG(EXTRACT(EPOCH FROM ("repliedAt" - "sentDate")) / 3600.0) AS avg_hours,
+               COUNT(*) AS sample_size
+        FROM "Outreach"
+        WHERE "repliedAt" IS NOT NULL AND archived = false ${fromClause} ${toClause}
+      `;
+      responseTime = {
+        insufficient: false,
+        avgHours: Number(rtRow.avg_hours),
+        sampleSize: Number(rtRow.sample_size),
+      };
+    }
+
+    // ── Reply Rate Trend (weekly) ─────────────────────────────────────────
+    let replyTrend;
+    // Determine effective date range for the 30-day minimum check
+    const effectiveFrom = fromDate ?? (await prisma.outreach.findFirst({
+      where: { archived: false },
+      orderBy: { sentDate: 'asc' },
+      select: { sentDate: true },
+    }))?.sentDate;
+    const effectiveTo = toDate ?? new Date();
+    const daySpan = effectiveFrom
+      ? (effectiveTo - effectiveFrom) / (1000 * 60 * 60 * 24)
+      : 0;
+
+    if (totalSent < REPLY_TREND_MIN_SENT || daySpan < REPLY_TREND_MIN_DAYS) {
+      replyTrend = { insufficient: true, sent: totalSent, replied: totalReplied };
+    } else {
+      const trendRows = await prisma.$queryRaw`
+        SELECT
+          DATE_TRUNC('week', "sentDate") AS week,
+          COUNT(*) AS sent,
+          SUM(CASE WHEN "repliedAt" IS NOT NULL THEN 1 ELSE 0 END)::INTEGER AS replied
+        FROM "Outreach"
+        WHERE archived = false ${fromClause} ${toClause}
+        GROUP BY week
+        ORDER BY week
+      `;
+      replyTrend = {
+        insufficient: false,
+        data: trendRows.map(r => ({
+          week: r.week.toISOString().slice(0, 10),
+          sent: Number(r.sent),
+          replied: Number(r.replied),
+          rate: Number(r.sent) > 0 ? Number(r.replied) / Number(r.sent) : 0,
+        })),
+      };
+    }
+
+    res.json({ sent: totalSent, replied: totalReplied, bestTime, responseTime, replyTrend });
+  } catch (e) {
+    next(e);
+  }
+});
 
 // GET /best-time — aggregated send/reply data by hour
 // Mounted at /api/insights in index.js, so full path is GET /api/insights/best-time
