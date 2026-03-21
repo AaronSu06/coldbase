@@ -146,7 +146,7 @@ function DeveloperNote() {
         A note from the developer
       </p>
       <p className="text-[12px] text-chrome-subtle leading-relaxed">
-        I built Reach because I was spending hours managing cold outreach in spreadsheets — tracking who I'd contacted, when, and whether they'd replied. I wanted something minimal, honest, and actually useful. Pro keeps the lights on and funds everything on the roadmap. Thank you for being here.
+        I built Reach because spreadsheet-based outreach tracking was eating my time. I wanted something minimal and honest. Pro keeps the lights on — thank you for being here.
       </p>
     </ActionCard>
   );
@@ -163,18 +163,17 @@ export default function HomePage() {
       </div>
 
       {/* Action cards grid */}
-      <div className="p-4 sm:p-8 max-w-4xl">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Left: utility cards stacked */}
           <div className="flex flex-col gap-4">
             <NotificationsCard />
             <CompleteProfileCard />
           </div>
-          {/* Right: developer note + pricing */}
-          <div className="flex flex-col gap-4">
-            <DeveloperNote />
-            <UpgradeCard />
-          </div>
+          {/* Centre: pricing */}
+          <UpgradeCard />
+          {/* Right: developer note */}
+          <DeveloperNote />
         </div>
       </div>
     </div>
