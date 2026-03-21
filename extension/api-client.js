@@ -58,8 +58,8 @@ export async function apiFetchRetry(url, token, getAuthToken) {
 // ─── Server API helpers ───────────────────────────────────────────────────────
 
 /**
- * Base fetch helper for the Reach server. Attaches the x-reach-secret header
- * and prepends SERVER_URL to the path.
+ * Base fetch helper for the Reach server. Attaches the Authorization: Bearer
+ * token (from chrome.storage.local) and prepends SERVER_URL to the path.
  * @param {string} path - Path relative to SERVER_URL (e.g. '/outreach').
  * @param {RequestInit} options - Standard fetch options.
  */
