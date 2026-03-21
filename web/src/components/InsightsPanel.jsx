@@ -83,12 +83,11 @@ export default function InsightsPanel() {
           {/* Outlined ghost bars */}
           <div className="flex items-end gap-1 h-40 mb-2 pointer-events-none select-none">
             {ghostHeights.map((h, i) => (
-              <div key={i} className="flex-1">
-                <div
-                  className="w-full rounded-t bg-chrome-deep border border-chrome-rim"
-                  style={{ height: `${h}%` }}
-                />
-              </div>
+              <div
+                key={i}
+                className="flex-1 rounded-t bg-chrome-deep border border-chrome-rim"
+                style={{ height: `${h}%` }}
+              />
             ))}
           </div>
 
