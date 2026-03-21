@@ -211,3 +211,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
 });
+
+// ─── Dashboard token sync ──────────────────────────────────────────────────────
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === 'SYNC_REACH_TOKEN' && msg.token) {
+    chrome.storage.local.set({ reach_jwt: msg.token });
+  }
+});

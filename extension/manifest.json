@@ -34,6 +34,11 @@
       "matches": ["http://localhost/*"],
       "js": ["logger.js", "relay.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://localhost:5173/*"],
+      "js": ["dashboard-sync.js"],
+      "run_at": "document_idle"
     }
   ],
   "icons": {
