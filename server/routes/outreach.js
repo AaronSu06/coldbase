@@ -17,12 +17,18 @@ const PatchOutreachSchema = CreateOutreachSchema.partial();
 // ─── GET / — list with limit/offset pagination ────────────────────────────────
 
 router.get('/', async (req, res, next) => {
+  const { userId } = req.user;
   try {
     const limit  = Math.min(parseInt(req.query.limit)  || 100, 500);
     const offset = parseInt(req.query.offset) || 0;
     const [records, total] = await Promise.all([
-      prisma.outreach.findMany({ orderBy: { sentDate: 'desc' }, take: limit, skip: offset }),
-      prisma.outreach.count(),
+      prisma.outreach.findMany({
+        where: { userId },
+        orderBy: { sentDate: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.outreach.count({ where: { userId } }),
     ]);
     res.json({ data: records, total });
   } catch (e) {
@@ -41,15 +47,31 @@ router.post('/', async (req, res, next) => {
       statusCode: 400,
     });
   }
+  const { userId } = req.user;
   try {
-    const record = await prisma.outreach.create({ data: parsed.data });
+    const record = await prisma.outreach.create({ data: { ...parsed.data, userId } });
     res.status(201).json(record);
   } catch (e) {
     next(e);
   }
 });
 
-// ─── PATCH /:threadId — partial update with Zod validation ───────────────────
+// ─── GET /:threadId — single record ───────────────────────────────────────────
+
+router.get('/:threadId', async (req, res, next) => {
+  const { userId } = req.user;
+  try {
+    const record = await prisma.outreach.findFirst({
+      where: { threadId: req.params.threadId, userId },
+    });
+    if (!record) return res.status(404).json({ error: 'Not Found' });
+    res.json(record);
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ─── PATCH /:threadId ─────────────────────────────────────────────────────────
 
 router.patch('/:threadId', async (req, res, next) => {
   const parsed = PatchOutreachSchema.safeParse(req.body);
@@ -60,9 +82,14 @@ router.patch('/:threadId', async (req, res, next) => {
       statusCode: 400,
     });
   }
+  const { userId } = req.user;
   try {
+    const existing = await prisma.outreach.findFirst({
+      where: { threadId: req.params.threadId, userId },
+    });
+    if (!existing) return res.status(404).json({ error: 'Not Found' });
     const record = await prisma.outreach.update({
-      where: { threadId: req.params.threadId },
+      where: { id: existing.id },
       data: parsed.data,
     });
     res.json(record);
@@ -74,8 +101,13 @@ router.patch('/:threadId', async (req, res, next) => {
 // ─── DELETE /:threadId ────────────────────────────────────────────────────────
 
 router.delete('/:threadId', async (req, res, next) => {
+  const { userId } = req.user;
   try {
-    await prisma.outreach.delete({ where: { threadId: req.params.threadId } });
+    const existing = await prisma.outreach.findFirst({
+      where: { threadId: req.params.threadId, userId },
+    });
+    if (!existing) return res.status(404).json({ error: 'Not Found' });
+    await prisma.outreach.delete({ where: { id: existing.id } });
     res.status(204).end();
   } catch (e) {
     next(e);
