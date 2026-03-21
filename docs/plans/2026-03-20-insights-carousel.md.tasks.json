@@ -1,0 +1,13 @@
+{
+  "planPath": "docs/plans/2026-03-20-insights-carousel.md",
+  "tasks": [
+    {"id": 11, "subject": "Task 1: Write failing tests for GET /api/insights", "status": "pending"},
+    {"id": 12, "subject": "Task 2: Implement GET /api/insights endpoint", "status": "pending", "blockedBy": [11]},
+    {"id": 13, "subject": "Task 3: Add fetchInsights to frontend API client", "status": "pending"},
+    {"id": 14, "subject": "Task 4: Refactor InsightsPanel — carousel shell", "status": "pending", "blockedBy": [13]},
+    {"id": 15, "subject": "Task 5: Implement BestTimeSlide", "status": "pending", "blockedBy": [14]},
+    {"id": 16, "subject": "Task 6: Implement ResponseTimeSlide", "status": "pending", "blockedBy": [14]},
+    {"id": 17, "subject": "Task 7: Implement ReplyTrendSlide", "status": "pending", "blockedBy": [14]}
+  ],
+  "lastUpdated": "2026-03-20T00:00:00Z"
+}
