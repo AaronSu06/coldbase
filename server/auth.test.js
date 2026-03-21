@@ -134,3 +134,48 @@ describe('GET /api/auth/me', () => {
     assert.equal(res.status, 401);
   });
 });
+
+describe('Cross-user data isolation', () => {
+  let tokenA, tokenB, threadId;
+
+  before(async () => {
+    // Create two separate users
+    const resA = await request('POST', '/api/auth/signup', { email: 'usera@example.com', password: 'passwordA123' });
+    tokenA = resA.body.token;
+    const resB = await request('POST', '/api/auth/signup', { email: 'userb@example.com', password: 'passwordB123' });
+    tokenB = resB.body.token;
+
+    // Create an outreach record as user A
+    threadId = `thread-isolation-${Date.now()}`;
+    await request('POST', '/api/outreach', {
+      threadId,
+      company: 'Acme',
+      contactEmail: 'contact@acme.com',
+      gmailUrl: 'https://mail.google.com/mail/u/0/#inbox/abc',
+      contactName: 'Alice',
+      domain: 'acme.com',
+      subject: 'Hello',
+      sentDate: new Date().toISOString(),
+      latestActivity: new Date().toISOString(),
+    }, { Authorization: `Bearer ${tokenA}` });
+  });
+
+  it('user B cannot read user A outreach records', async () => {
+    const res = await request('GET', '/api/outreach', null, { Authorization: `Bearer ${tokenB}` });
+    assert.equal(res.status, 200);
+    const hasA = res.body.data.some(r => r.threadId === threadId);
+    assert.equal(hasA, false, "user B should not see user A's records");
+  });
+
+  it('user B cannot patch user A outreach record', async () => {
+    const res = await request('PATCH', `/api/outreach/${threadId}`, { notes: 'hacked' }, { Authorization: `Bearer ${tokenB}` });
+    assert.equal(res.status, 404, "user B should get 404, not access user A's record");
+  });
+
+  it('user A can still read their own record', async () => {
+    const res = await request('GET', '/api/outreach', null, { Authorization: `Bearer ${tokenA}` });
+    assert.equal(res.status, 200);
+    const hasA = res.body.data.some(r => r.threadId === threadId);
+    assert.equal(hasA, true, "user A should see their own record");
+  });
+});

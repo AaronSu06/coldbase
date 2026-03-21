@@ -88,9 +88,11 @@ router.patch('/:threadId', async (req, res, next) => {
       where: { threadId: req.params.threadId, userId },
     });
     if (!existing) return res.status(404).json({ error: 'Not Found' });
+    // Strip system/immutable fields from the patch data
+    const { userId: _u, id: _id, createdAt: _ca, updatedAt: _ua, ...patchData } = parsed.data;
     const record = await prisma.outreach.update({
       where: { id: existing.id },
-      data: parsed.data,
+      data: patchData,
     });
     res.json(record);
   } catch (e) {
