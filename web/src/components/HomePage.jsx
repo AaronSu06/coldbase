@@ -72,21 +72,81 @@ function CompleteProfileCard() {
   );
 }
 
-// ── Upgrade teaser ─────────────────────────────────────────────────────────
+// ── Reach Pro pricing card ─────────────────────────────────────────────────
 
 function UpgradeCard() {
+  const features = [
+    'AI-drafted follow-up emails',
+    'Advanced analytics & reporting',
+    'Priority support',
+  ];
+
   return (
     <ActionCard className="border-accent/20 bg-accent/[0.03]">
-      <div className="flex items-center gap-2 mb-0.5">
-            <p className="font-sans font-semibold text-[14px] text-chrome-text">
-              Reach Pro
-            </p>
-            <span className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-accent/70 bg-accent/10 px-1.5 py-0.5 rounded-md">
-              Coming soon
-            </span>
+      <p className="font-sans font-semibold text-[15px] text-chrome-text mb-3">
+        Reach Pro
+      </p>
+      <ul className="space-y-1 mb-4">
+        {features.map(f => (
+          <li key={f} className="flex items-center gap-2 text-[12px] text-chrome-muted">
+            <span className="text-accent text-[10px]">✦</span>
+            {f}
+          </li>
+        ))}
+      </ul>
+      <div className="flex gap-3">
+        {/* Monthly */}
+        <div className="flex flex-col items-center gap-2 border border-chrome-border rounded-xl p-3 flex-1">
+          <p className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted">
+            Monthly
+          </p>
+          <div className="text-center">
+            <span className="font-display text-[22px] font-bold text-chrome-text">$19</span>
+            <span className="text-[11px] text-chrome-muted"> / mo</span>
           </div>
-      <p className="text-[12px] text-chrome-muted leading-relaxed mt-0.5">
-        Unlock AI-drafted follow-ups, advanced analytics, and priority support.
+          <button
+            type="button"
+            className="w-full text-[11px] font-semibold text-accent border border-accent/40 rounded-lg py-1.5 hover:bg-accent/10 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+          >
+            Subscribe
+          </button>
+        </div>
+
+        {/* Annual */}
+        <div className="flex flex-col items-center gap-2 border border-accent/40 bg-accent/[0.04] rounded-xl p-3 flex-1 relative">
+          <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold font-sans uppercase tracking-[0.08em] bg-accent text-white px-2 py-0.5 rounded-full whitespace-nowrap">
+            Save 21%
+          </span>
+          <p className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted">
+            Annual
+          </p>
+          <div className="text-center">
+            <span className="font-display text-[22px] font-bold text-chrome-text">$15</span>
+            <span className="text-[11px] text-chrome-muted"> / mo</span>
+          </div>
+          <p className="text-[9px] text-chrome-muted text-center">billed $180 / yr</p>
+          <button
+            type="button"
+            className="w-full text-[11px] font-semibold text-white bg-accent rounded-lg py-1.5 hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+          >
+            Subscribe
+          </button>
+        </div>
+      </div>
+    </ActionCard>
+  );
+}
+
+// ── Developer note ─────────────────────────────────────────────────────────
+
+function DeveloperNote() {
+  return (
+    <ActionCard>
+      <p className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted mb-2">
+        A note from the developer
+      </p>
+      <p className="text-[12px] text-chrome-subtle leading-relaxed">
+        I built Reach because I was spending hours managing cold outreach in spreadsheets — tracking who I'd contacted, when, and whether they'd replied. I wanted something minimal, honest, and actually useful. Pro keeps the lights on and funds everything on the roadmap. Thank you for being here.
       </p>
     </ActionCard>
   );
@@ -103,14 +163,19 @@ export default function HomePage() {
       </div>
 
       {/* Action cards grid */}
-      <div className="p-4 sm:p-8 max-w-4xl space-y-4">
-        {/* Top row: utility cards */}
+      <div className="p-4 sm:p-8 max-w-4xl">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <NotificationsCard />
-          <CompleteProfileCard />
+          {/* Left: utility cards stacked */}
+          <div className="flex flex-col gap-4">
+            <NotificationsCard />
+            <CompleteProfileCard />
+          </div>
+          {/* Right: pricing + developer note */}
+          <div className="flex flex-col gap-4">
+            <UpgradeCard />
+            <DeveloperNote />
+          </div>
         </div>
-        {/* Bottom row: subscription */}
-        <UpgradeCard />
       </div>
     </div>
   );
