@@ -1238,18 +1238,22 @@ window.ReachWidget = (function () {
         </div>
       `;
 
-      // Fetch dashUrl via existing GET_RUNTIME_CONFIG pattern
+      // Wire buttons immediately with fallback, update when config resolves
+      let _dashUrl = 'http://localhost:5173';
+      const loginBtn  = shadow.getElementById('cp-auth-login');
+      const signupBtn = shadow.getElementById('cp-auth-signup');
+      loginBtn.addEventListener('click',  () => window.open(_dashUrl + '/login', '_blank'));
+      signupBtn.addEventListener('click', () => window.open(_dashUrl + '/signup', '_blank'));
       chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (res) => {
-        const dashUrl = res?.config?.dashboardUrl ?? 'http://localhost:5173';
-        shadow.getElementById('cp-auth-login').addEventListener('click', () => window.open(dashUrl + '/login', '_blank'));
-        shadow.getElementById('cp-auth-signup').addEventListener('click', () => window.open(dashUrl + '/signup', '_blank'));
+        if (res?.config?.dashboardUrl) _dashUrl = res.config.dashboardUrl;
       });
 
       // Auto-unlock when JWT is set
       function onStorageChanged(changes, area) {
         if (area !== 'local' || !changes.reach_jwt?.newValue) return;
         chrome.storage.onChanged.removeListener(onStorageChanged);
-        _composeAuthGateHost.style.display = 'none';
+        _composeAuthGateHost.remove();
+        _composeAuthGateHost = null;
         openComposePanel(editorEl);
       }
       chrome.storage.onChanged.addListener(onStorageChanged);
