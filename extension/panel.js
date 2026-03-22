@@ -268,7 +268,7 @@
       const fontLink = document.createElement('link');
       fontLink.id = 'reach-panel-fonts';
       fontLink.rel = 'stylesheet';
-      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@0,400;0,500&display=swap';
       document.head.appendChild(fontLink);
     }
 
@@ -337,7 +337,7 @@
       const fontLink = document.createElement('link');
       fontLink.id = 'reach-panel-fonts';
       fontLink.rel = 'stylesheet';
-      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@0,400;0,500&display=swap';
       document.head.appendChild(fontLink);
     }
 
