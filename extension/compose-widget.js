@@ -407,7 +407,7 @@ window.ReachWidget = (function () {
     .result-email {
       flex: 1; font-size: 12px; color: #1c1917;
       font-family: 'IBM Plex Mono', ui-monospace, monospace;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      word-break: break-all;
     }
     .result-score { font-size: 10px; color: #78716c; flex-shrink: 0; }
     .copy-btn {
@@ -431,12 +431,6 @@ window.ReachWidget = (function () {
     .btn-row { display: flex; gap: 8px; margin-top: 8px; }
     .btn-row .action-btn { flex: 1; }
     .autofill-note { font-size: 10px; color: #78716c; margin-top: 4px; font-style: italic; }
-    .result-status { font-size:9px; font-weight:700; padding:2px 5px; border-radius:10px;
-      flex-shrink:0; text-transform:uppercase; letter-spacing:0.04em; }
-    .result-status.verified    { background:#dcfce7; color:#16a34a; }
-    .result-status.unconfirmed { background:#fefce8; color:#ca8a04; }
-    .result-status.unreachable { background:#f6f5f1; color:#78716c; }
-    .result-source { font-size:9px; color:#78716c; flex-shrink:0; font-style:italic; }
 
   /* ── Search box ─────────────────────────────── */
   .cp-search-box {
@@ -583,7 +577,45 @@ window.ReachWidget = (function () {
   }
   .cp-auth-btn-secondary:hover { background: #ede9e3; }
   .cp-tabs-locked .tab { opacity: 0.35; pointer-events: none; cursor: default; }
+
+  /* ── Plan gate (Draft AI pro upgrade) ─────────── */
+  .cp-plan-gate {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 28px 20px; gap: 10px;
+    text-align: center;
+  }
+  .cp-plan-gate-icon {
+    font-size: 24px; line-height: 1;
+  }
+  .cp-plan-gate-heading {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700; color: #1c1917;
+    letter-spacing: -0.02em; margin: 0;
+  }
+  .cp-plan-gate-sub {
+    font-size: 11px; color: #78716c; line-height: 1.5; margin: 0;
+  }
+
+  /* ── Resume banner (pro users) ───────────────── */
+  .cp-resume-banner {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px; margin-bottom: 10px;
+    background: #fdf3ec; border: 1px solid #f5d0b5;
+    border-radius: 8px; font-size: 11px;
+  }
+  .cp-resume-name {
+    flex: 1; color: #7c4015; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cp-resume-link {
+    color: #b85212; background: none; border: none; padding: 0;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    text-decoration: underline; flex-shrink: 0;
+  }
+  .cp-resume-link:hover { color: #9a4310; }
   `;
+
 
   // ─── Panel HTML ──────────────────────────────────────────────────────────────
 
@@ -673,10 +705,26 @@ window.ReachWidget = (function () {
 
         <!-- Draft AI -->
         <div class="tab-panel" id="cp-panel-draft">
+          <!-- Plan gate — shown for free users, hidden for pro -->
+          <div id="cp-plan-gate" class="cp-plan-gate" style="display:none">
+            <div class="cp-plan-gate-icon">✦</div>
+            <p class="cp-plan-gate-heading">Draft AI is a Pro feature</p>
+            <p class="cp-plan-gate-sub">Upgrade to Pro to generate<br>personalized outreach emails.</p>
+            <button class="action-btn" id="cp-upgrade-btn">Upgrade to Pro</button>
+          </div>
           <div id="cp-draft-empty" class="status-msg" style="padding:24px 0">
             Open a compose window to use Draft AI.
           </div>
           <div id="cp-draft-form" style="display:none">
+            <!-- Resume banner — shown for pro users -->
+            <div id="cp-resume-banner" class="cp-resume-banner" style="display:none">
+              <span class="cp-resume-name" id="cp-resume-name-text"></span>
+              <button class="cp-resume-link" id="cp-resume-change">Change</button>
+            </div>
+            <div id="cp-resume-nudge" class="cp-resume-banner" style="display:none;background:#f6f5f1;border-color:#e6e3db;">
+              <span class="cp-resume-name" style="color:#78716c">No resume — drafts use a generic prompt</span>
+              <button class="cp-resume-link" id="cp-resume-add">Add resume</button>
+            </div>
             <div class="form-group">
               <label>Type</label>
               <select id="cp-draft-type" style="width:100%">
@@ -773,6 +821,29 @@ window.ReachWidget = (function () {
   }
 
   // Sets up the Find Contacts tab: search bar, domain dropdown, email finder.
+  function _cpRenderResults(shadow, results) {
+    var resultsEl = shadow.getElementById('cp-results');
+    if (!resultsEl) return;
+    resultsEl.innerHTML = results.map(function(r, i) {
+      return '<div class="result-row" data-idx="' + i + '">'
+        + '<span class="result-email">' + _cpEscapeHtml(r.email) + '</span>'
+        + '<span class="result-score">' + r.confidence + '%</span>'
+        + '<button class="copy-btn" data-email="' + _cpEscapeHtml(r.email) + '">Copy</button>'
+        + '</div>';
+    }).join('');
+    resultsEl.querySelectorAll('.copy-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        navigator.clipboard.writeText(btn.dataset.email).then(function() {
+          btn.textContent = 'Copied!'; btn.classList.add('copied');
+          setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        }).catch(function() {
+          btn.textContent = 'Failed';
+          setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+        });
+      });
+    });
+  }
+
   function setupFindTab(shadow) {
     var CP_AVATAR_COLORS = ['#6366f1','#8b5cf6','#14b8a6','#f59e0b','#f43f5e','#0ea5e9'];
     function _cpAvatarColor(s) {
@@ -898,6 +969,7 @@ window.ReachWidget = (function () {
       _cpResetSelection();
       _cpHideDropdown();
       searchInput.focus();
+      chrome.storage.session.remove(['reach_find_state', 'reach_find_results']);
     });
 
     searchInput.addEventListener('keydown', function(e) {
@@ -950,22 +1022,20 @@ window.ReachWidget = (function () {
           return;
         }
         if (res && res.ok && res.results && res.results.length) {
-          resultsEl.innerHTML = res.results.map(function(r, i) {
-            var sc = r.status ? r.status.toLowerCase() : 'unconfirmed';
-            var sl = r.source ? r.source.replace('gemini-', '').replace('-', ' ') : '';
-            return '<div class="result-row" data-idx="' + i + '">'
-              + '<span class="result-email">'  + _cpEscapeHtml(r.email)  + '</span>'
-              + '<span class="result-status ' + sc + '">' + _cpEscapeHtml(r.status) + '</span>'
-              + '<span class="result-score">'  + r.confidence + '%</span>'
-              + '<span class="result-source">' + _cpEscapeHtml(sl) + '</span>'
-              + '<button class="copy-btn" data-email="' + _cpEscapeHtml(r.email) + '">Copy</button>'
-              + '</div>';
-          }).join('');
+          _cpRenderResults(shadow, res.results);
+          // Persist results and inputs for session restore
+          chrome.storage.session.set({
+            reach_find_state:   { domain: company, firstName: firstName, lastName: lastName },
+            reach_find_results: { results: res.results },
+          });
+        } else if (res && res.error === 'quota_exceeded') {
+          resultsEl.innerHTML = '<div class="status-msg">Monthly lookup limit reached ('
+            + res.used + '/' + res.limit + '). Upgrade to find more contacts.</div>';
         } else if (!res || !res.ok) {
           var msgs = {
             no_domain:     'Could not resolve a domain for this company.',
             no_mx:         'No mail server found for this domain.',
-            no_candidates: 'No public emails found for this company.',
+            no_candidates: 'No emails found for this company. Try adding a first and last name.',
             all_invalid:   'Unable to find email for this person/company.',
           };
           resultsEl.innerHTML = '<div class="status-msg">'
@@ -973,25 +1043,79 @@ window.ReachWidget = (function () {
         } else {
           resultsEl.innerHTML = '<div class="status-msg">No results found.</div>';
         }
-        resultsEl.querySelectorAll('.copy-btn').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            navigator.clipboard.writeText(btn.dataset.email).then(function() {
-              btn.textContent = 'Copied!'; btn.classList.add('copied');
-              setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-            }).catch(function() {
-              btn.textContent = 'Failed';
-              setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
-            });
-          });
-        });
       });
+    });
+
+    // Restore last session state
+    chrome.storage.session.get(['reach_find_state', 'reach_find_results'], function(data) {
+      if (data.reach_find_state) {
+        var s = data.reach_find_state;
+        if (s.domain) {
+          searchInput.value = s.domain;
+          _cpSelectedDomain = s.domain;
+          clearBtn.style.display = '';
+          _cpSetFavicon(searchFavicon, s.domain, s.domain);
+        }
+        if (s.firstName) shadow.getElementById('cp-first-name').value = s.firstName;
+        if (s.lastName)  shadow.getElementById('cp-last-name').value  = s.lastName;
+      }
+      if (data.reach_find_results && data.reach_find_results.results) {
+        _cpRenderResults(shadow, data.reach_find_results.results);
+      }
     });
   }
 
   // Sets up the Draft AI tab: type/company/contact/notes form, generate, copy, insert.
   // Returns prefillDraftTab so buildComposePanel can call it when the tab is activated.
   function setupDraftTab(shadow, ctx) {
+    let _isPro = false;
+    let _dashUrlForResume = 'http://localhost:5173';
+
+    // Fetch plan + resumeName once; update tier badge and gate/banner visibility.
+    chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (cfgRes) => {
+      _dashUrlForResume = cfgRes?.config?.dashboardUrl ?? 'http://localhost:5173';
+    });
+    chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, (res) => {
+      if (chrome.runtime.lastError || !res?.ok) return;
+      _isPro = res.plan === 'pro';
+      const planGate = shadow.getElementById('cp-plan-gate');
+      const draftEmpty = shadow.getElementById('cp-draft-empty');
+      const draftForm = shadow.getElementById('cp-draft-form');
+      // Update tier badge in header
+      const tierBadge = shadow.getElementById('cp-tier');
+      if (tierBadge) tierBadge.textContent = _isPro ? 'Pro' : 'Free';
+      if (!_isPro) {
+        // Hide form + empty state, show plan gate
+        planGate.style.display = '';
+        draftEmpty.style.display = 'none';
+        draftForm.style.display = 'none';
+        return;
+      }
+      // Pro user: wire resume banner/nudge
+      planGate.style.display = 'none';
+      if (res.resumeName) {
+        shadow.getElementById('cp-resume-banner').style.display = '';
+        shadow.getElementById('cp-resume-name-text').textContent = `Using \u201c${res.resumeName}\u201d`;
+        shadow.getElementById('cp-resume-nudge').style.display = 'none';
+      } else {
+        shadow.getElementById('cp-resume-banner').style.display = 'none';
+        shadow.getElementById('cp-resume-nudge').style.display = '';
+      }
+    });
+
+    // Wire upgrade + resume link buttons (need dashUrl — may load async)
+    shadow.getElementById('cp-upgrade-btn').addEventListener('click', () => {
+      window.open(_dashUrlForResume + '/upgrade', '_blank');
+    });
+    shadow.getElementById('cp-resume-change').addEventListener('click', () => {
+      window.open(_dashUrlForResume + '/profile', '_blank');
+    });
+    shadow.getElementById('cp-resume-add').addEventListener('click', () => {
+      window.open(_dashUrlForResume + '/profile', '_blank');
+    });
+
     function prefillDraftTab() {
+      if (!_isPro) return; // plan gate handles its own visibility
       shadow.getElementById('cp-draft-empty').style.display = ctx.currentEditorEl ? 'none' : '';
       shadow.getElementById('cp-draft-form').style.display  = ctx.currentEditorEl ? '' : 'none';
       if (!ctx.currentEditorEl) return;
