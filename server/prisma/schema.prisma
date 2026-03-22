@@ -12,7 +12,9 @@ model User {
   id             Int             @id @default(autoincrement())
   email          String          @unique
   passwordHash   String
-  plan           String          @default("free")
+  plan                 String          @default("free")
+  lookupsUsedThisMonth Int             @default(0)
+  lookupsResetAt       DateTime?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   outreaches     Outreach[]
