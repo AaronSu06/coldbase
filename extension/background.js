@@ -170,19 +170,39 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'FIND_CONTACT') {
     (async () => {
       try {
-        const res = await serverFetch('/find-email', {
+        const res  = await serverFetch('/find-email', {
           method: 'POST',
           body: JSON.stringify({
             company:   message.company,
-            firstName: message.firstName || '',
-            lastName:  message.lastName  || '',
+            firstName: message.firstName || undefined,
+            lastName:  message.lastName  || undefined,
             domain:    message.domain    || undefined,
           }),
         });
-        sendResponse(await res.json());
+        const body = await res.json();
+        if (res.status === 429) {
+          sendResponse({ ok: false, error: 'quota_exceeded', used: body.used, limit: body.limit });
+        } else {
+          sendResponse(body);
+        }
       } catch (e) {
         log.error('/api/find-email fetch failed:', e.message);
         sendResponse({ ok: false, reason: 'all_invalid' });
+      }
+    })();
+    return true;
+  }
+
+  if (message.type === 'GET_USER_PROFILE') {
+    (async () => {
+      try {
+        const res = await serverFetch('/auth/me');
+        if (!res.ok) { sendResponse({ ok: false }); return; }
+        const data = await res.json();
+        sendResponse({ ok: true, plan: data.plan, resumeName: data.resumeName ?? null });
+      } catch (e) {
+        log.error('GET_USER_PROFILE failed:', e.message);
+        sendResponse({ ok: false });
       }
     })();
     return true;
