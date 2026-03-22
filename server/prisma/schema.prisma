@@ -13,6 +13,8 @@ model User {
   email          String          @unique
   passwordHash   String
   plan                 String          @default("free")
+  resumeText           String?
+  resumeName           String?
   lookupsUsedThisMonth Int             @default(0)
   lookupsResetAt       DateTime?
   createdAt      DateTime        @default(now())
