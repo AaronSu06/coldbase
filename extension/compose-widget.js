@@ -1177,6 +1177,7 @@ window.ReachWidget = (function () {
             return;
           }
           textarea.value = res.text;
+          chrome.storage.session.set({ reach_draft_state: { text: res.text } });
         }
       );
     });
@@ -1200,6 +1201,13 @@ window.ReachWidget = (function () {
       document.execCommand('selectAll', false, null);
       document.execCommand('insertText', false, text);
       ctx.currentEditorEl.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    });
+
+    // Restore draft from session if present
+    chrome.storage.session.get('reach_draft_state', function(data) {
+      if (data.reach_draft_state?.text) {
+        shadow.getElementById('cp-draft-output').value = data.reach_draft_state.text;
+      }
     });
 
     return prefillDraftTab;
