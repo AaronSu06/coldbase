@@ -65,6 +65,28 @@ export async function authSignup(email, password) {
   return data;
 }
 
+export const fetchProfile = () =>
+  apiFetch(`${BASE}/auth/me`).then(r => r.json());
+
+export async function uploadResume(file) {
+  const token = getToken();
+  if (!token) { window.location.href = '/login'; throw new Error('Not authenticated'); }
+  const form = new FormData();
+  form.append('resume', file);
+  const res = await fetch(`${BASE}/profile/resume`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (res.status === 401) { localStorage.removeItem(TOKEN_KEY); window.location.href = '/login'; throw new Error('Session expired'); }
+  if (!res.ok) { const b = await res.text().catch(() => ''); throw new Error(`Upload failed (${res.status}): ${b || res.statusText}`); }
+  return res.json();
+}
+
+export async function deleteResume() {
+  return apiFetch(`${BASE}/profile/resume`, { method: 'DELETE' }).then(r => r.json());
+}
+
 export async function authLogin(email, password) {
   const res = await fetch(`${BASE}/auth/login`, {
     method: 'POST',

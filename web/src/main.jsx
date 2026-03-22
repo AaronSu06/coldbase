@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import App from './App';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
+import ProfilePage from './components/ProfilePage';
 import './index.css';
 import { TOKEN_KEY } from './hooks/useAuth.js';
 
@@ -19,6 +20,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         <Route path="/*" element={<PrivateRoute><App /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>

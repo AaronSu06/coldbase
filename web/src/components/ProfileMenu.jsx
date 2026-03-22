@@ -1,4 +1,5 @@
 // web/src/components/ProfileMenu.jsx
+import { useNavigate } from 'react-router-dom';
 
 function UserIcon() {
   return (
@@ -37,13 +38,15 @@ function SignOutIcon() {
   );
 }
 
-const MENU_ITEMS = [
-  { icon: UserIcon,     label: 'Profile',        onClick: () => {} },
-  { icon: FlagIcon,     label: 'Report an issue', onClick: () => {} },
-  { icon: SettingsIcon, label: 'Settings',        onClick: () => {} },
-];
-
 export default function ProfileMenu({ onClose }) {
+  const navigate = useNavigate();
+
+  const MENU_ITEMS = [
+    { icon: UserIcon,     label: 'Profile',        onClick: () => navigate('/profile') },
+    { icon: FlagIcon,     label: 'Report an issue', onClick: () => {} },
+    { icon: SettingsIcon, label: 'Settings',        onClick: () => {} },
+  ];
+
   return (
     <div
       role="menu"
