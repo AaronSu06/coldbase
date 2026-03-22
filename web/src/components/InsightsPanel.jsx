@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { fetchInsights } from '../lib/api';
+import { useState } from 'react';
 import { DateRangePicker } from './DateRangePicker';
 
 function formatHour(h) {
@@ -272,27 +271,8 @@ function NavArrow({ direction, onClick, disabled }) {
   );
 }
 
-export default function InsightsPanel() {
+export default function InsightsPanel({ dateFrom, dateTo, data, loading, error, onRangeChange }) {
   const [index, setIndex] = useState(0);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const debounceRef = useRef(null);
-
-  useEffect(() => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setLoading(true);
-      setError(null);
-      fetchInsights({ from: dateFrom || undefined, to: dateTo || undefined })
-        .then(setData)
-        .catch(e => setError(e.message))
-        .finally(() => setLoading(false));
-    }, 300);
-    return () => clearTimeout(debounceRef.current);
-  }, [dateFrom, dateTo]);
 
   if (loading) {
     return (
@@ -323,7 +303,7 @@ export default function InsightsPanel() {
         <DateRangePicker
           dateFrom={dateFrom}
           dateTo={dateTo}
-          onRangeChange={({ from, to }) => { setDateFrom(from); setDateTo(to); }}
+          onRangeChange={onRangeChange}
         />
       </div>
 

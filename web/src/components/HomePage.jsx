@@ -257,26 +257,41 @@ function DeveloperNote() {
 
 // ── Home page ──────────────────────────────────────────────────────────────
 
-export default function HomePage() {
+export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange }) {
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="h-full overflow-y-auto">
       {/* Insights section — full-width at top */}
       <div className="border-b border-chrome-border min-h-[280px]">
-        <InsightsPanel />
+        <InsightsPanel
+          dateFrom={insightsDateFrom}
+          dateTo={insightsDateTo}
+          data={insightsData}
+          loading={insightsLoading}
+          error={insightsError}
+          onRangeChange={onInsightsRangeChange}
+        />
       </div>
 
       {/* Action cards grid */}
       <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+        {/*
+          Mobile order: Pro first (above fold), then utility cards, then note.
+          Desktop order: utility | Pro | note  (via sm:order-* overrides).
+        */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Left: utility cards stacked */}
-          <div className="flex flex-col gap-4">
+          {/* Pro — mobile: first, desktop: center */}
+          <div className="order-1 sm:order-2">
+            <UpgradeCard />
+          </div>
+          {/* Utility cards — mobile: second, desktop: left */}
+          <div className="order-2 sm:order-1 flex flex-col gap-4">
             <NotificationsCard />
             <CompleteProfileCard />
           </div>
-          {/* Centre: pricing */}
-          <UpgradeCard />
-          {/* Right: developer note */}
-          <DeveloperNote />
+          {/* Developer note — mobile: third, desktop: right */}
+          <div className="order-3 sm:order-3">
+            <DeveloperNote />
+          </div>
         </div>
       </div>
     </div>

@@ -75,7 +75,10 @@ export default function TopNav({ activeSection, onSectionChange }) {
             Y
           </button>
           {profileOpen && (
-            <ProfileMenu onClose={() => setProfileOpen(false)} />
+            <ProfileMenu
+              onClose={() => setProfileOpen(false)}
+              onSettings={() => { onSectionChange('settings'); setProfileOpen(false); }}
+            />
           )}
         </div>
       </div>
