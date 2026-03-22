@@ -14,7 +14,9 @@ import trackingRoutes  from './routes/tracking.js';
 import emailRoutes     from './routes/email.js';
 import analyticsRoutes from './routes/analytics.js';
 import authRoutes      from './routes/auth.js';
+import profileRoutes   from './routes/profile.js';
 import requireAuth     from './middleware/requireAuth.js';
+import checkQuota     from './middleware/checkQuota.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const { version } = JSON.parse(
@@ -79,10 +81,12 @@ const expensiveRateLimit = rateLimit({
 // ─── Route mounts ─────────────────────────────────────────────────────────────
 
 app.use('/api/outreach',   outreachRoutes);
+app.use('/api/profile',    profileRoutes);
 app.use('/',               trackingRoutes);   // full paths inside: /track/:id and /api/track
-app.post('/api/find-email',      expensiveRateLimit, emailRoutes);
-app.post('/api/suggest-domains', expensiveRateLimit, emailRoutes);
-app.post('/api/draft-email',     expensiveRateLimit, emailRoutes);
+app.use('/api/find-email',      expensiveRateLimit, checkQuota);
+app.use('/api/suggest-domains', expensiveRateLimit);
+app.use('/api/draft-email',     expensiveRateLimit);
+app.use('/api', emailRoutes);
 app.use('/api/insights',   analyticsRoutes);
 
 // ─── Sentry error handler — captures before formatting ────────────────────────
