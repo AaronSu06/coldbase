@@ -40,7 +40,7 @@ window.ReachWidget = (function () {
       const fontLink = document.createElement('link');
       fontLink.id = 'reach-widget-fonts';
       fontLink.rel = 'stylesheet';
-      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@0,400;0,500&display=swap';
       document.head.appendChild(fontLink);
     }
     const s = document.createElement('style');
@@ -509,6 +509,80 @@ window.ReachWidget = (function () {
   .cp-dropdown-status {
     font-size: 11px; color: #78716c; text-align: center; padding: 10px 0; font-style: italic;
   }
+
+  /* ── Auth gate ───────────────────────────────── */
+  .cp-auth-gate {
+    position: relative;
+    overflow: hidden;
+  }
+  .cp-auth-ghost {
+    filter: blur(5px);
+    opacity: 0.12;
+    pointer-events: none;
+    user-select: none;
+    padding: 14px;
+  }
+  .cp-auth-ghost .stats {
+    display: flex;
+    border: 1px solid #e6e3db;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .cp-auth-ghost .stat { flex: 1; text-align: center; padding: 12px 8px; }
+  .cp-auth-ghost .stat + .stat { border-left: 1px solid #e6e3db; }
+  .cp-auth-ghost .stat-value {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 22px; font-weight: 500; color: #b85212; line-height: 1;
+  }
+  .cp-auth-ghost .stat-label {
+    font-size: 9px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #78716c; margin-top: 4px;
+  }
+  .cp-auth-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    gap: 10px;
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(2px);
+  }
+  .cp-auth-logo {
+    width: 28px; height: 28px; border-radius: 7px; margin-bottom: 2px;
+  }
+  .cp-auth-heading {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700; color: #1c1917;
+    letter-spacing: -0.02em; text-align: center; margin: 0;
+  }
+  .cp-auth-sub {
+    font-size: 11px; color: #78716c; text-align: center;
+    line-height: 1.5; margin: 0;
+  }
+  .cp-auth-btn-row {
+    display: flex; gap: 8px; margin-top: 6px; width: 100%;
+  }
+  .cp-auth-btn-primary {
+    flex: 1; background: #b85212; color: #fff; border: none;
+    border-radius: 8px; padding: 8px 12px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: background 150ms ease;
+  }
+  .cp-auth-btn-primary:hover { background: #9a4310; }
+  .cp-auth-btn-secondary {
+    flex: 1; background: #f6f5f1; color: #44403c;
+    border: 1px solid #e6e3db; border-radius: 8px; padding: 8px 12px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: background 150ms ease;
+  }
+  .cp-auth-btn-secondary:hover { background: #ede9e3; }
+  .cp-tabs-locked .tab { opacity: 0.35; pointer-events: none; cursor: default; }
   `;
 
   // ─── Panel HTML ──────────────────────────────────────────────────────────────
@@ -1096,8 +1170,121 @@ window.ReachWidget = (function () {
   let _composePanelSyncTrackMode  = null;
   let _composePanelCurrentEditor  = null;
   let _composePanelLoadOverview   = null;
+  let _composeAuthGateHost        = null;
 
-  function openComposePanel(editorEl) {
+  function showComposeAuthGate(editorEl) {
+    // If auth gate already open, toggle it off
+    if (_composeAuthGateHost && _composeAuthGateHost.style.display !== 'none') {
+      _composeAuthGateHost.style.display = 'none';
+      return;
+    }
+
+    if (!_composeAuthGateHost) {
+      const ICON_URL = chrome.runtime.getURL('Reach.png');
+      const host = document.createElement('div');
+      host.id = 'reach-compose-auth-gate-host';
+      host.style.display = 'none';
+
+      ['keydown', 'keyup', 'keypress'].forEach(type =>
+        host.addEventListener(type, e => e.stopPropagation(), true)
+      );
+
+      const shadow = host.attachShadow({ mode: 'closed' });
+      shadow.innerHTML = `
+        <style>${PANEL_STYLES}</style>
+        <div class="panel">
+          <div class="header">
+            <img src="${ICON_URL}" alt="Reach" />
+            <div class="header-text">
+              <h1>Reach</h1>
+              <span class="tier-badge">Free</span>
+            </div>
+            <button class="close-btn" aria-label="Close">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="tabs cp-tabs-locked">
+            <button class="tab active">Overview</button>
+            <button class="tab">Find Contacts</button>
+            <button class="tab">Draft AI</button>
+          </div>
+          <div class="cp-auth-gate">
+            <div class="cp-auth-ghost">
+              <div class="stats">
+                <div class="stat">
+                  <div class="stat-value">—</div>
+                  <div class="stat-label">Sent</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-value">—</div>
+                  <div class="stat-label">Replied</div>
+                </div>
+              </div>
+              <div style="height:32px;background:#e6e3db;border-radius:8px;margin-bottom:10px;"></div>
+              <div style="height:32px;background:#e6e3db;border-radius:8px;opacity:0.5;"></div>
+            </div>
+            <div class="cp-auth-overlay">
+              <img src="${ICON_URL}" class="cp-auth-logo" alt="Reach" />
+              <p class="cp-auth-heading">Sign in to unlock Reach</p>
+              <p class="cp-auth-sub">Track outreach, find contacts,<br>and draft emails.</p>
+              <div class="cp-auth-btn-row">
+                <button class="cp-auth-btn-primary" id="cp-auth-login">Log in</button>
+                <button class="cp-auth-btn-secondary" id="cp-auth-signup">Create account</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Wire buttons immediately with fallback, update when config resolves
+      let _dashUrl = 'http://localhost:5173';
+      const loginBtn  = shadow.getElementById('cp-auth-login');
+      const signupBtn = shadow.getElementById('cp-auth-signup');
+      loginBtn.addEventListener('click',  () => window.open(_dashUrl + '/login', '_blank'));
+      signupBtn.addEventListener('click', () => window.open(_dashUrl + '/signup', '_blank'));
+      chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (res) => {
+        if (res?.config?.dashboardUrl) _dashUrl = res.config.dashboardUrl;
+      });
+
+      // Auto-unlock when JWT is set
+      function onStorageChanged(changes, area) {
+        if (area !== 'local' || !changes.reach_jwt?.newValue) return;
+        chrome.storage.onChanged.removeListener(onStorageChanged);
+        _composeAuthGateHost.remove();
+        _composeAuthGateHost = null;
+        openComposePanel(editorEl);
+      }
+      chrome.storage.onChanged.addListener(onStorageChanged);
+
+      shadow.querySelector('.close-btn').addEventListener('click', () => {
+        chrome.storage.onChanged.removeListener(onStorageChanged);
+        host.style.display = 'none';
+      });
+
+      document.documentElement.appendChild(host);
+      _composeAuthGateHost = host;
+    }
+
+    _composeAuthGateHost.style.display = '';
+  }
+
+  async function openComposePanel(editorEl) {
+    // Auth gate check
+    const result = await new Promise(resolve =>
+      chrome.storage.local.get('reach_jwt', resolve)
+    );
+    if (!result.reach_jwt) {
+      showComposeAuthGate(editorEl);
+      return;
+    }
+
+    // Hide auth gate if previously shown
+    if (_composeAuthGateHost) {
+      _composeAuthGateHost.style.display = 'none';
+    }
+
     if (!_composePanelHost) {
       const panel = buildComposePanel();
       _composePanelHost          = panel.host;
