@@ -1,14 +1,4 @@
 // web/src/components/ProfileMenu.jsx
-import { useNavigate } from 'react-router-dom';
-
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="w-4 h-4 flex-shrink-0" aria-hidden="true">
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-    </svg>
-  );
-}
 
 function FlagIcon() {
   return (
@@ -38,13 +28,10 @@ function SignOutIcon() {
   );
 }
 
-export default function ProfileMenu({ onClose }) {
-  const navigate = useNavigate();
-
+export default function ProfileMenu({ onClose, onSettings }) {
   const MENU_ITEMS = [
-    { icon: UserIcon,     label: 'Profile',        onClick: () => navigate('/profile') },
     { icon: FlagIcon,     label: 'Report an issue', onClick: () => {} },
-    { icon: SettingsIcon, label: 'Settings',        onClick: () => {} },
+    { icon: SettingsIcon, label: 'Settings',        onClick: onSettings },
   ];
 
   return (
@@ -57,7 +44,7 @@ export default function ProfileMenu({ onClose }) {
         <button
           key={label}
           role="menuitem"
-          onClick={() => { onClick(); onClose(); }}
+          onClick={() => { onClick?.(); onClose(); }}
           className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-chrome-text hover:bg-chrome-deep transition-colors text-left"
         >
           <Icon />

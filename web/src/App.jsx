@@ -7,9 +7,12 @@ import Sidebar from './components/Sidebar';
 import EmptyState from './components/EmptyState';
 import TopNav from './components/TopNav';
 import HomePage from './components/HomePage';
+import LoginPage from './components/LoginPage';
+import SettingsPage from './components/SettingsPage';
 import { DateRangePicker } from './components/DateRangePicker';
 import { COLUMNS } from '@shared/constants';
 import { STATUS_COLORS, formatShortDate } from './lib/utils';
+import { fetchInsights } from './lib/api';
 
 // ── Status dot for list view ───────────────────────────────────────────────
 
@@ -36,9 +39,94 @@ function StatInline({ value, label }) {
   );
 }
 
+// ── Mobile filters bottom sheet ───────────────────────────────────────────
+
+function MobileFiltersSheet({ onClose, showFavoritesOnly, onToggleFavorites, onArchiveAll, dateFrom, dateTo, onRangeChange, viewMode, visibleColumns, onToggleColumn }) {
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} aria-hidden="true" />
+
+      {/* Sheet */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Filter options"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-chrome-surface rounded-t-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.10)]"
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 bg-chrome-border rounded-full" />
+        </div>
+
+        <div className="px-4 pt-1 pb-8 space-y-0.5">
+          {/* Favorites toggle */}
+          <button
+            onClick={() => { onToggleFavorites(); onClose(); }}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-colors ${
+              showFavoritesOnly
+                ? 'bg-rose-500/10 text-rose-500'
+                : 'text-chrome-text hover:bg-chrome-deep'
+            }`}
+          >
+            <Heart size={16} strokeWidth={2} fill={showFavoritesOnly ? 'currentColor' : 'none'} />
+            <span className="text-[14px] font-medium">
+              {showFavoritesOnly ? 'Show all contacts' : 'Show favorites only'}
+            </span>
+          </button>
+
+          {/* Archive all */}
+          <button
+            onClick={() => { onArchiveAll(); onClose(); }}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left text-chrome-text hover:bg-chrome-deep transition-colors"
+          >
+            <Archive size={16} strokeWidth={2} />
+            <span className="text-[14px] font-medium">Archive all visible</span>
+          </button>
+
+          <div className="h-px bg-chrome-border !my-2" />
+
+          {/* Date range */}
+          <div className="px-2 py-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-2 px-2">Date filter</p>
+            <DateRangePicker
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onRangeChange={onRangeChange}
+            />
+          </div>
+
+          {/* Column visibility — kanban only */}
+          {viewMode === 'columns' && (
+            <>
+              <div className="h-px bg-chrome-border !my-2" />
+              <div className="px-2 py-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-1 px-2">Visible columns</p>
+                {COLUMNS.map(col => (
+                  <label key={col} className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-chrome-deep cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleColumns.includes(col)}
+                      onChange={() => onToggleColumn(col)}
+                      aria-label={`Show ${col} column`}
+                      className="accent-accent w-4 h-4"
+                    />
+                    <span className="text-[14px] text-chrome-text">{col}</span>
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ── App ────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { records, error, refresh, updateStatus, toggleFavorite, toggleArchived, archiveAll, updateRecord, deleteRecord } = useOutreach();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [query, setQuery] = useState('');
@@ -53,7 +141,27 @@ export default function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [activeSection, setActiveSection] = useState('tracker');
   const columnPickerRef = useRef(null);
-  const mobileMenuRef = useRef(null);
+
+  // Insights state — lifted here so data persists across home/tracker navigation
+  const [insightsDateFrom, setInsightsDateFrom] = useState('');
+  const [insightsDateTo, setInsightsDateTo] = useState('');
+  const [insightsData, setInsightsData] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(true);
+  const [insightsError, setInsightsError] = useState(null);
+  const insightsDebounceRef = useRef(null);
+
+  useEffect(() => {
+    clearTimeout(insightsDebounceRef.current);
+    insightsDebounceRef.current = setTimeout(() => {
+      setInsightsLoading(true);
+      setInsightsError(null);
+      fetchInsights({ from: insightsDateFrom || undefined, to: insightsDateTo || undefined })
+        .then(setInsightsData)
+        .catch(e => setInsightsError(e.message))
+        .finally(() => setInsightsLoading(false));
+    }, 300);
+    return () => clearTimeout(insightsDebounceRef.current);
+  }, [insightsDateFrom, insightsDateTo]);
 
   const selectedRecord = useMemo(() => {
     if (!selectedThreadId) return null;
@@ -86,6 +194,15 @@ export default function App() {
     ? '—'
     : Math.round((statReplied / statSent) * 100) + '%';
 
+  function refreshInsights() {
+    setInsightsLoading(true);
+    setInsightsError(null);
+    fetchInsights({ from: insightsDateFrom || undefined, to: insightsDateTo || undefined })
+      .then(setInsightsData)
+      .catch(e => setInsightsError(e.message))
+      .finally(() => setInsightsLoading(false));
+  }
+
   async function handleRefresh() {
     if (isRefreshing) return;
     setIsRefreshing(true);
@@ -107,6 +224,7 @@ export default function App() {
       await Promise.all([request('RESCAN'), request('RECHECK_REPLIES')]);
     } finally {
       refresh();
+      refreshInsights();
       setIsRefreshing(false);
     }
   }
@@ -165,18 +283,6 @@ export default function App() {
     };
   }, [showColumnPicker]);
 
-  // Close mobile menu on outside click
-  useEffect(() => {
-    if (!showMobileMenu) return;
-    function handleOutside(e) {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
-        setShowMobileMenu(false);
-      }
-    }
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, [showMobileMenu]);
-
   // Visibility-based extension trigger
   useEffect(() => {
     function onVisibilityChange() {
@@ -186,11 +292,15 @@ export default function App() {
         { source: 'outreachiq-webapp', type: 'RECHECK_REPLIES', requestId },
         '*'
       );
-      setTimeout(refresh, 3_500);
+      setTimeout(() => { refresh(); refreshInsights(); }, 3_500);
     }
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, [refresh]);
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div className="h-screen flex flex-col bg-chrome-bg">
@@ -340,37 +450,30 @@ export default function App() {
             </button>
           </div>
 
-          {/* Mobile: overflow menu */}
-          <div className="sm:hidden flex items-center" ref={mobileMenuRef}>
+          {/* Mobile: filters sheet */}
+          <div className="sm:hidden flex items-center">
             <button
               onClick={() => setShowMobileMenu(v => !v)}
               aria-label="More options"
               aria-expanded={showMobileMenu}
-              aria-haspopup="menu"
+              aria-haspopup="dialog"
               className="p-1.5 rounded-md text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors"
             >
               <MoreVertical size={16} strokeWidth={2} aria-hidden="true" />
             </button>
             {showMobileMenu && (
-              <div
-                role="menu"
-                className="absolute right-4 mt-1 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg z-50 p-1 min-w-[140px]"
-              >
-                {['Active', 'Archived'].map(tab => (
-                  <button
-                    key={tab}
-                    role="menuitem"
-                    onClick={() => { setActiveTab(tab); setShowMobileMenu(false); }}
-                    className={`w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors ${
-                      activeTab === tab
-                        ? 'text-accent font-semibold bg-accent/5'
-                        : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
+              <MobileFiltersSheet
+                onClose={() => setShowMobileMenu(false)}
+                showFavoritesOnly={showFavoritesOnly}
+                onToggleFavorites={() => setShowFavoritesOnly(prev => !prev)}
+                onArchiveAll={handleArchiveAll}
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+                onRangeChange={({ from, to }) => { setDateFrom(from); setDateTo(to); }}
+                viewMode={viewMode}
+                visibleColumns={visibleColumns}
+                onToggleColumn={toggleColumnVisible}
+              />
             )}
           </div>
         </div>
@@ -406,8 +509,17 @@ export default function App() {
       {/* ── Main content ────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-hidden">
-          {activeSection === 'home' ? (
-            <HomePage />
+          {activeSection === 'settings' ? (
+            <SettingsPage />
+          ) : activeSection === 'home' ? (
+            <HomePage
+              insightsDateFrom={insightsDateFrom}
+              insightsDateTo={insightsDateTo}
+              insightsData={insightsData}
+              insightsLoading={insightsLoading}
+              insightsError={insightsError}
+              onInsightsRangeChange={({ from, to }) => { setInsightsDateFrom(from); setInsightsDateTo(to); }}
+            />
           ) : error && records.length === 0 ? (
             <div className="flex items-center justify-center flex-1 h-full text-red-500 text-sm">
               Failed to load data. Please refresh.
