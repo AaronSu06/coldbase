@@ -1,5 +1,16 @@
 import { useState } from 'react';
+import {
+  AreaChart, Area,
+  BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts';
 import { DateRangePicker } from './DateRangePicker';
+
+const ACCENT      = '#b85212';
+const MUTED       = '#78716c';
+const BORDER      = '#e8e6e1';
+const TOOLTIP_BG  = '#1a1917';
+const MONO        = 'IBM Plex Mono, monospace';
 
 function formatHour(h) {
   if (h === 0) return '12am';
@@ -8,25 +19,16 @@ function formatHour(h) {
   return `${h - 12}pm`;
 }
 
-// Converts an array of {x, y} points into a smooth cubic bezier SVG path string.
-// Uses a cardinal spline (tension=0.3) so the curve passes through every point.
-function smoothPath(pts) {
-  if (pts.length < 2) return '';
-  const t = 0.3;
-  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[Math.max(0, i - 1)];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[Math.min(pts.length - 1, i + 2)];
-    const cp1x = p1.x + (p2.x - p0.x) * t;
-    const cp1y = p1.y + (p2.y - p0.y) * t;
-    const cp2x = p2.x - (p3.x - p1.x) * t;
-    const cp2y = p2.y - (p3.y - p1.y) * t;
-    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
-  }
-  return d;
+function fmtHours(h) {
+  return h < 24 ? `${Math.round(h)}h` : `${(h / 24).toFixed(1)}d`;
 }
+
+const tickStyle = { fontSize: 10, fill: MUTED, fontFamily: MONO };
+const tooltipContentStyle = {
+  background: TOOLTIP_BG, border: 'none', borderRadius: 6, padding: '6px 10px',
+};
+const tooltipLabelStyle = { color: MUTED, fontSize: 11, fontFamily: MONO };
+const tooltipItemStyle  = { color: '#f8f7f5', fontSize: 11 };
 
 function StatsRow({ sent, replied }) {
   const rate = sent > 0 ? Math.round((replied / sent) * 100) : 0;
@@ -76,6 +78,18 @@ function GhostChart() {
         ))}
       </div>
     </div>
+  );
+}
+
+// Decorative ghost line used in locked states for line/bar charts
+function GhostLine() {
+  return (
+    <svg viewBox="0 0 100 60" className="w-full h-32 sm:h-40 opacity-15" preserveAspectRatio="none">
+      <path
+        d="M 0 40 C 12 40, 18 18, 33 24 S 52 46, 68 30 S 88 14, 100 20"
+        fill="none" stroke="currentColor" strokeWidth="2" className="text-chrome-muted"
+      />
+    </svg>
   );
 }
 
@@ -157,18 +171,10 @@ function BestTimeSlide({ data }) {
 }
 
 function ResponseTimeSlide({ data }) {
-  // Ghost / locked state
   if (data.insufficient) {
-    const ghostPts = Array.from({ length: 8 }, (_, i) => ({
-      x: (i / 7) * 100,
-      y: 50 + Math.sin(i * 0.9) * 20,
-    }));
-    const ghostPath = smoothPath(ghostPts);
     return (
       <div className="relative min-h-[160px] sm:min-h-[180px]">
-        <svg viewBox="0 0 100 80" className="w-full h-32 sm:h-40 opacity-15" preserveAspectRatio="none">
-          <path d={ghostPath} fill="none" stroke="currentColor" strokeWidth="2" className="text-chrome-muted" />
-        </svg>
+        <GhostLine />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
           <p className="font-sans font-semibold text-[13px] text-chrome-text">
             Unlock response time trend
@@ -183,10 +189,8 @@ function ResponseTimeSlide({ data }) {
 
   const weeks = data.weeks ?? [];
 
-  // Fallback: only one data point — show the big number (no chart possible)
   if (weeks.length < 2) {
-    const hours = data.avgHours;
-    const display = hours < 24 ? `${Math.round(hours)}h` : `${(hours / 24).toFixed(1)}d`;
+    const display = fmtHours(data.avgHours);
     return (
       <div className="flex flex-col items-center justify-center min-h-[160px] sm:min-h-[180px] gap-2">
         <p className="font-display text-[48px] sm:text-[56px] font-bold text-chrome-text leading-none">{display}</p>
@@ -196,59 +200,29 @@ function ResponseTimeSlide({ data }) {
     );
   }
 
-  // Chart layout — PAD.left is 32 (vs 28 in ReplyTrendSlide) to fit wider time labels
-  const W = 300;
-  const H = 120;
-  const PAD = { top: 8, right: 8, bottom: 24, left: 32 };
-  const innerW = W - PAD.left - PAD.right;
-  const innerH = H - PAD.top - PAD.bottom;
-
-  const maxHours = Math.max(...weeks.map(w => w.avgHours), 0.01);
-  const xScale = i => PAD.left + (i / Math.max(weeks.length - 1, 1)) * innerW;
-  const yScale = h => PAD.top + innerH - (h / maxHours) * innerH;
-
-  const pts = weeks.map((w, i) => ({ x: xScale(i), y: yScale(w.avgHours) }));
-  const linePath = smoothPath(pts);
-  const first = pts[0];
-  const last = pts[pts.length - 1];
-  const baseline = PAD.top + innerH;
-  const areaPath = `${linePath} L ${last.x.toFixed(1)} ${baseline} L ${first.x.toFixed(1)} ${baseline} Z`;
-
-  // Y-axis: format hours as "Xh" or "Xd"
-  const fmtHours = h => h < 24 ? `${Math.round(h)}h` : `${(h / 24).toFixed(1)}d`;
-  const yTicks = [0, 0.5, 1].map(f => ({
-    y: yScale(maxHours * f),
-    label: fmtHours(maxHours * f),
+  const chartData = weeks.map(w => ({
+    week: w.week.slice(5),
+    hours: parseFloat(w.avgHours.toFixed(1)),
   }));
-
-  const step = Math.ceil(weeks.length / 5);
-  const avgDisplay = fmtHours(data.avgHours);
 
   return (
     <div className="min-h-[160px] sm:min-h-[180px]">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-36 sm:h-44">
-        {yTicks.map(t => (
-          <g key={t.label}>
-            <line x1={PAD.left} y1={t.y} x2={W - PAD.right} y2={t.y}
-              stroke="currentColor" strokeWidth="0.5" className="text-chrome-border" />
-            <text x={PAD.left - 3} y={t.y + 3} textAnchor="end" fontSize="6" className="fill-chrome-muted font-mono">
-              {t.label}
-            </text>
-          </g>
-        ))}
-        <path d={areaPath} className="fill-accent/10" />
-        <path d={linePath} fill="none" stroke="currentColor" strokeWidth="1.5" className="text-accent" strokeLinejoin="round" />
-        {pts.map((p, i) => (
-          <circle key={weeks[i].week} cx={p.x} cy={p.y} r="2" className="fill-accent" />
-        ))}
-        {weeks.map((w, i) => i % step === 0 && (
-          <text key={w.week} x={xScale(i)} y={H - 6} textAnchor="middle" fontSize="6" className="fill-chrome-muted font-mono">
-            {w.week.slice(5)}
-          </text>
-        ))}
-      </svg>
+      <ResponsiveContainer width="100%" height={160}>
+        <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke={BORDER} vertical={false} />
+          <XAxis dataKey="week" tick={tickStyle} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+          <YAxis tickFormatter={fmtHours} tick={tickStyle} tickLine={false} axisLine={false} width={32} />
+          <Tooltip
+            contentStyle={tooltipContentStyle}
+            labelStyle={tooltipLabelStyle}
+            itemStyle={tooltipItemStyle}
+            formatter={v => [fmtHours(v), 'Avg Response']}
+          />
+          <Bar dataKey="hours" fill={ACCENT} fillOpacity={0.85} radius={[3, 3, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
       <p className="text-[11px] text-chrome-muted text-center -mt-1">
-        avg {avgDisplay} · {data.sampleSize} {data.sampleSize === 1 ? 'reply' : 'replies'}
+        avg {fmtHours(data.avgHours)} · {data.sampleSize} {data.sampleSize === 1 ? 'reply' : 'replies'}
       </p>
     </div>
   );
@@ -256,16 +230,9 @@ function ResponseTimeSlide({ data }) {
 
 function ReplyTrendSlide({ data }) {
   if (data.insufficient) {
-    const ghostPoints = Array.from({ length: 8 }, (_, i) => ({
-      x: (i / 7) * 100,
-      y: 50 + Math.sin(i * 0.9) * 20,
-    }));
-    const ghostPath = smoothPath(ghostPoints);
     return (
       <div className="relative min-h-[160px] sm:min-h-[180px]">
-        <svg viewBox="0 0 100 80" className="w-full h-32 sm:h-40 opacity-15" preserveAspectRatio="none">
-          <path d={ghostPath} fill="none" stroke="currentColor" strokeWidth="2" className="text-chrome-muted" />
-        </svg>
+        <GhostLine />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
           <p className="font-sans font-semibold text-[13px] text-chrome-text">
             Unlock reply rate trend
@@ -281,54 +248,41 @@ function ReplyTrendSlide({ data }) {
   const weeks = data.data;
   if (weeks.length === 0) return null;
 
-  const W = 300;
-  const H = 120;
-  const PAD = { top: 8, right: 8, bottom: 24, left: 28 };
-  const innerW = W - PAD.left - PAD.right;
-  const innerH = H - PAD.top - PAD.bottom;
-
-  const maxRate = Math.max(...weeks.map(w => w.rate), 0.01);
-  const xScale = i => PAD.left + (i / Math.max(weeks.length - 1, 1)) * innerW;
-  const yScale = r => PAD.top + innerH - (r / maxRate) * innerH;
-
-  const pts = weeks.map((w, i) => ({ x: xScale(i), y: yScale(w.rate) }));
-  const pathD = smoothPath(pts);
-
-  const yTicks = [0, 0.5, 1].map(f => ({
-    y: yScale(maxRate * f),
-    label: `${Math.round(maxRate * f * 100)}%`,
+  const chartData = weeks.map(w => ({
+    week: w.week.slice(5),
+    rate: parseFloat((w.rate * 100).toFixed(1)),
   }));
-
-  const step = Math.ceil(weeks.length / 5);
 
   return (
     <div className="min-h-[160px] sm:min-h-[180px]">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-36 sm:h-44">
-        {yTicks.map(t => (
-          <g key={t.label}>
-            <line
-              x1={PAD.left} y1={t.y} x2={W - PAD.right} y2={t.y}
-              stroke="currentColor" strokeWidth="0.5" className="text-chrome-border"
-            />
-            <text x={PAD.left - 3} y={t.y + 3} textAnchor="end" fontSize="6" className="fill-chrome-muted font-mono">
-              {t.label}
-            </text>
-          </g>
-        ))}
-        <path
-          d={`${pathD} L ${xScale(weeks.length - 1).toFixed(1)} ${yScale(0).toFixed(1)} L ${xScale(0).toFixed(1)} ${yScale(0).toFixed(1)} Z`}
-          className="fill-accent/10"
-        />
-        <path d={pathD} fill="none" stroke="currentColor" strokeWidth="1.5" className="text-accent" strokeLinejoin="round" />
-        {weeks.map((w, i) => (
-          <circle key={w.week} cx={xScale(i)} cy={yScale(w.rate)} r="2" className="fill-accent" />
-        ))}
-        {weeks.map((w, i) => i % step === 0 && (
-          <text key={w.week} x={xScale(i)} y={H - 6} textAnchor="middle" fontSize="6" className="fill-chrome-muted font-mono">
-            {w.week.slice(5)}
-          </text>
-        ))}
-      </svg>
+      <ResponsiveContainer width="100%" height={160}>
+        <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+          <defs>
+            <linearGradient id="replyRateGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor={ACCENT} stopOpacity={0.2} />
+              <stop offset="95%" stopColor={ACCENT} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke={BORDER} vertical={false} />
+          <XAxis dataKey="week" tick={tickStyle} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+          <YAxis tickFormatter={v => `${v}%`} tick={tickStyle} tickLine={false} axisLine={false} width={32} />
+          <Tooltip
+            contentStyle={tooltipContentStyle}
+            labelStyle={tooltipLabelStyle}
+            itemStyle={tooltipItemStyle}
+            formatter={v => [`${v}%`, 'Reply Rate']}
+          />
+          <Area
+            type="monotone"
+            dataKey="rate"
+            stroke={ACCENT}
+            strokeWidth={2}
+            fill="url(#replyRateGrad)"
+            dot={{ r: 3, fill: ACCENT, strokeWidth: 0 }}
+            activeDot={{ r: 4 }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 }
