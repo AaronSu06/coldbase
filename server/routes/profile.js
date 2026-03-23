@@ -1,12 +1,9 @@
 // server/routes/profile.js
 import { Router } from 'express';
-import { createRequire } from 'node:module';
+import { PDFParse } from 'pdf-parse';
 import multer from 'multer';
 import mammoth from 'mammoth';
 import { prisma } from '../lib/prisma.js';
-
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
 
 const router = Router();
 
@@ -32,8 +29,9 @@ const upload = multer({
 async function extractText(file) {
   const { mimetype, buffer } = file;
   if (mimetype === 'application/pdf') {
-    const data = await pdfParse(buffer);
-    return data.text.trim();
+    const parser = new PDFParse({ data: buffer });
+    const result = await parser.getText();
+    return result.text.trim();
   }
   if (
     mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
