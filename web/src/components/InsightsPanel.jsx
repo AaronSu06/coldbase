@@ -157,33 +157,98 @@ function BestTimeSlide({ data }) {
 }
 
 function ResponseTimeSlide({ data }) {
+  // Ghost / locked state
   if (data.insufficient) {
+    const ghostPts = Array.from({ length: 8 }, (_, i) => ({
+      x: (i / 7) * 100,
+      y: 50 + Math.sin(i * 0.9) * 20,
+    }));
+    const ghostPath = smoothPath(ghostPts);
     return (
-      <div className="flex flex-col items-center justify-center min-h-[160px] sm:min-h-[180px] gap-2">
-        <p className="font-display text-[40px] font-bold text-chrome-border leading-none">--</p>
-        <p className="text-[12px] text-chrome-muted">avg. response time</p>
-        <p className="text-[11px] text-chrome-muted font-mono mt-2">
-          Need {10 - data.replied} more {10 - data.replied === 1 ? 'reply' : 'replies'} to unlock
-        </p>
+      <div className="relative min-h-[160px] sm:min-h-[180px]">
+        <svg viewBox="0 0 100 80" className="w-full h-32 sm:h-40 opacity-15" preserveAspectRatio="none">
+          <path d={ghostPath} fill="none" stroke="currentColor" strokeWidth="2" className="text-chrome-muted" />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+          <p className="font-sans font-semibold text-[13px] text-chrome-text">
+            Unlock response time trend
+          </p>
+          <p className="text-[11px] text-chrome-muted font-mono">
+            Need {10 - data.replied} more {10 - data.replied === 1 ? 'reply' : 'replies'} to unlock
+          </p>
+        </div>
       </div>
     );
   }
 
-  const hours = data.avgHours;
-  const display = hours < 24
-    ? `${Math.round(hours)}h`
-    : `${(hours / 24).toFixed(1)}d`;
+  const weeks = data.weeks ?? [];
+
+  // Fallback: only one data point — show the big number (no chart possible)
+  if (weeks.length < 2) {
+    const hours = data.avgHours;
+    const display = hours < 24 ? `${Math.round(hours)}h` : `${(hours / 24).toFixed(1)}d`;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[160px] sm:min-h-[180px] gap-2">
+        <p className="font-display text-[48px] sm:text-[56px] font-bold text-chrome-text leading-none">{display}</p>
+        <p className="text-[12px] text-chrome-muted uppercase tracking-[0.08em] font-semibold">avg. response time</p>
+        <p className="text-[11px] text-chrome-muted mt-1">based on {data.sampleSize} {data.sampleSize === 1 ? 'reply' : 'replies'}</p>
+      </div>
+    );
+  }
+
+  // Chart layout — PAD.left is 32 (vs 28 in ReplyTrendSlide) to fit wider time labels
+  const W = 300;
+  const H = 120;
+  const PAD = { top: 8, right: 8, bottom: 24, left: 32 };
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+
+  const maxHours = Math.max(...weeks.map(w => w.avgHours), 0.01);
+  const xScale = i => PAD.left + (i / Math.max(weeks.length - 1, 1)) * innerW;
+  const yScale = h => PAD.top + innerH - (h / maxHours) * innerH;
+
+  const pts = weeks.map((w, i) => ({ x: xScale(i), y: yScale(w.avgHours) }));
+  const linePath = smoothPath(pts);
+  const first = pts[0];
+  const last = pts[pts.length - 1];
+  const baseline = PAD.top + innerH;
+  const areaPath = `${linePath} L ${last.x.toFixed(1)} ${baseline} L ${first.x.toFixed(1)} ${baseline} Z`;
+
+  // Y-axis: format hours as "Xh" or "Xd"
+  const fmtHours = h => h < 24 ? `${Math.round(h)}h` : `${(h / 24).toFixed(1)}d`;
+  const yTicks = [0, 0.5, 1].map(f => ({
+    y: yScale(maxHours * f),
+    label: fmtHours(maxHours * f),
+  }));
+
+  const step = Math.ceil(weeks.length / 5);
+  const avgDisplay = fmtHours(data.avgHours);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[160px] sm:min-h-[180px] gap-2">
-      <p className="font-display text-[48px] sm:text-[56px] font-bold text-chrome-text leading-none">
-        {display}
-      </p>
-      <p className="text-[12px] text-chrome-muted uppercase tracking-[0.08em] font-semibold">
-        avg. response time
-      </p>
-      <p className="text-[11px] text-chrome-muted mt-1">
-        based on {data.sampleSize} {data.sampleSize === 1 ? 'reply' : 'replies'}
+    <div className="min-h-[160px] sm:min-h-[180px]">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-36 sm:h-44">
+        {yTicks.map(t => (
+          <g key={t.label}>
+            <line x1={PAD.left} y1={t.y} x2={W - PAD.right} y2={t.y}
+              stroke="currentColor" strokeWidth="0.5" className="text-chrome-border" />
+            <text x={PAD.left - 3} y={t.y + 3} textAnchor="end" fontSize="6" className="fill-chrome-muted font-mono">
+              {t.label}
+            </text>
+          </g>
+        ))}
+        <path d={areaPath} className="fill-accent/10" />
+        <path d={linePath} fill="none" stroke="currentColor" strokeWidth="1.5" className="text-accent" strokeLinejoin="round" />
+        {pts.map((p, i) => (
+          <circle key={weeks[i].week} cx={p.x} cy={p.y} r="2" className="fill-accent" />
+        ))}
+        {weeks.map((w, i) => i % step === 0 && (
+          <text key={w.week} x={xScale(i)} y={H - 6} textAnchor="middle" fontSize="6" className="fill-chrome-muted font-mono">
+            {w.week.slice(5)}
+          </text>
+        ))}
+      </svg>
+      <p className="text-[11px] text-chrome-muted text-center -mt-1">
+        avg {avgDisplay} · {data.sampleSize} {data.sampleSize === 1 ? 'reply' : 'replies'}
       </p>
     </div>
   );
