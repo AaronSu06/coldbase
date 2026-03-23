@@ -1,10 +1,10 @@
 // web/src/components/SettingsPage.jsx
 import { useState, useRef } from 'react';
-import { Upload, X, Star, ChevronDown } from 'lucide-react';
+import { Upload, X, Star, ChevronDown, Check, FileText } from 'lucide-react';
 
 function SectionTitle({ children }) {
   return (
-    <h2 className="font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-chrome-muted mb-4">
+    <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-chrome-muted mb-3">
       {children}
     </h2>
   );
@@ -48,7 +48,84 @@ function SaveCancel({ onCancel }) {
   );
 }
 
-export default function SettingsPage() {
+const PRO_FEATURES = [
+  'Unlimited contacts & outreach campaigns',
+  'Advanced analytics and reply tracking',
+  'Priority email delivery',
+];
+
+function PlanSection({ plan = 'free' }) {
+  if (plan === 'pro') {
+    return (
+      <section aria-label="Plan">
+        <SectionTitle>Plan</SectionTitle>
+        <div className="rounded-xl border border-chrome-border bg-chrome-surface overflow-hidden">
+          <div className="px-4 py-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Star size={13} className="text-accent fill-accent flex-shrink-0" aria-hidden="true" />
+                  <span className="text-[14px] font-semibold text-chrome-text">Reach Pro</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-semibold text-emerald-700">
+                    <Check size={10} strokeWidth={2.5} aria-hidden="true" />
+                    Active
+                  </span>
+                </div>
+                <ul className="space-y-1 mt-2">
+                  {PRO_FEATURES.map(f => (
+                    <li key={f} className="flex items-center gap-2 text-[13px] text-chrome-muted">
+                      <Check size={12} className="text-accent flex-shrink-0" strokeWidth={2.5} aria-hidden="true" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-chrome-border px-4 py-3 flex items-center justify-between">
+            <span className="text-[12px] text-chrome-muted">Billing managed through Stripe</span>
+            <button className="text-[13px] font-medium text-accent hover:text-accent-hover transition-colors">
+              Manage subscription →
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section aria-label="Plan">
+      <SectionTitle>Plan</SectionTitle>
+      <div className="rounded-xl border border-chrome-border bg-chrome-surface overflow-hidden">
+        <div className="px-4 py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-chrome-deep border border-chrome-border text-[11px] font-semibold text-chrome-muted uppercase tracking-wide">
+                  Free
+                </span>
+                <span className="text-[13px] text-chrome-muted">Upgrade to unlock:</span>
+              </div>
+              <ul className="space-y-1 mt-2">
+                {PRO_FEATURES.map(f => (
+                  <li key={f} className="flex items-center gap-2 text-[13px] text-chrome-muted">
+                    <Star size={11} className="text-accent/60 flex-shrink-0" aria-hidden="true" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <button className="flex-shrink-0 mt-0.5 px-4 py-2 rounded-lg bg-accent text-white text-[13px] font-semibold hover:bg-accent-hover transition-colors whitespace-nowrap">
+              Upgrade →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function SettingsPage({ plan = 'free' }) {
   // Resume
   const [resumeFile, setResumeFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -97,24 +174,22 @@ export default function SettingsPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-chrome-bg">
-      <div className="max-w-2xl mx-auto px-6 py-10 space-y-10">
+      <div className="max-w-2xl mx-auto px-6 py-12 space-y-14">
 
         {/* ── Resume ─────────────────────────────────────────────────── */}
         <section aria-label="Resume">
           <SectionTitle>Resume</SectionTitle>
 
           {resumeFile ? (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-chrome-border bg-chrome-surface">
-              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                <Upload size={14} className="text-accent" aria-hidden="true" />
-              </div>
-              <span className="flex-1 text-[14px] text-chrome-text font-medium truncate min-w-0">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-orange-200 bg-orange-50">
+              <FileText size={16} strokeWidth={1.75} className="text-accent flex-shrink-0" aria-hidden="true" />
+              <span className="flex-1 text-[13px] text-chrome-text font-medium truncate min-w-0">
                 {resumeFile.name}
               </span>
               <button
                 onClick={() => setResumeFile(null)}
                 aria-label="Remove resume"
-                className="w-6 h-6 rounded-md flex items-center justify-center text-chrome-muted hover:text-chrome-text hover:bg-black/5 transition-colors flex-shrink-0"
+                className="w-6 h-6 rounded-md flex items-center justify-center text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors flex-shrink-0"
               >
                 <X size={14} aria-hidden="true" />
               </button>
@@ -159,8 +234,6 @@ export default function SettingsPage() {
           )}
         </section>
 
-        <div className="border-t border-chrome-border" role="separator" />
-
         {/* ── Notifications ──────────────────────────────────────────── */}
         <section aria-label="Notifications">
           <SectionTitle>Notifications</SectionTitle>
@@ -198,7 +271,8 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        <div className="border-t border-chrome-border" role="separator" />
+        {/* ── Plan ───────────────────────────────────────────────────── */}
+        <PlanSection plan={plan} />
 
         {/* ── Account ────────────────────────────────────────────────── */}
         <section aria-label="Account">
@@ -293,24 +367,6 @@ export default function SettingsPage() {
               )}
             </div>
 
-            {/* Reach Pro */}
-            <div className="border-t border-chrome-border px-4 py-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Star size={13} className="text-accent fill-accent flex-shrink-0" aria-hidden="true" />
-                    <span className="text-[14px] font-semibold text-chrome-text font-display">Reach Pro</span>
-                  </div>
-                  <p className="text-[13px] text-chrome-muted leading-relaxed">
-                    Unlock advanced analytics, unlimited contacts, and priority email delivery.
-                  </p>
-                </div>
-                <button className="flex-shrink-0 mt-0.5 px-4 py-2 rounded-lg bg-accent text-white text-[13px] font-semibold hover:bg-accent-hover transition-colors whitespace-nowrap">
-                  Upgrade →
-                </button>
-              </div>
-            </div>
-
             {/* Delete account */}
             <div className="border-t border-chrome-border">
               <button
@@ -321,7 +377,7 @@ export default function SettingsPage() {
                 <span>Delete account</span>
                 <ChevronDown
                   size={15}
-                  className={`transition-transform duration-200 ${expandedRow === 'delete' ? 'rotate-180' : ''}`}
+                  className={`text-chrome-muted transition-transform duration-200 ${expandedRow === 'delete' ? 'rotate-180' : ''}`}
                   aria-hidden="true"
                 />
               </button>
