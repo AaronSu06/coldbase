@@ -81,15 +81,35 @@ function GhostChart() {
   );
 }
 
-// Decorative ghost line used in locked states for line/bar charts
-function GhostLine() {
+// Ghost placeholder that mimics an AreaChart (for Reply Rate Trend locked state)
+function GhostArea() {
   return (
     <svg viewBox="0 0 100 60" className="w-full h-32 sm:h-40 opacity-15" preserveAspectRatio="none">
       <path
+        d="M 0 40 C 12 40, 18 18, 33 24 S 52 46, 68 30 S 88 14, 100 20 L 100 60 L 0 60 Z"
+        className="fill-chrome-muted"
+      />
+      <path
         d="M 0 40 C 12 40, 18 18, 33 24 S 52 46, 68 30 S 88 14, 100 20"
-        fill="none" stroke="currentColor" strokeWidth="2" className="text-chrome-muted"
+        fill="none" stroke="currentColor" strokeWidth="1.5" className="text-chrome-muted"
       />
     </svg>
+  );
+}
+
+// Ghost placeholder that mimics a BarChart (for Avg Response Time locked state)
+function GhostBars() {
+  const heights = [35, 55, 45, 70, 40, 60, 50, 65];
+  return (
+    <div className="flex items-end gap-1.5 h-32 sm:h-40 opacity-15 pointer-events-none select-none">
+      {heights.map((h, i) => (
+        <div
+          key={i}
+          className="flex-1 rounded-t bg-chrome-muted"
+          style={{ height: `${h}%` }}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -174,7 +194,7 @@ function ResponseTimeSlide({ data }) {
   if (data.insufficient) {
     return (
       <div className="relative min-h-[160px] sm:min-h-[180px]">
-        <GhostLine />
+        <GhostBars />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
           <p className="font-sans font-semibold text-[13px] text-chrome-text">
             Unlock response time trend
@@ -232,7 +252,7 @@ function ReplyTrendSlide({ data }) {
   if (data.insufficient) {
     return (
       <div className="relative min-h-[160px] sm:min-h-[180px]">
-        <GhostLine />
+        <GhostArea />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
           <p className="font-sans font-semibold text-[13px] text-chrome-text">
             Unlock reply rate trend
