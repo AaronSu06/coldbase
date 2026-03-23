@@ -124,7 +124,7 @@ export default function LoginPage({ onLogin }) {
       <p className="mt-5 text-[13px] font-sans text-chrome-muted">
         Don't have an account?{' '}
         <Link
-          to="/signup"
+          to="/auth/register"
           className="text-accent hover:text-accent-hover transition-colors font-medium px-1 py-0.5 -ml-1 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
         >
           Register →

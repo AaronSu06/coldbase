@@ -140,7 +140,7 @@ export default function SignupPage() {
       <p className="mt-5 text-[13px] font-sans text-chrome-muted">
         Already have an account?{' '}
         <Link
-          to="/login"
+          to="/auth/login"
           className="text-accent hover:text-accent-hover transition-colors font-medium px-1 py-0.5 -ml-1 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
         >
           Sign in →
