@@ -1375,7 +1375,7 @@ window.ReachWidget = (function () {
       const loginBtn  = shadow.getElementById('cp-auth-login');
       const signupBtn = shadow.getElementById('cp-auth-signup');
       loginBtn.addEventListener('click',  () => window.open(_dashUrl + '/auth', '_blank'));
-      signupBtn.addEventListener('click', () => window.open(_dashUrl + '/auth?mode=signup', '_blank'));
+      signupBtn.addEventListener('click', () => window.open(_dashUrl + '/signup', '_blank'));
       chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (res) => {
         if (res?.config?.dashboardUrl) _dashUrl = res.config.dashboardUrl;
       });

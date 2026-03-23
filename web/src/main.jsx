@@ -3,7 +3,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import App from './App';
-import AuthPage from './components/AuthPage';
+import LoginPage from './components/LoginPage';
+import SignupPage from './components/SignupPage';
 import ProfilePage from './components/ProfilePage';
 import './index.css';
 import { TOKEN_KEY } from './hooks/useAuth.js';
@@ -17,9 +18,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/auth" element={<LoginPage />} />
         <Route path="/login" element={<Navigate to="/auth" replace />} />
-        <Route path="/signup" element={<Navigate to="/auth?mode=signup" replace />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         <Route path="/settings" element={<PrivateRoute><App initialSection="settings" /></PrivateRoute>} />
         <Route path="/tracker" element={<PrivateRoute><App initialSection="tracker" /></PrivateRoute>} />

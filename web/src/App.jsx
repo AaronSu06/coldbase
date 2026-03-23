@@ -8,7 +8,7 @@ import Sidebar from './components/Sidebar';
 import EmptyState from './components/EmptyState';
 import TopNav from './components/TopNav';
 import HomePage from './components/HomePage';
-import AuthPage from './components/AuthPage';
+import LoginPage from './components/LoginPage';
 import SettingsPage from './components/SettingsPage';
 import { DateRangePicker } from './components/DateRangePicker';
 import { COLUMNS } from '@shared/constants';
@@ -300,7 +300,7 @@ export default function App({ initialSection = 'home' }) {
   }, [refresh]);
 
   if (!isAuthenticated) {
-    return <AuthPage onLogin={() => setIsAuthenticated(true)} />;
+    return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
   }
 
   return (
