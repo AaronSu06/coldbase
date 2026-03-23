@@ -1365,8 +1365,7 @@ window.ReachWidget = (function () {
               <p class="cp-auth-heading">Sign in to unlock Reach</p>
               <p class="cp-auth-sub">Track outreach, find contacts,<br>and draft emails.</p>
               <div class="cp-auth-btn-row">
-                <button class="cp-auth-btn-primary" id="cp-auth-login">Log in</button>
-                <button class="cp-auth-btn-secondary" id="cp-auth-signup">Create account</button>
+                <button class="cp-auth-btn-primary" id="cp-auth-login">Sign in</button>
               </div>
             </div>
           </div>
@@ -1375,10 +1374,8 @@ window.ReachWidget = (function () {
 
       // Wire buttons immediately with fallback, update when config resolves
       let _dashUrl = 'http://localhost:5173';
-      const loginBtn  = shadow.getElementById('cp-auth-login');
-      const signupBtn = shadow.getElementById('cp-auth-signup');
-      loginBtn.addEventListener('click',  () => window.open(_dashUrl + '/auth/login', '_blank'));
-      signupBtn.addEventListener('click', () => window.open(_dashUrl + '/auth/register', '_blank'));
+      const loginBtn = shadow.getElementById('cp-auth-login');
+      loginBtn.addEventListener('click', () => window.open(_dashUrl + '/auth', '_blank'));
       chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (res) => {
         if (res?.config?.dashboardUrl) _dashUrl = res.config.dashboardUrl;
       });
