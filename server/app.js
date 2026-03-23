@@ -86,6 +86,7 @@ app.use('/',               trackingRoutes);   // full paths inside: /track/:id a
 app.use('/api/find-email',      expensiveRateLimit, checkQuota);
 app.use('/api/suggest-domains', expensiveRateLimit);
 app.use('/api/draft-email',     expensiveRateLimit);
+app.use('/api/feedback',        expensiveRateLimit);
 app.use('/api', emailRoutes);
 app.use('/api/insights',   analyticsRoutes);
 

@@ -4,10 +4,12 @@ export const TOKEN_KEY = 'reach_token';
 export function useAuth() {
   function login(token) {
     localStorage.setItem(TOKEN_KEY, token);
+    window.postMessage({ source: 'reach-webapp', type: 'REACH_LOGIN', token }, '*');
   }
 
   function logout() {
     localStorage.removeItem(TOKEN_KEY);
+    window.postMessage({ source: 'reach-webapp', type: 'REACH_LOGOUT' }, '*');
   }
 
   function getToken() {

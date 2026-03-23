@@ -3,7 +3,7 @@ import { SERVER_URL, DASH_URL } from './config.js';
 import { getAuthToken } from './auth.js';
 import { serverFetch, fetchOutreach } from './api-client.js';
 import { checkReplies, trackLatestSent, trackFromPendingScan } from './reply-checker.js';
-import { setReachToken } from './reach-auth.js';
+import { setReachToken, clearReachToken } from './reach-auth.js';
 import { makeLogger } from './logger-esm.js';
 
 const log = makeLogger('background');
@@ -199,7 +199,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         const res = await serverFetch('/auth/me');
         if (!res.ok) { sendResponse({ ok: false }); return; }
         const data = await res.json();
-        sendResponse({ ok: true, plan: data.plan, resumeName: data.resumeName ?? null });
+        sendResponse({ ok: true, plan: data.plan, isAdmin: data.isAdmin ?? false, resumeName: data.resumeName ?? null });
       } catch (e) {
         log.error('GET_USER_PROFILE failed:', e.message);
         sendResponse({ ok: false });
@@ -234,8 +234,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 // ─── Dashboard token sync ──────────────────────────────────────────────────────
-chrome.runtime.onMessage.addListener((msg) => {
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'SYNC_REACH_TOKEN' && msg.token) {
     setReachToken(msg.token);
+    return;
+  }
+  if (msg.type === 'CLEAR_REACH_TOKEN') {
+    clearReachToken().then(() => sendResponse({ ok: true }));
+    return true;
   }
 });
