@@ -60,7 +60,7 @@ function PlanSection({ plan = 'free' }) {
     return (
       <section aria-label="Plan">
         <SectionTitle>Plan</SectionTitle>
-        <div className="rounded-lg border border-chrome-rim bg-chrome-card shadow-card overflow-hidden">
+        <div className="rounded-lg border border-chrome-rim bg-chrome-card overflow-hidden">
           <div className="px-4 py-4">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
@@ -97,7 +97,7 @@ function PlanSection({ plan = 'free' }) {
   return (
     <section aria-label="Plan">
       <SectionTitle>Plan</SectionTitle>
-      <div className="rounded-lg border border-chrome-rim bg-chrome-card shadow-card overflow-hidden">
+      <div className="rounded-lg border border-chrome-rim bg-chrome-card overflow-hidden">
         <div className="px-4 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -215,10 +215,10 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col h-full">
       {/* ── Sub-header strip — mirrors tracker sub-nav ─────────────────────── */}
-      <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 pt-3 flex-shrink-0">
-        <div className="pb-3 inline-block text-[13px] font-display font-semibold text-chrome-text border-b-2 border-accent">
+      <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-stretch h-11 flex-shrink-0">
+        <span className="flex items-center text-[13px] font-display font-semibold text-chrome-text border-b-2 border-accent">
           Settings
-        </div>
+        </span>
       </div>
 
       <div className="flex-1 overflow-y-auto bg-chrome-bg">
@@ -292,7 +292,7 @@ export default function SettingsPage() {
         <section aria-label="Notifications">
           <SectionTitle>Notifications</SectionTitle>
 
-          <div className="rounded-lg border border-chrome-rim bg-chrome-card shadow-card overflow-hidden">
+          <div className="rounded-lg border border-chrome-rim bg-chrome-card overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3.5 gap-4">
               <span className="text-[14px] text-chrome-text font-medium">Email digest</span>
               <div
@@ -334,7 +334,7 @@ export default function SettingsPage() {
         <section aria-label="Account">
           <SectionTitle>Account</SectionTitle>
 
-          <div className="rounded-lg border border-chrome-rim bg-chrome-card shadow-card overflow-hidden">
+          <div className="rounded-lg border border-chrome-rim bg-chrome-card overflow-hidden">
 
             {/* Change email */}
             <div>
@@ -430,7 +430,7 @@ export default function SettingsPage() {
         <section aria-label="Danger zone">
           <SectionTitle className="text-red-400">Danger zone</SectionTitle>
 
-          <div className="rounded-lg border border-red-200 bg-chrome-card shadow-card overflow-hidden">
+          <div className="rounded-lg border border-red-200 bg-chrome-card overflow-hidden">
             <button
               onClick={() => handleRowToggle('delete')}
               aria-expanded={expandedRow === 'delete'}
