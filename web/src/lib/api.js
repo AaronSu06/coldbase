@@ -97,6 +97,24 @@ export const patchSettings = (patch) =>
     body: JSON.stringify(patch),
   }).then(r => r.json());
 
+export const patchEmail = (newEmail, password) =>
+  apiFetch(`${BASE}/auth/email`, {
+    method: 'PATCH',
+    body: JSON.stringify({ newEmail, password }),
+  }).then(r => r.json());
+
+export const patchPassword = (currentPassword, newPassword) =>
+  apiFetch(`${BASE}/auth/password`, {
+    method: 'PATCH',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  }).then(r => r.json());
+
+export const deleteAccount = () =>
+  apiFetch(`${BASE}/auth/account`, {
+    method: 'DELETE',
+    body: JSON.stringify({ confirm: 'DELETE' }),
+  }).then(r => r.json());
+
 export const generateFeedback = (record) =>
   apiFetch(`${BASE}/feedback`, {
     method: 'POST',
