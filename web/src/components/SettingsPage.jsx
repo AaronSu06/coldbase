@@ -1,7 +1,8 @@
 // web/src/components/SettingsPage.jsx
 import { useState, useRef, useEffect } from 'react';
-import { Upload, X, Star, ChevronDown, Check, FileText } from 'lucide-react';
-import { fetchSettings, patchSettings, uploadResume, deleteResume } from '../lib/api';
+import { TOKEN_KEY } from '../hooks/useAuth.js';
+import { Upload, X, Star, ChevronDown, Check, FileText, Eye, EyeOff } from 'lucide-react';
+import { fetchSettings, patchSettings, uploadResume, deleteResume, patchEmail, patchPassword, deleteAccount } from '../lib/api';
 
 function SectionTitle({ children, className = '' }) {
   return (
@@ -29,6 +30,57 @@ function InputField({ label, id, ...props }) {
   );
 }
 
+function PasswordField({ label, id, ...props }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div>
+      <label
+        htmlFor={id}
+        className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-1.5"
+      >
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          type={visible ? 'text' : 'password'}
+          className="w-full rounded-lg border border-chrome-border bg-chrome-bg px-3 py-2 pr-9 text-[14px] text-chrome-text placeholder:text-chrome-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
+          {...props}
+        />
+        <button
+          type="button"
+          onClick={() => setVisible(v => !v)}
+          aria-label={visible ? 'Hide password' : 'Show password'}
+          className="absolute inset-y-0 right-0 flex items-center px-2.5 text-chrome-muted hover:text-chrome-text transition-colors"
+        >
+          {visible
+            ? <EyeOff size={15} strokeWidth={1.75} aria-hidden="true" />
+            : <Eye size={15} strokeWidth={1.75} aria-hidden="true" />
+          }
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AccordionPanel({ isOpen, children }) {
+  return (
+    <div
+      className={`grid motion-safe:transition-[grid-template-rows] motion-safe:duration-[250ms] motion-safe:[transition-timing-function:cubic-bezier(0.25,1,0.5,1)] ${
+        isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+      }`}
+    >
+      <div
+        className={`overflow-hidden min-h-0 motion-safe:transition-opacity motion-safe:duration-200 ${
+          isOpen ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function SaveCancel({ onCancel }) {
   return (
     <div className="flex gap-2 pt-1">
@@ -46,6 +98,15 @@ function SaveCancel({ onCancel }) {
         Cancel
       </button>
     </div>
+  );
+}
+
+function FormStatus({ status, message }) {
+  if (!status) return null;
+  return (
+    <p className={`text-[13px] font-medium ${status === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+      {message}
+    </p>
   );
 }
 
@@ -139,6 +200,8 @@ export default function SettingsPage() {
 
   // Account — which row is expanded
   const [expandedRow, setExpandedRow] = useState(null);
+  const isAnimating = useRef(false);
+  const ANIM_MS = 260; // matches AccordionPanel 250ms + small buffer
 
   // Load settings on mount
   useEffect(() => {
@@ -154,24 +217,105 @@ export default function SettingsPage() {
   // Change email form
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
+  const [emailFormStatus, setEmailFormStatus] = useState(null); // null | { type, message }
 
   // Change password form
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordFormStatus, setPasswordFormStatus] = useState(null);
 
   // Delete account
   const [deleteConfirm, setDeleteConfirm] = useState('');
 
+  // Inline feedback
+  const [digestStatus, setDigestStatus] = useState(null);
+  const [resumeError, setResumeError] = useState(null);
+
+  function resetForms() {
+    setNewEmail(''); setEmailPassword('');
+    setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+    setDeleteConfirm('');
+  }
+
+  function handleClose() {
+    if (isAnimating.current) return;
+    isAnimating.current = true;
+    setExpandedRow(null);
+    setTimeout(() => { isAnimating.current = false; }, ANIM_MS);
+  }
+
   function handleRowToggle(row) {
+    if (isAnimating.current) return;
+    isAnimating.current = true;
+
     if (expandedRow === row) {
+      // Close
       setExpandedRow(null);
+      setTimeout(() => { isAnimating.current = false; }, ANIM_MS);
+    } else if (expandedRow !== null) {
+      // Close current first, then open new one after animation completes
+      setExpandedRow(null);
+      setTimeout(() => {
+        resetForms();
+        setExpandedRow(row);
+        setTimeout(() => { isAnimating.current = false; }, ANIM_MS);
+      }, ANIM_MS);
     } else {
+      // Nothing open — open directly
+      resetForms();
       setExpandedRow(row);
-      // Reset all forms when switching rows
-      setNewEmail(''); setEmailPassword('');
-      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
-      setDeleteConfirm('');
+      setTimeout(() => { isAnimating.current = false; }, ANIM_MS);
+    }
+  }
+
+  async function handleChangeEmail(e) {
+    e.preventDefault();
+    setEmailFormStatus(null);
+    try {
+      await patchEmail(newEmail, emailPassword);
+      setEmailFormStatus({ type: 'success', message: 'Saved ✓' });
+      setTimeout(() => {
+        handleClose();
+        setEmailFormStatus(null);
+      }, 2000);
+    } catch (err) {
+      const message = err.message.includes('409') ? 'That email is already in use'
+        : err.message.includes('401') ? 'Incorrect password'
+        : 'Something went wrong, please try again';
+      setEmailFormStatus({ type: 'error', message });
+    }
+  }
+
+  async function handleChangePassword(e) {
+    e.preventDefault();
+    setPasswordFormStatus(null);
+    if (newPassword !== confirmPassword) {
+      setPasswordFormStatus({ type: 'error', message: "Passwords don't match" });
+      return;
+    }
+    try {
+      await patchPassword(currentPassword, newPassword);
+      setPasswordFormStatus({ type: 'success', message: 'Saved ✓' });
+      setTimeout(() => {
+        handleClose();
+        setPasswordFormStatus(null);
+      }, 2000);
+    } catch (err) {
+      const message = err.message.includes('401') ? 'Incorrect password'
+        : err.message.includes('400') ? 'New password must be at least 8 characters'
+        : 'Something went wrong, please try again';
+      setPasswordFormStatus({ type: 'error', message });
+    }
+  }
+
+  async function handleDeleteAccount() {
+    try {
+      await deleteAccount();
+      localStorage.removeItem(TOKEN_KEY);
+      window.location.href = '/login';
+    } catch (e) {
+      console.error('[Reach] Account deletion failed:', e.message);
     }
   }
 
@@ -182,13 +326,18 @@ export default function SettingsPage() {
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
-    if (!allowed.includes(file.type)) return;
+    if (!allowed.includes(file.type)) {
+      setResumeError('Only PDF, DOC, or DOCX files are accepted');
+      return;
+    }
+    setResumeError(null);
     setIsUploading(true);
     try {
       const { resumeName: name } = await uploadResume(file);
       setResumeName(name);
     } catch (e) {
       console.error('[Reach] Resume upload failed:', e.message);
+      setResumeError('Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -205,22 +354,19 @@ export default function SettingsPage() {
 
   async function handleDigestChange(value) {
     setEmailDigest(value);
+    setDigestStatus(null);
     try {
       await patchSettings({ emailDigest: value });
+      setDigestStatus('success');
+      setTimeout(() => setDigestStatus(null), 2000);
     } catch (e) {
       console.error('[Reach] Failed to save email digest:', e.message);
+      setDigestStatus('error');
     }
   }
 
   return (
     <div className="flex flex-col h-full">
-      {/* ── Sub-header strip — mirrors tracker sub-nav ─────────────────────── */}
-      <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 flex items-stretch h-11 flex-shrink-0">
-        <span className="flex items-center text-[13px] font-display font-semibold text-chrome-text border-b-2 border-accent">
-          Settings
-        </span>
-      </div>
-
       <div className="flex-1 overflow-y-auto bg-chrome-bg">
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-10">
 
@@ -286,6 +432,9 @@ export default function SettingsPage() {
               />
             </div>
           )}
+          {resumeError && (
+            <p className="text-[13px] text-red-500 font-medium mt-2">{resumeError}</p>
+          )}
         </section>
 
         {/* ── Notifications ──────────────────────────────────────────── */}
@@ -294,11 +443,11 @@ export default function SettingsPage() {
 
           <div className="rounded-lg border border-chrome-rim bg-chrome-card overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3.5 gap-4">
-              <span className="text-[14px] text-chrome-text font-medium">Email digest</span>
+              <span className="text-[14px] text-chrome-text font-medium">Email me updates</span>
               <div
                 className="flex rounded-lg border border-chrome-border overflow-hidden"
                 role="radiogroup"
-                aria-label="Email digest frequency"
+                aria-label="Email update frequency"
               >
                 {['Daily', 'Weekly', 'Never'].map((opt, i) => (
                   <label key={opt} className="cursor-pointer">
@@ -324,6 +473,11 @@ export default function SettingsPage() {
                 ))}
               </div>
             </div>
+            {digestStatus && (
+              <p className={`text-[12px] font-medium mt-1 px-4 pb-2 ${digestStatus === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+                {digestStatus === 'success' ? 'Saved ✓' : 'Failed to save'}
+              </p>
+            )}
           </div>
         </section>
 
@@ -350,14 +504,14 @@ export default function SettingsPage() {
                   aria-hidden="true"
                 />
               </button>
-              {expandedRow === 'email' && (
-                <div className="px-4 pb-4 space-y-3 border-t border-chrome-border pt-3">
+              <AccordionPanel isOpen={expandedRow === 'email'}>
+                <form onSubmit={handleChangeEmail} className="px-4 pb-4 space-y-3 border-t border-chrome-border pt-3">
                   <InputField
                     label="New email address"
                     id="new-email"
                     type="email"
                     value={newEmail}
-                    onChange={e => setNewEmail(e.target.value)}
+                    onChange={e => { setNewEmail(e.target.value); setEmailFormStatus(null); }}
                     placeholder="you@example.com"
                     autoComplete="email"
                   />
@@ -366,13 +520,14 @@ export default function SettingsPage() {
                     id="email-current-password"
                     type="password"
                     value={emailPassword}
-                    onChange={e => setEmailPassword(e.target.value)}
+                    onChange={e => { setEmailPassword(e.target.value); setEmailFormStatus(null); }}
                     placeholder="••••••••"
                     autoComplete="current-password"
                   />
-                  <SaveCancel onCancel={() => setExpandedRow(null)} />
-                </div>
-              )}
+                  <FormStatus status={emailFormStatus?.type} message={emailFormStatus?.message} />
+                  <SaveCancel onCancel={handleClose} />
+                </form>
+              </AccordionPanel>
             </div>
 
             {/* Change password */}
@@ -389,38 +544,36 @@ export default function SettingsPage() {
                   aria-hidden="true"
                 />
               </button>
-              {expandedRow === 'password' && (
-                <div className="px-4 pb-4 space-y-3 border-t border-chrome-border pt-3">
-                  <InputField
+              <AccordionPanel isOpen={expandedRow === 'password'}>
+                <form onSubmit={handleChangePassword} className="px-4 pb-4 space-y-3 border-t border-chrome-border pt-3">
+                  <PasswordField
                     label="Current password"
                     id="current-password"
-                    type="password"
                     value={currentPassword}
-                    onChange={e => setCurrentPassword(e.target.value)}
+                    onChange={e => { setCurrentPassword(e.target.value); setPasswordFormStatus(null); }}
                     placeholder="••••••••"
                     autoComplete="current-password"
                   />
-                  <InputField
+                  <PasswordField
                     label="New password"
                     id="new-password"
-                    type="password"
                     value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
+                    onChange={e => { setNewPassword(e.target.value); setPasswordFormStatus(null); }}
                     placeholder="••••••••"
                     autoComplete="new-password"
                   />
-                  <InputField
+                  <PasswordField
                     label="Confirm new password"
                     id="confirm-password"
-                    type="password"
                     value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
+                    onChange={e => { setConfirmPassword(e.target.value); setPasswordFormStatus(null); }}
                     placeholder="••••••••"
                     autoComplete="new-password"
                   />
-                  <SaveCancel onCancel={() => setExpandedRow(null)} />
-                </div>
-              )}
+                  <FormStatus status={passwordFormStatus?.type} message={passwordFormStatus?.message} />
+                  <SaveCancel onCancel={handleClose} />
+                </form>
+              </AccordionPanel>
             </div>
 
           </div>
@@ -443,7 +596,7 @@ export default function SettingsPage() {
                 aria-hidden="true"
               />
             </button>
-            {expandedRow === 'delete' && (
+            <AccordionPanel isOpen={expandedRow === 'delete'}>
               <div className="px-4 pb-4 space-y-3 border-t border-red-100 pt-3">
                 <p className="text-[13px] text-chrome-muted">
                   This action is permanent and cannot be undone. All your data will be deleted.
@@ -466,6 +619,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex gap-2 pt-1">
                   <button
+                    onClick={handleDeleteAccount}
                     disabled={deleteConfirm !== 'DELETE'}
                     className="px-4 py-2 rounded-lg bg-red-500 text-white text-[13px] font-semibold hover:bg-red-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
@@ -473,14 +627,14 @@ export default function SettingsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setExpandedRow(null)}
+                    onClick={handleClose}
                     className="px-4 py-2 rounded-lg text-[13px] font-medium text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
-            )}
+            </AccordionPanel>
           </div>
         </section>
 
