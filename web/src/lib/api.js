@@ -87,6 +87,15 @@ export async function deleteResume() {
   return apiFetch(`${BASE}/profile/resume`, { method: 'DELETE' }).then(r => r.json());
 }
 
+export const fetchSettings = () =>
+  apiFetch(`${BASE}/settings`).then(r => r.json());
+
+export const patchSettings = (patch) =>
+  apiFetch(`${BASE}/settings`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  }).then(r => r.json());
+
 export async function authLogin(email, password) {
   const res = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
