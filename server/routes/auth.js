@@ -90,4 +90,74 @@ router.get('/me', requireAuth, async (req, res, next) => {
   }
 });
 
+// ─── PATCH /email ──────────────────────────────────────────────────────────────
+
+router.patch('/email', requireAuth, async (req, res, next) => {
+  const { newEmail, password } = req.body;
+  if (!newEmail || !password) {
+    return res.status(400).json({ error: 'Validation Error', message: 'newEmail and password are required', statusCode: 400 });
+  }
+  const emailParsed = z.string().email().safeParse(newEmail);
+  if (!emailParsed.success) {
+    return res.status(400).json({ error: 'Validation Error', message: 'Invalid email address', statusCode: 400 });
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!user) return res.status(404).json({ error: 'Not Found', message: 'User not found', statusCode: 404 });
+    const match = await bcrypt.compare(password, user.passwordHash);
+    if (!match) return res.status(401).json({ error: 'Unauthorized', message: 'Incorrect password', statusCode: 401 });
+    const existing = await prisma.user.findUnique({ where: { email: newEmail } });
+    if (existing) return res.status(409).json({ error: 'Conflict', message: 'Email already in use', statusCode: 409 });
+    const updated = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { email: newEmail },
+      select: { email: true },
+    });
+    res.json(updated);
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ─── PATCH /password ───────────────────────────────────────────────────────────
+
+router.patch('/password', requireAuth, async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Validation Error', message: 'currentPassword and newPassword are required', statusCode: 400 });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'Validation Error', message: 'New password must be at least 8 characters', statusCode: 400 });
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!user) return res.status(404).json({ error: 'Not Found', message: 'User not found', statusCode: 404 });
+    const match = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!match) return res.status(401).json({ error: 'Unauthorized', message: 'Incorrect password', statusCode: 401 });
+    const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { passwordHash },
+    });
+    res.json({ success: true });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ─── DELETE /account ───────────────────────────────────────────────────────────
+
+router.delete('/account', requireAuth, async (req, res, next) => {
+  const { confirm } = req.body ?? {};
+  if (confirm !== 'DELETE') {
+    return res.status(400).json({ error: 'Validation Error', message: 'Body must contain { confirm: "DELETE" }', statusCode: 400 });
+  }
+  try {
+    await prisma.user.delete({ where: { id: req.user.userId } });
+    res.json({ success: true });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;
