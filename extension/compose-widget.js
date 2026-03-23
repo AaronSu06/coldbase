@@ -1069,6 +1069,7 @@ window.ReachWidget = (function () {
   // Returns prefillDraftTab so buildComposePanel can call it when the tab is activated.
   function setupDraftTab(shadow, ctx) {
     let _isPro = false;
+    let _isAdmin = false;
     let _dashUrlForResume = 'http://localhost:5173';
 
     // Fetch plan + resumeName once; update tier badge and gate/banner visibility.
@@ -1078,20 +1079,22 @@ window.ReachWidget = (function () {
     chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, (res) => {
       if (chrome.runtime.lastError || !res?.ok) return;
       _isPro = res.plan === 'pro';
+      _isAdmin = res.isAdmin ?? false;
+      const hasAccess = _isPro || _isAdmin;
       const planGate = shadow.getElementById('cp-plan-gate');
       const draftEmpty = shadow.getElementById('cp-draft-empty');
       const draftForm = shadow.getElementById('cp-draft-form');
       // Update tier badge in header
       const tierBadge = shadow.getElementById('cp-tier');
-      if (tierBadge) tierBadge.textContent = _isPro ? 'Pro' : 'Free';
-      if (!_isPro) {
+      if (tierBadge) tierBadge.textContent = _isAdmin ? 'Admin' : _isPro ? 'Pro' : 'Free';
+      if (!hasAccess) {
         // Hide form + empty state, show plan gate
         planGate.style.display = '';
         draftEmpty.style.display = 'none';
         draftForm.style.display = 'none';
         return;
       }
-      // Pro user: wire resume banner/nudge
+      // Pro/Admin user: wire resume banner/nudge
       planGate.style.display = 'none';
       if (res.resumeName) {
         shadow.getElementById('cp-resume-banner').style.display = '';
@@ -1115,7 +1118,7 @@ window.ReachWidget = (function () {
     });
 
     function prefillDraftTab() {
-      if (!_isPro) return; // plan gate handles its own visibility
+      if (!_isPro && !_isAdmin) return; // plan gate handles its own visibility
       shadow.getElementById('cp-draft-empty').style.display = ctx.currentEditorEl ? 'none' : '';
       shadow.getElementById('cp-draft-form').style.display  = ctx.currentEditorEl ? '' : 'none';
       if (!ctx.currentEditorEl) return;

@@ -178,12 +178,64 @@ router.post('/draft-email', async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { plan: true, resumeText: true },
+      select: { plan: true, isAdmin: true, resumeText: true },
     });
-    if (!user || user.plan !== 'pro') {
+    if (!user || (!user.isAdmin && user.plan !== 'pro')) {
       return res.status(403).json({ ok: false, error: 'pro_required', message: 'Draft AI is a Pro feature. Upgrade to use it.' });
     }
     const prompt = buildDraftPrompt({ ...parsed.data, resumeText: user.resumeText });
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+    const gemRes = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+    });
+    if (!gemRes.ok) {
+      const body = await gemRes.text();
+      return res.status(502).json({ ok: false, error: `Gemini API error ${gemRes.status}: ${body.slice(0, 120)}` });
+    }
+    const data = await gemRes.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    res.json({ ok: true, text });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// POST /feedback — AI conversation feedback (pro + admin only)
+router.post('/feedback', async (req, res, next) => {
+  const geminiKey = process.env.GEMINI_KEY;
+  if (!geminiKey) return res.status(500).json({ ok: false, error: 'Gemini API key not configured on server.' });
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { plan: true, isAdmin: true },
+    });
+    if (!user || (!user.isAdmin && user.plan !== 'pro')) {
+      return res.status(403).json({ ok: false, error: 'pro_required', message: 'Feedback AI is a Pro feature. Upgrade to use it.' });
+    }
+    const { company, contactName, subject, status, sentDate, snippet, notes } = req.body;
+    const daysSince = sentDate ? Math.floor((Date.now() - new Date(sentDate).getTime()) / 86_400_000) : 0;
+    const threadCtx = snippet
+      ? `\nConversation (format: [OUT] = sent by candidate, [IN] = received):\n${snippet.slice(0, 1200)}`
+      : '';
+    const notesCtx = notes ? `\nCandidate notes: ${notes}` : '';
+    const prompt = `You are an expert career coach reviewing a job outreach email thread.
+
+Context:
+- Company: ${company || 'the company'}
+- Contact: ${contactName || 'the recruiter'}
+- Subject: ${subject || ''}
+- Status: ${status || 'Sent'}
+- Days since sent: ${daysSince}${threadCtx}${notesCtx}
+
+Provide concise, specific feedback in four labeled sections:
+1. What the candidate did well (1-2 sentences)
+2. What to improve (1-2 sentences, specific)
+3. Tone assessment (1 sentence)
+4. Suggested next move given the current status (1-2 sentences)
+
+Be direct and actionable. No filler phrases.`;
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
     const gemRes = await fetch(endpoint, {
       method: 'POST',

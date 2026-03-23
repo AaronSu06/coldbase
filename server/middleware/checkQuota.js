@@ -2,9 +2,8 @@
 import { prisma } from '../lib/prisma.js';
 
 const PLAN_LIMITS = {
-  free:  5,
-  basic: 50,
-  pro:   200,
+  free: 10,
+  pro:  100,
 };
 
 export default async function checkQuota(req, res, next) {
@@ -13,6 +12,12 @@ export default async function checkQuota(req, res, next) {
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+  // Admins bypass all quota checks
+  if (user.isAdmin) {
+    req.incrementQuota = () => Promise.resolve();
+    return next();
+  }
 
   const limit = PLAN_LIMITS[user.plan] ?? PLAN_LIMITS.free;
   const now   = new Date();
