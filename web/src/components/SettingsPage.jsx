@@ -203,6 +203,8 @@ export default function SettingsPage() {
   const isAnimating = useRef(false);
   const ANIM_MS = 260; // matches AccordionPanel 250ms + small buffer
 
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
   // Load settings on mount
   useEffect(() => {
     fetchSettings()
@@ -210,6 +212,7 @@ export default function SettingsPage() {
         if (data.plan) setPlan(data.plan);
         if (data.emailDigest) setEmailDigest(data.emailDigest);
         setResumeName(data.resumeName ?? null);
+        setSettingsLoaded(true);
       })
       .catch(e => console.error('[Reach] Failed to load settings:', e.message));
   }, []);
@@ -445,7 +448,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between px-4 py-3.5 gap-4">
               <span className="text-[14px] text-chrome-text font-medium">Email me updates</span>
               <div
-                className="flex rounded-lg border border-chrome-border overflow-hidden"
+                className={`flex rounded-lg border border-chrome-border overflow-hidden transition-opacity duration-200 ${settingsLoaded ? 'opacity-100' : 'opacity-0'}`}
                 role="radiogroup"
                 aria-label="Email update frequency"
               >
