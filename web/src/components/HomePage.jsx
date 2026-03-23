@@ -1,52 +1,49 @@
 // web/src/components/HomePage.jsx
-import { useState } from 'react';
+import { useState } from 'react'; // used by UpgradeCard
 import InsightsPanel from './InsightsPanel';
 
 // ── Action card shell ──────────────────────────────────────────────────────
 
 function ActionCard({ children, className = '' }) {
   return (
-    <div className={`bg-chrome-surface border border-chrome-rim rounded-xl p-5 shadow-card ${className}`}>
+    <div className={`bg-chrome-surface border border-chrome-rim rounded-xl p-5 ${className}`}>
       {children}
     </div>
   );
 }
 
-// ── Email notifications opt-in ─────────────────────────────────────────────
+// ── Follow-up nudge ────────────────────────────────────────────────────────
 
-function NotificationsCard() {
-  const [enabled, setEnabled] = useState(false);
+function FollowUpCard({ count, onGoToTracker }) {
+  if (count === 0) {
+    return (
+      <ActionCard>
+        <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
+          You're all caught up
+        </p>
+        <p className="text-[12px] text-chrome-muted leading-relaxed">
+          No follow-ups overdue. Keep the momentum going.
+        </p>
+      </ActionCard>
+    );
+  }
 
   return (
     <ActionCard>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
-            Email digests
-          </p>
-          <p className="text-[12px] text-chrome-muted leading-relaxed">
-            Get a weekly summary of your outreach activity and reply rate delivered to your inbox.
-          </p>
-        </div>
-        {/* Toggle */}
-        <button
-          role="switch"
-          aria-checked={enabled}
-          aria-label={enabled ? 'Disable email digests' : 'Enable email digests'}
-          onClick={() => setEnabled(v => !v)}
-          className={`
-            relative flex-shrink-0 w-10 h-[22px] rounded-full border transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50
-            ${enabled ? 'bg-accent border-accent' : 'bg-chrome-deep border-chrome-border'}
-          `}
-        >
-          <span
-            className={`
-              absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200
-              ${enabled ? 'translate-x-[18px]' : 'translate-x-0'}
-            `}
-          />
-        </button>
-      </div>
+      <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
+        <span className="font-mono text-accent">{count}</span>{' '}
+        {count === 1 ? 'contact' : 'contacts'} to follow up with
+      </p>
+      <p className="text-[12px] text-chrome-muted leading-relaxed mb-3">
+        {count === 1 ? "Hasn't" : "Haven't"} replied in 7+ days — worth a nudge.
+      </p>
+      <button
+        type="button"
+        onClick={onGoToTracker}
+        className="text-[12px] font-semibold text-accent hover:text-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+      >
+        Go to Job Tracker →
+      </button>
     </ActionCard>
   );
 }
@@ -257,7 +254,7 @@ function DeveloperNote() {
 
 // ── Home page ──────────────────────────────────────────────────────────────
 
-export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange }) {
+export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange, followUpCount = 0, onGoToTracker }) {
   return (
     <div className="h-full overflow-y-auto">
       {/* Insights section — full-width at top */}
@@ -274,6 +271,9 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
 
       {/* Action cards grid */}
       <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-4">
+          Your account
+        </p>
         {/*
           Mobile order: Pro first (above fold), then utility cards, then note.
           Desktop order: utility | Pro | note  (via sm:order-* overrides).
@@ -285,7 +285,7 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
           </div>
           {/* Utility cards — mobile: second, desktop: left */}
           <div className="order-2 sm:order-1 flex flex-col gap-4">
-            <NotificationsCard />
+            <FollowUpCard count={followUpCount} onGoToTracker={onGoToTracker} />
             <CompleteProfileCard />
           </div>
           {/* Developer note — mobile: third, desktop: right */}

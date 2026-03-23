@@ -213,14 +213,18 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-chrome-bg">
-      <div className="max-w-2xl mx-auto px-6 py-12">
-
-        <h1 className="font-display text-[22px] font-bold text-chrome-text tracking-tight mb-10">
+    <div className="flex flex-col h-full">
+      {/* ── Sub-header strip — mirrors tracker sub-nav ─────────────────────── */}
+      <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 pt-3 flex-shrink-0">
+        <div className="pb-3 inline-block text-[13px] font-display font-semibold text-chrome-text border-b-2 border-accent">
           Settings
-        </h1>
+        </div>
+      </div>
 
-        <div className="space-y-14">
+      <div className="flex-1 overflow-y-auto bg-chrome-bg">
+      <div className="max-w-2xl mx-auto px-4 pt-6 pb-10">
+
+        <div className="space-y-10">
 
         {/* ── Resume ─────────────────────────────────────────────────── */}
         <section aria-label="Resume">
@@ -481,6 +485,7 @@ export default function SettingsPage() {
         </section>
 
         </div>
+      </div>
       </div>
     </div>
   );
