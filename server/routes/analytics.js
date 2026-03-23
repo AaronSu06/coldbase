@@ -65,16 +65,27 @@ router.get('/', async (req, res, next) => {
     if (totalReplied < RESPONSE_TIME_MIN_REPLIED) {
       responseTime = { insufficient: true, sent: totalSent, replied: totalReplied };
     } else {
-      const [rtRow] = await prisma.$queryRaw`
-        SELECT AVG(EXTRACT(EPOCH FROM ("repliedAt" - "sentDate")) / 3600.0) AS avg_hours,
-               COUNT(*) AS sample_size
+      const weeklyRows = await prisma.$queryRaw`
+        SELECT
+          DATE_TRUNC('week', "sentDate") AS week,
+          AVG(EXTRACT(EPOCH FROM ("repliedAt" - "sentDate")) / 3600.0) AS avg_hours,
+          COUNT(*) AS sample_size
         FROM "Outreach"
         WHERE "repliedAt" IS NOT NULL AND archived = false ${fromClause} ${toClause}
+        GROUP BY week
+        ORDER BY week
       `;
+      const weeks = weeklyRows.map(r => ({
+        week: r.week.toISOString().slice(0, 10),
+        avgHours: Number(r.avg_hours),
+      }));
+      const totalSampleSize = weeklyRows.reduce((s, r) => s + Number(r.sample_size), 0);
+      const weightedSum = weeklyRows.reduce((s, r) => s + Number(r.avg_hours) * Number(r.sample_size), 0);
       responseTime = {
         insufficient: false,
-        avgHours: Number(rtRow.avg_hours),
-        sampleSize: Number(rtRow.sample_size),
+        avgHours: totalSampleSize > 0 ? weightedSum / totalSampleSize : 0,
+        sampleSize: totalSampleSize,
+        weeks,
       };
     }
 
