@@ -195,9 +195,7 @@ function ReplyTrendSlide({ data }) {
       x: (i / 7) * 100,
       y: 50 + Math.sin(i * 0.9) * 20,
     }));
-    const ghostPath = ghostPoints
-      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
-      .join(' ');
+    const ghostPath = smoothPath(ghostPoints);
     return (
       <div className="relative min-h-[160px] sm:min-h-[180px]">
         <svg viewBox="0 0 100 80" className="w-full h-32 sm:h-40 opacity-15" preserveAspectRatio="none">
@@ -228,9 +226,8 @@ function ReplyTrendSlide({ data }) {
   const xScale = i => PAD.left + (i / Math.max(weeks.length - 1, 1)) * innerW;
   const yScale = r => PAD.top + innerH - (r / maxRate) * innerH;
 
-  const pathD = weeks
-    .map((w, i) => `${i === 0 ? 'M' : 'L'} ${xScale(i).toFixed(1)} ${yScale(w.rate).toFixed(1)}`)
-    .join(' ');
+  const pts = weeks.map((w, i) => ({ x: xScale(i), y: yScale(w.rate) }));
+  const pathD = smoothPath(pts);
 
   const yTicks = [0, 0.5, 1].map(f => ({
     y: yScale(maxRate * f),
