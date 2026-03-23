@@ -1,6 +1,7 @@
 // web/src/components/SettingsPage.jsx
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, X, Star, ChevronDown, Check, FileText } from 'lucide-react';
+import { fetchSettings, patchSettings, uploadResume, deleteResume } from '../lib/api';
 
 function SectionTitle({ children, className = '' }) {
   return (
@@ -125,17 +126,30 @@ function PlanSection({ plan = 'free' }) {
   );
 }
 
-export default function SettingsPage({ plan = 'free' }) {
-  // Resume
-  const [resumeFile, setResumeFile] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef(null);
-
-  // Notifications
+export default function SettingsPage() {
+  // Settings loaded from server
+  const [plan, setPlan] = useState('free');
   const [emailDigest, setEmailDigest] = useState('weekly');
+
+  // Resume
+  const [resumeName, setResumeName] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Account — which row is expanded
   const [expandedRow, setExpandedRow] = useState(null);
+
+  // Load settings on mount
+  useEffect(() => {
+    fetchSettings()
+      .then(data => {
+        if (data.plan) setPlan(data.plan);
+        if (data.emailDigest) setEmailDigest(data.emailDigest);
+        setResumeName(data.resumeName ?? null);
+      })
+      .catch(e => console.error('[Reach] Failed to load settings:', e.message));
+  }, []);
 
   // Change email form
   const [newEmail, setNewEmail] = useState('');
@@ -161,7 +175,7 @@ export default function SettingsPage({ plan = 'free' }) {
     }
   }
 
-  function handleFileSelect(file) {
+  async function handleFileSelect(file) {
     if (!file) return;
     const allowed = [
       'application/pdf',
@@ -169,31 +183,61 @@ export default function SettingsPage({ plan = 'free' }) {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
     if (!allowed.includes(file.type)) return;
-    setResumeFile(file);
+    setIsUploading(true);
+    try {
+      const { resumeName: name } = await uploadResume(file);
+      setResumeName(name);
+    } catch (e) {
+      console.error('[Reach] Resume upload failed:', e.message);
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  async function handleDeleteResume() {
+    try {
+      await deleteResume();
+      setResumeName(null);
+    } catch (e) {
+      console.error('[Reach] Resume delete failed:', e.message);
+    }
+  }
+
+  async function handleDigestChange(value) {
+    setEmailDigest(value);
+    try {
+      await patchSettings({ emailDigest: value });
+    } catch (e) {
+      console.error('[Reach] Failed to save email digest:', e.message);
+    }
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-chrome-bg">
-      <div className="max-w-2xl mx-auto px-6 py-12">
-
-        <h1 className="font-display text-[22px] font-bold text-chrome-text tracking-tight mb-10">
+    <div className="flex flex-col h-full">
+      {/* ── Sub-header strip — mirrors tracker sub-nav ─────────────────────── */}
+      <div className="bg-chrome-bg border-b border-chrome-border px-4 sm:px-8 pt-3 flex-shrink-0">
+        <div className="pb-3 inline-block text-[13px] font-display font-semibold text-chrome-text border-b-2 border-accent">
           Settings
-        </h1>
+        </div>
+      </div>
 
-        <div className="space-y-14">
+      <div className="flex-1 overflow-y-auto bg-chrome-bg">
+      <div className="max-w-2xl mx-auto px-4 pt-6 pb-10">
+
+        <div className="space-y-10">
 
         {/* ── Resume ─────────────────────────────────────────────────── */}
         <section aria-label="Resume">
           <SectionTitle>Resume</SectionTitle>
 
-          {resumeFile ? (
+          {resumeName ? (
             <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-orange-200 bg-orange-50">
               <FileText size={16} strokeWidth={1.75} className="text-accent flex-shrink-0" aria-hidden="true" />
               <span className="flex-1 text-[13px] text-chrome-text font-medium truncate min-w-0">
-                {resumeFile.name}
+                {resumeName}
               </span>
               <button
-                onClick={() => setResumeFile(null)}
+                onClick={handleDeleteResume}
                 aria-label="Remove resume"
                 className="w-6 h-6 rounded-md flex items-center justify-center text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors flex-shrink-0"
               >
@@ -210,7 +254,9 @@ export default function SettingsPage({ plan = 'free' }) {
                 handleFileSelect(e.dataTransfer.files[0]);
               }}
               className={`rounded-lg border-2 border-dashed px-6 py-8 flex flex-col items-center gap-3 transition-colors ${
-                isDragging
+                isUploading
+                  ? 'border-accent/40 bg-accent/5 pointer-events-none'
+                  : isDragging
                   ? 'border-accent bg-accent/5'
                   : 'border-chrome-border bg-chrome-surface hover:border-chrome-muted'
               }`}
@@ -219,7 +265,9 @@ export default function SettingsPage({ plan = 'free' }) {
                 <Upload size={18} className="text-chrome-muted" aria-hidden="true" />
               </div>
               <div className="text-center">
-                <p className="text-[14px] text-chrome-text font-medium">Drag your resume here</p>
+                <p className="text-[14px] text-chrome-text font-medium">
+                  {isUploading ? 'Uploading…' : 'Drag your resume here'}
+                </p>
                 <p className="text-[12px] text-chrome-muted mt-0.5">PDF, DOC, or DOCX</p>
               </div>
               <button
@@ -259,7 +307,7 @@ export default function SettingsPage({ plan = 'free' }) {
                       name="emailDigest"
                       value={opt.toLowerCase()}
                       checked={emailDigest === opt.toLowerCase()}
-                      onChange={() => setEmailDigest(opt.toLowerCase())}
+                      onChange={() => handleDigestChange(opt.toLowerCase())}
                       className="sr-only"
                     />
                     <span className={`
@@ -437,6 +485,7 @@ export default function SettingsPage({ plan = 'free' }) {
         </section>
 
         </div>
+      </div>
       </div>
     </div>
   );

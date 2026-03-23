@@ -196,6 +196,15 @@ export default function App({ initialSection = 'home' }) {
     ? '—'
     : Math.round((statReplied / statSent) * 100) + '%';
 
+  const sevenDaysAgo = useMemo(() => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), []);
+  const followUpCount = useMemo(
+    () => records.filter(r =>
+      !r.archived && !r.hasReply && r.status === 'Sent' &&
+      new Date(r.sentDate) < sevenDaysAgo
+    ).length,
+    [records, sevenDaysAgo]
+  );
+
   function refreshInsights() {
     setInsightsLoading(true);
     setInsightsError(null);
@@ -522,6 +531,8 @@ export default function App({ initialSection = 'home' }) {
               insightsLoading={insightsLoading}
               insightsError={insightsError}
               onInsightsRangeChange={({ from, to }) => { setInsightsDateFrom(from); setInsightsDateTo(to); }}
+              followUpCount={followUpCount}
+              onGoToTracker={() => setActiveSection('tracker')}
             />
           ) : error && records.length === 0 ? (
             <div className="flex items-center justify-center flex-1 h-full text-red-500 text-sm">

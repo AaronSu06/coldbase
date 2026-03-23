@@ -15,6 +15,7 @@ import emailRoutes     from './routes/email.js';
 import analyticsRoutes from './routes/analytics.js';
 import authRoutes      from './routes/auth.js';
 import profileRoutes   from './routes/profile.js';
+import settingsRoutes  from './routes/settings.js';
 import requireAuth     from './middleware/requireAuth.js';
 import checkQuota     from './middleware/checkQuota.js';
 
@@ -82,6 +83,7 @@ const expensiveRateLimit = rateLimit({
 
 app.use('/api/outreach',   outreachRoutes);
 app.use('/api/profile',    profileRoutes);
+app.use('/api/settings',   settingsRoutes);
 app.use('/',               trackingRoutes);   // full paths inside: /track/:id and /api/track
 app.use('/api/find-email',      expensiveRateLimit, checkQuota);
 app.use('/api/suggest-domains', expensiveRateLimit);
