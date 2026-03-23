@@ -179,3 +179,133 @@ describe('Cross-user data isolation', () => {
     assert.equal(hasA, true, "user A should see their own record");
   });
 });
+
+describe('PATCH /api/auth/email', () => {
+  let token;
+
+  before(async () => {
+    const res = await request('POST', '/api/auth/signup', {
+      email: 'change-email@example.com',
+      password: 'password123',
+    });
+    token = res.body.token;
+  });
+
+  it('updates email with correct password', async () => {
+    const res = await request(
+      'PATCH', '/api/auth/email',
+      { newEmail: 'changed@example.com', password: 'password123' },
+      { Authorization: `Bearer ${token}` },
+    );
+    assert.equal(res.status, 200);
+    assert.equal(res.body.email, 'changed@example.com');
+  });
+
+  it('returns 401 with wrong password', async () => {
+    const res = await request(
+      'PATCH', '/api/auth/email',
+      { newEmail: 'x@example.com', password: 'wrongpassword' },
+      { Authorization: `Bearer ${token}` },
+    );
+    assert.equal(res.status, 401);
+  });
+
+  it('returns 409 if new email is already taken', async () => {
+    await request('POST', '/api/auth/signup', { email: 'taken@example.com', password: 'password123' });
+    const res = await request(
+      'PATCH', '/api/auth/email',
+      { newEmail: 'taken@example.com', password: 'password123' },
+      { Authorization: `Bearer ${token}` },
+    );
+    assert.equal(res.status, 409);
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request('PATCH', '/api/auth/email', { newEmail: 'x@example.com', password: 'p' });
+    assert.equal(res.status, 401);
+  });
+});
+
+describe('PATCH /api/auth/password', () => {
+  let token;
+
+  before(async () => {
+    const res = await request('POST', '/api/auth/signup', {
+      email: 'change-pw@example.com',
+      password: 'oldpassword',
+    });
+    token = res.body.token;
+  });
+
+  it('updates password with correct current password', async () => {
+    const res = await request(
+      'PATCH', '/api/auth/password',
+      { currentPassword: 'oldpassword', newPassword: 'newpassword123' },
+      { Authorization: `Bearer ${token}` },
+    );
+    assert.equal(res.status, 200);
+    assert.ok(res.body.success);
+  });
+
+  it('returns 401 with wrong current password', async () => {
+    const res = await request(
+      'PATCH', '/api/auth/password',
+      { currentPassword: 'wrongpassword', newPassword: 'newpassword123' },
+      { Authorization: `Bearer ${token}` },
+    );
+    assert.equal(res.status, 401);
+  });
+
+  it('returns 400 if new password is shorter than 8 characters', async () => {
+    const res = await request(
+      'PATCH', '/api/auth/password',
+      { currentPassword: 'oldpassword', newPassword: 'short' },
+      { Authorization: `Bearer ${token}` },
+    );
+    assert.equal(res.status, 400);
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request('PATCH', '/api/auth/password', { currentPassword: 'x', newPassword: 'y' });
+    assert.equal(res.status, 401);
+  });
+});
+
+describe('DELETE /api/auth/account', () => {
+  let token;
+
+  before(async () => {
+    const res = await request('POST', '/api/auth/signup', {
+      email: 'delete-me@example.com',
+      password: 'password123',
+    });
+    token = res.body.token;
+  });
+
+  it('deletes the account when confirm body is correct', async () => {
+    const res = await request(
+      'DELETE', '/api/auth/account',
+      { confirm: 'DELETE' },
+      { Authorization: `Bearer ${token}` },
+    );
+    assert.equal(res.status, 200);
+    assert.ok(res.body.success);
+  });
+
+  it('returns 400 when confirm body is missing or wrong', async () => {
+    // Sign up a fresh user so we have a valid token
+    const signup = await request('POST', '/api/auth/signup', {
+      email: 'delete-me2@example.com',
+      password: 'password123',
+    });
+    const t2 = signup.body.token;
+
+    const res = await request('DELETE', '/api/auth/account', { confirm: 'wrong' }, { Authorization: `Bearer ${t2}` });
+    assert.equal(res.status, 400);
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request('DELETE', '/api/auth/account', { confirm: 'DELETE' });
+    assert.equal(res.status, 401);
+  });
+});
