@@ -28,10 +28,10 @@ function SignOutIcon() {
   );
 }
 
-export default function ProfileMenu({ onClose, onSettings }) {
+export default function ProfileMenu({ onClose, onSettings, onSignOut }) {
   const MENU_ITEMS = [
-    { icon: FlagIcon,     label: 'Report an issue', onClick: () => {} },
     { icon: SettingsIcon, label: 'Settings',        onClick: onSettings },
+    { icon: FlagIcon,     label: 'Report an issue', onClick: () => {} },
   ];
 
   return (
@@ -57,7 +57,7 @@ export default function ProfileMenu({ onClose, onSettings }) {
 
       <button
         role="menuitem"
-        onClick={onClose}
+        onClick={() => { onSignOut?.(); onClose(); }}
         className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors text-left"
       >
         <SignOutIcon />

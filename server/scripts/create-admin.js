@@ -1,0 +1,25 @@
+import 'dotenv/config';
+import bcrypt from 'bcrypt';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+const email = process.env.ADMIN_EMAIL;
+const password = process.env.ADMIN_PASSWORD;
+const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '12');
+
+if (!email || !password) {
+  console.error('Missing ADMIN_EMAIL or ADMIN_PASSWORD in .env');
+  process.exit(1);
+}
+
+const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+const user = await prisma.user.upsert({
+  where: { email },
+  update: { passwordHash, isAdmin: true, plan: 'pro' },
+  create: { email, passwordHash, isAdmin: true, plan: 'pro' },
+});
+
+console.log(`Admin account ready: ${user.email} (id: ${user.id})`);
+await prisma.$disconnect();

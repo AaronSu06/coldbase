@@ -13,6 +13,7 @@ model User {
   email          String          @unique
   passwordHash   String
   plan                 String          @default("free")
+  isAdmin              Boolean         @default(false)
   resumeText           String?
   resumeName           String?
   lookupsUsedThisMonth Int             @default(0)

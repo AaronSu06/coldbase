@@ -1108,10 +1108,10 @@ window.ReachWidget = (function () {
       window.open(_dashUrlForResume + '/upgrade', '_blank');
     });
     shadow.getElementById('cp-resume-change').addEventListener('click', () => {
-      window.open(_dashUrlForResume + '/profile', '_blank');
+      window.open(_dashUrlForResume + '/settings', '_blank');
     });
     shadow.getElementById('cp-resume-add').addEventListener('click', () => {
-      window.open(_dashUrlForResume + '/profile', '_blank');
+      window.open(_dashUrlForResume + '/settings', '_blank');
     });
 
     function prefillDraftTab() {
@@ -1374,8 +1374,8 @@ window.ReachWidget = (function () {
       let _dashUrl = 'http://localhost:5173';
       const loginBtn  = shadow.getElementById('cp-auth-login');
       const signupBtn = shadow.getElementById('cp-auth-signup');
-      loginBtn.addEventListener('click',  () => window.open(_dashUrl + '/login', '_blank'));
-      signupBtn.addEventListener('click', () => window.open(_dashUrl + '/signup', '_blank'));
+      loginBtn.addEventListener('click',  () => window.open(_dashUrl + '/auth', '_blank'));
+      signupBtn.addEventListener('click', () => window.open(_dashUrl + '/auth?mode=signup', '_blank'));
       chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (res) => {
         if (res?.config?.dashboardUrl) _dashUrl = res.config.dashboardUrl;
       });

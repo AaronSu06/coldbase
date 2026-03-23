@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { TOKEN_KEY } from './hooks/useAuth.js';
 import { Archive, Download, RefreshCw, Columns3, List, MoreVertical, Heart } from 'lucide-react';
 import { useOutreach } from './hooks/useOutreach';
 import KanbanBoard from './components/KanbanBoard';
@@ -7,7 +8,7 @@ import Sidebar from './components/Sidebar';
 import EmptyState from './components/EmptyState';
 import TopNav from './components/TopNav';
 import HomePage from './components/HomePage';
-import LoginPage from './components/LoginPage';
+import AuthPage from './components/AuthPage';
 import SettingsPage from './components/SettingsPage';
 import { DateRangePicker } from './components/DateRangePicker';
 import { COLUMNS } from '@shared/constants';
@@ -125,8 +126,8 @@ function MobileFiltersSheet({ onClose, showFavoritesOnly, onToggleFavorites, onA
 
 // ── App ────────────────────────────────────────────────────────────────────
 
-export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export default function App({ initialSection = 'home' }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem(TOKEN_KEY));
   const { records, error, refresh, updateStatus, toggleFavorite, toggleArchived, archiveAll, updateRecord, deleteRecord } = useOutreach();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [query, setQuery] = useState('');
@@ -139,7 +140,7 @@ export default function App() {
   const [dateTo, setDateTo] = useState('');
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [activeSection, setActiveSection] = useState('tracker');
+  const [activeSection, setActiveSection] = useState(initialSection);
   const columnPickerRef = useRef(null);
 
   // Insights state — lifted here so data persists across home/tracker navigation
@@ -299,7 +300,7 @@ export default function App() {
   }, [refresh]);
 
   if (!isAuthenticated) {
-    return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
+    return <AuthPage onLogin={() => setIsAuthenticated(true)} />;
   }
 
   return (

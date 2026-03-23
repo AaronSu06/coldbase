@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Home, Briefcase } from 'lucide-react';
 import ProfileMenu from './ProfileMenu';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const NAV_SECTIONS = [
   { id: 'home',    label: 'Home',        Icon: Home },
@@ -10,6 +12,14 @@ const NAV_SECTIONS = [
 
 export default function TopNav({ activeSection, onSectionChange }) {
   const [profileOpen, setProfileOpen] = useState(false);
+  const { getUserEmail, logout } = useAuth();
+  const initial = (getUserEmail()?.[0] ?? '?').toUpperCase();
+  const navigate = useNavigate();
+
+  function handleSignOut() {
+    logout();
+    navigate('/auth');
+  }
   const profileRef = useRef(null);
 
   // Close profile menu on outside click
@@ -72,12 +82,13 @@ export default function TopNav({ activeSection, onSectionChange }) {
             aria-haspopup="menu"
             className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-display font-bold text-[13px] hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
           >
-            Y
+            {initial}
           </button>
           {profileOpen && (
             <ProfileMenu
               onClose={() => setProfileOpen(false)}
               onSettings={() => { onSectionChange('settings'); setProfileOpen(false); }}
+              onSignOut={handleSignOut}
             />
           )}
         </div>

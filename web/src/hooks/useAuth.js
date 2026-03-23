@@ -18,5 +18,16 @@ export function useAuth() {
     return !!getToken();
   }
 
-  return { login, logout, getToken, isAuthenticated };
+  function getUserEmail() {
+    const token = getToken();
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.email ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  return { login, logout, getToken, isAuthenticated, getUserEmail };
 }
