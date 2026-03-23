@@ -1069,6 +1069,7 @@ window.ReachWidget = (function () {
   // Returns prefillDraftTab so buildComposePanel can call it when the tab is activated.
   function setupDraftTab(shadow, ctx) {
     let _isPro = false;
+    let _isAdmin = false;
     let _dashUrlForResume = 'http://localhost:5173';
 
     // Fetch plan + resumeName once; update tier badge and gate/banner visibility.
@@ -1078,20 +1079,22 @@ window.ReachWidget = (function () {
     chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, (res) => {
       if (chrome.runtime.lastError || !res?.ok) return;
       _isPro = res.plan === 'pro';
+      _isAdmin = res.isAdmin ?? false;
+      const hasAccess = _isPro || _isAdmin;
       const planGate = shadow.getElementById('cp-plan-gate');
       const draftEmpty = shadow.getElementById('cp-draft-empty');
       const draftForm = shadow.getElementById('cp-draft-form');
       // Update tier badge in header
       const tierBadge = shadow.getElementById('cp-tier');
-      if (tierBadge) tierBadge.textContent = _isPro ? 'Pro' : 'Free';
-      if (!_isPro) {
+      if (tierBadge) tierBadge.textContent = _isAdmin ? 'Admin' : _isPro ? 'Pro' : 'Free';
+      if (!hasAccess) {
         // Hide form + empty state, show plan gate
         planGate.style.display = '';
         draftEmpty.style.display = 'none';
         draftForm.style.display = 'none';
         return;
       }
-      // Pro user: wire resume banner/nudge
+      // Pro/Admin user: wire resume banner/nudge
       planGate.style.display = 'none';
       if (res.resumeName) {
         shadow.getElementById('cp-resume-banner').style.display = '';
@@ -1108,14 +1111,14 @@ window.ReachWidget = (function () {
       window.open(_dashUrlForResume + '/upgrade', '_blank');
     });
     shadow.getElementById('cp-resume-change').addEventListener('click', () => {
-      window.open(_dashUrlForResume + '/profile', '_blank');
+      window.open(_dashUrlForResume + '/settings', '_blank');
     });
     shadow.getElementById('cp-resume-add').addEventListener('click', () => {
-      window.open(_dashUrlForResume + '/profile', '_blank');
+      window.open(_dashUrlForResume + '/settings', '_blank');
     });
 
     function prefillDraftTab() {
-      if (!_isPro) return; // plan gate handles its own visibility
+      if (!_isPro && !_isAdmin) return; // plan gate handles its own visibility
       shadow.getElementById('cp-draft-empty').style.display = ctx.currentEditorEl ? 'none' : '';
       shadow.getElementById('cp-draft-form').style.display  = ctx.currentEditorEl ? '' : 'none';
       if (!ctx.currentEditorEl) return;
@@ -1362,8 +1365,7 @@ window.ReachWidget = (function () {
               <p class="cp-auth-heading">Sign in to unlock Reach</p>
               <p class="cp-auth-sub">Track outreach, find contacts,<br>and draft emails.</p>
               <div class="cp-auth-btn-row">
-                <button class="cp-auth-btn-primary" id="cp-auth-login">Log in</button>
-                <button class="cp-auth-btn-secondary" id="cp-auth-signup">Create account</button>
+                <button class="cp-auth-btn-primary" id="cp-auth-login">Sign in</button>
               </div>
             </div>
           </div>
@@ -1372,10 +1374,8 @@ window.ReachWidget = (function () {
 
       // Wire buttons immediately with fallback, update when config resolves
       let _dashUrl = 'http://localhost:5173';
-      const loginBtn  = shadow.getElementById('cp-auth-login');
-      const signupBtn = shadow.getElementById('cp-auth-signup');
-      loginBtn.addEventListener('click',  () => window.open(_dashUrl + '/login', '_blank'));
-      signupBtn.addEventListener('click', () => window.open(_dashUrl + '/signup', '_blank'));
+      const loginBtn = shadow.getElementById('cp-auth-login');
+      loginBtn.addEventListener('click', () => window.open(_dashUrl + '/auth', '_blank'));
       chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (res) => {
         if (res?.config?.dashboardUrl) _dashUrl = res.config.dashboardUrl;
       });

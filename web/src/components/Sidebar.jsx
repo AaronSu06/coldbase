@@ -4,7 +4,8 @@ import HeartIcon from './icons/HeartIcon';
 import BellIcon from './icons/BellIcon';
 import ChatIcon from './icons/ChatIcon';
 import EyeIcon from './icons/EyeIcon';
-import { generateConversationFeedback } from '../lib/gemini';
+import { generateFeedback } from '../lib/api';
+import { useUser } from '../hooks/useUser';
 import { getDaysSince, formatShortDate, STATUS_COLORS } from '../lib/utils';
 import { DayPicker } from 'react-day-picker';
 import { parseLocalDate, toDateString } from './DateRangePicker';
@@ -189,6 +190,8 @@ export default function Sidebar({
   onStatusChange,
 }) {
   const isOpen = !!record;
+  const user = useUser();
+  const canUseFeedback = user?.isAdmin || user?.plan === 'pro';
 
   const [notes, setNotes] = useState('');
   const [nextActionDate, setNextActionDate] = useState('');
@@ -262,17 +265,21 @@ export default function Sidebar({
 
   const handleFeedback = useCallback(async () => {
     if (!record) return;
+    if (!canUseFeedback) {
+      setFeedbackError('Feedback AI is a Pro feature. Upgrade to use it.');
+      return;
+    }
     setFeedbackLoading(true);
     setFeedbackError(null);
     try {
-      const result = await generateConversationFeedback(record);
-      setFeedback(result);
+      const result = await generateFeedback(record);
+      setFeedback(result.text || '');
     } catch (err) {
       setFeedbackError(err?.message || 'Failed to generate feedback.');
     } finally {
       setFeedbackLoading(false);
     }
-  }, [record]);
+  }, [record, canUseFeedback]);
 
   const handleDelete = useCallback(() => {
     if (!record) return;
@@ -570,11 +577,18 @@ export default function Sidebar({
                     ) : (
                       <div>
                         {!feedback && !feedbackLoading && (
-                          <button onClick={handleFeedback} disabled={feedbackLoading}
-                            className="w-full flex items-center justify-center gap-1.5 bg-accent text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-accent-hover disabled:opacity-50 transition-colors">
-                            <GeminiIcon />
-                            ✦ Generate Feedback
-                          </button>
+                          canUseFeedback ? (
+                            <button onClick={handleFeedback} disabled={feedbackLoading}
+                              className="w-full flex items-center justify-center gap-1.5 bg-accent text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-accent-hover disabled:opacity-50 transition-colors">
+                              <GeminiIcon />
+                              ✦ Generate Feedback
+                            </button>
+                          ) : (
+                            <div className="w-full flex items-center justify-center gap-1.5 bg-chrome-deep text-chrome-muted text-[13px] font-medium px-4 py-2 rounded-md border border-chrome-rim cursor-not-allowed select-none">
+                              <GeminiIcon />
+                              ✦ Generate Feedback — Pro only
+                            </div>
+                          )
                         )}
                         {feedbackLoading && <p className="text-xs text-chrome-muted italic">Generating feedback...</p>}
                         {feedbackError && <p className="text-red-500 text-xs mt-1">{feedbackError}</p>}

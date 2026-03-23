@@ -6,7 +6,7 @@ import AuthShell, { GoogleIcon } from './AuthShell';
 import EyeIcon from './icons/EyeIcon';
 import EyeSlashIcon from './icons/EyeSlashIcon';
 
-export default function LoginPage() {
+export default function LoginPage({ onLogin }) {
   const [email, setEmail]         = useState('');
   const [password, setPassword]   = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +25,7 @@ export default function LoginPage() {
     try {
       const { token } = await authLogin(email, password);
       login(token);
+      onLogin?.();
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -136,7 +137,7 @@ export default function LoginPage() {
       <p className="mt-5 text-[13px] font-sans text-chrome-muted">
         Don't have an account?{' '}
         <Link
-          to="/signup"
+          to="/auth/register"
           className="text-accent hover:text-accent-hover transition-colors font-medium px-1 py-0.5 -ml-1 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
         >
           Register.

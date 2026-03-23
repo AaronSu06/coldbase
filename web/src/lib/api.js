@@ -21,6 +21,7 @@ async function apiFetch(url, options = {}) {
   const res = await fetch(url, { ...options, headers });
   if (res.status === 401) {
     localStorage.removeItem(TOKEN_KEY);
+    window.postMessage({ source: 'reach-webapp', type: 'REACH_LOGOUT' }, '*');
     window.location.href = '/login';
     throw new Error('Session expired — redirecting to login');
   }
@@ -94,6 +95,12 @@ export const patchSettings = (patch) =>
   apiFetch(`${BASE}/settings`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
+  }).then(r => r.json());
+
+export const generateFeedback = (record) =>
+  apiFetch(`${BASE}/feedback`, {
+    method: 'POST',
+    body: JSON.stringify(record),
   }).then(r => r.json());
 
 export async function authLogin(email, password) {

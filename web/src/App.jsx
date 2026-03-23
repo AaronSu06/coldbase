@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { TOKEN_KEY } from './hooks/useAuth.js';
+import { UserProvider } from './hooks/useUser.jsx';
 import { Archive, Download, RefreshCw, Columns3, List, MoreVertical, Heart } from 'lucide-react';
 import { useOutreach } from './hooks/useOutreach';
 import KanbanBoard from './components/KanbanBoard';
@@ -125,8 +127,8 @@ function MobileFiltersSheet({ onClose, showFavoritesOnly, onToggleFavorites, onA
 
 // ── App ────────────────────────────────────────────────────────────────────
 
-export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export default function App({ initialSection = 'home' }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem(TOKEN_KEY));
   const { records, error, refresh, updateStatus, toggleFavorite, toggleArchived, archiveAll, updateRecord, deleteRecord } = useOutreach();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [query, setQuery] = useState('');
@@ -139,7 +141,7 @@ export default function App() {
   const [dateTo, setDateTo] = useState('');
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [activeSection, setActiveSection] = useState('tracker');
+  const [activeSection, setActiveSection] = useState(initialSection);
   const columnPickerRef = useRef(null);
 
   // Insights state — lifted here so data persists across home/tracker navigation
@@ -312,6 +314,7 @@ export default function App() {
   }
 
   return (
+    <UserProvider>
     <div className="h-screen flex flex-col bg-chrome-bg">
 
       {/* ── Top Nav ─────────────────────────────────────────────────── */}
@@ -609,5 +612,6 @@ export default function App() {
         onStatusChange={updateStatus}
       />
     </div>
+    </UserProvider>
   );
 }
