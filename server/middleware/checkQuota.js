@@ -1,10 +1,6 @@
 // server/middleware/checkQuota.js
 import { prisma } from '../lib/prisma.js';
-
-const PLAN_LIMITS = {
-  free: 10,
-  pro:  100,
-};
+import { PLAN_LIMITS } from '../lib/planLimits.js';
 
 export default async function checkQuota(req, res, next) {
   const userId = req.user?.userId;
@@ -19,7 +15,8 @@ export default async function checkQuota(req, res, next) {
     return next();
   }
 
-  const limit = PLAN_LIMITS[user.plan] ?? PLAN_LIMITS.free;
+  const planConfig = PLAN_LIMITS[user.plan] ?? PLAN_LIMITS.free;
+  const limit = planConfig.emailLookupsPerMonth;
   const now   = new Date();
 
   // Reset quota if window has passed

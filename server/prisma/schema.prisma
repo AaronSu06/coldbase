@@ -26,6 +26,8 @@ model User {
   updatedAt      DateTime        @updatedAt
   outreaches     Outreach[]
   trackingPixels TrackingPixel[]
+
+  @@index([stripeSubscriptionId])
 }
 
 model Outreach {

@@ -6,6 +6,7 @@ import App from './App';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
 import ProfilePage from './components/ProfilePage';
+import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
 import { TOKEN_KEY } from './hooks/useAuth.js';
 
@@ -16,6 +17,7 @@ function PrivateRoute({ children }) {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    <ErrorBoundary>
     <BrowserRouter>
       <Routes>
         <Route path="/auth/login" element={<LoginPage />} />
@@ -30,5 +32,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/*" element={<PrivateRoute><App /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 );
