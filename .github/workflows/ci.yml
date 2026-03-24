@@ -62,6 +62,7 @@ jobs:
       TEST_DIRECT_URL: postgresql://postgres:postgres@localhost:5432/reach_ci
       JWT_SECRET: ci-test-jwt-secret
       BCRYPT_ROUNDS: '1'
+      NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
 
