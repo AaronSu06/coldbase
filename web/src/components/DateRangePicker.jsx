@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/style.css';
 
@@ -66,43 +66,86 @@ const RDP_STYLES = {
   weekday: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em' },
 };
 
-export function DateRangePicker({ dateFrom, dateTo, onRangeChange }) {
+export function DateRangePicker({ dateFrom, dateTo, onRangeChange, align = 'right' }) {
   const [open, setOpen] = useState(false);
+  // draft: the in-flight selection while the picker is open.
+  // Isolated from parent so mid-selection state doesn't re-render DayPicker.
+  const [draft, setDraft] = useState(null);
   const ref = useRef(null);
 
   const fromDate = parseLocalDate(dateFrom);
   const toDate = parseLocalDate(dateTo);
-  const range = (fromDate || toDate) ? { from: fromDate, to: toDate } : undefined;
+  const committedRange = (fromDate || toDate) ? { from: fromDate, to: toDate } : undefined;
   const hasRange = !!(dateFrom || dateTo);
   const label = formatRangeLabel(fromDate, toDate);
+
+  // Hint shown inside the picker while the user has picked a start but not yet an end
+  const awaitingEnd = open && draft?.from && !draft?.to;
+
+  const applyDraft = useCallback((d) => {
+    onRangeChange({
+      from: toDateString(d?.from),
+      to: toDateString(d?.to),
+    });
+  }, [onRangeChange]);
+
+  const closeAndApply = useCallback((d) => {
+    if (d !== null) applyDraft(d);
+    setOpen(false);
+    setDraft(null);
+  }, [applyDraft]);
 
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target)) {
+        // Outside click: apply whatever is in draft (even partial "from only") and close
+        closeAndApply(draft);
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  }, [open, draft, closeAndApply]);
+
+  function handleButtonClick() {
+    if (open) {
+      // Clicking the button again while open → close and apply draft
+      closeAndApply(draft);
+    } else {
+      // Opening → seed draft from current committed range so existing selection is visible
+      setDraft(committedRange ?? null);
+      setOpen(true);
+    }
+  }
 
   function handleSelect(newRange) {
-    onRangeChange({
-      from: toDateString(newRange?.from),
-      to: toDateString(newRange?.to),
-    });
-    if (newRange?.from && newRange?.to) setOpen(false);
+    // Treat same-day from==to as "just start selected, no end yet"
+    const fromMs = newRange?.from?.getTime();
+    const toMs = newRange?.to?.getTime();
+    const isCompleteRange = fromMs && toMs && fromMs !== toMs;
+
+    if (isCompleteRange) {
+      // Both ends chosen → apply immediately and close
+      applyDraft(newRange);
+      setOpen(false);
+      setDraft(null);
+    } else {
+      // Partial selection (start only, or same-day click) → keep open, update draft
+      setDraft(newRange ?? null);
+    }
   }
 
   function clearRange(e) {
     e.stopPropagation();
     onRangeChange({ from: '', to: '' });
+    setDraft(null);
     setOpen(false);
   }
 
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={handleButtonClick}
         aria-label="Filter by date range"
         aria-expanded={open}
         aria-haspopup="dialog"
@@ -113,8 +156,8 @@ export function DateRangePicker({ dateFrom, dateTo, onRangeChange }) {
         }`}
       >
         <CalendarIcon />
-        {/* Text label hidden on mobile — icon only */}
-        <span className="hidden sm:inline">{label ?? 'Date range'}</span>
+        {/* Show range label always when active; placeholder only on sm+ */}
+        <span className={hasRange ? undefined : 'hidden sm:inline'}>{label ?? 'Date range'}</span>
         {hasRange && (
           <span
             role="button"
@@ -133,17 +176,21 @@ export function DateRangePicker({ dateFrom, dateTo, onRangeChange }) {
         <div
           role="dialog"
           aria-label="Date range picker"
-          // left-0 on mobile (calendar ~270px, fine for 360px+ screens)
+          // align='right' → right-align with button (desktop toolbar); align='left' → left-align (bottom sheet)
           // max-w prevents overflow on very small screens
-          className="absolute top-full right-0 mt-1.5 z-50 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg p-3 max-w-[calc(100vw-2rem)]"
+          className={`absolute top-full mt-1.5 z-50 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg p-3 max-w-[calc(100vw-2rem)] ${align === 'left' ? 'left-0' : 'right-0'}`}
         >
           <DayPicker
             mode="range"
             navLayout="around"
-            selected={range}
+            selected={draft ?? undefined}
             onSelect={handleSelect}
             styles={RDP_STYLES}
           />
+          {/* Step hint */}
+          <p className={`text-[11px] text-center pb-0.5 transition-colors ${awaitingEnd ? 'text-accent/70' : 'text-chrome-muted/50'}`}>
+            {awaitingEnd ? 'Now pick an end date' : 'Pick a start date'}
+          </p>
         </div>
       )}
     </div>

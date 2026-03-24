@@ -4,6 +4,7 @@ import {
   BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DateRangePicker } from './DateRangePicker';
 
 const ACCENT      = '#b85212';
@@ -60,23 +61,14 @@ function GhostChart() {
     return Math.max(morning, afternoon) * 75 + 8;
   });
   return (
-    <div className="relative">
-      <div className="flex items-end gap-1 h-32 sm:h-40 mb-2 pointer-events-none select-none">
-        {ghostHeights.map((h, i) => (
-          <div
-            key={i}
-            className="flex-1 rounded-t bg-chrome-deep border border-chrome-rim"
-            style={{ height: `${h}%` }}
-          />
-        ))}
-      </div>
-      <div className="flex gap-1 text-[9px] text-chrome-muted font-mono opacity-40 pointer-events-none select-none mb-2">
-        {ghostHeights.map((_, i) => (
-          <div key={i} className="flex-1 text-center">
-            {i % 6 === 0 ? formatHour(i) : ''}
-          </div>
-        ))}
-      </div>
+    <div className="flex items-end gap-1 h-32 sm:h-40 opacity-20 pointer-events-none select-none">
+      {ghostHeights.map((h, i) => (
+        <div
+          key={i}
+          className="flex-1 rounded-t bg-chrome-muted"
+          style={{ height: `${h}%` }}
+        />
+      ))}
     </div>
   );
 }
@@ -84,7 +76,7 @@ function GhostChart() {
 // Ghost placeholder that mimics an AreaChart (for Reply Rate Trend locked state)
 function GhostArea() {
   return (
-    <svg viewBox="0 0 100 60" className="w-full h-32 sm:h-40 opacity-15" preserveAspectRatio="none">
+    <svg viewBox="0 0 100 60" className="w-full h-32 sm:h-40 opacity-20" preserveAspectRatio="none">
       <path
         d="M 0 40 C 12 40, 18 18, 33 24 S 52 46, 68 30 S 88 14, 100 20 L 100 60 L 0 60 Z"
         className="fill-chrome-muted"
@@ -101,7 +93,7 @@ function GhostArea() {
 function GhostBars() {
   const heights = [35, 55, 45, 70, 40, 60, 50, 65];
   return (
-    <div className="flex items-end gap-1.5 h-32 sm:h-40 opacity-15 pointer-events-none select-none">
+    <div className="flex items-end gap-1.5 h-32 sm:h-40 opacity-20 pointer-events-none select-none">
       {heights.map((h, i) => (
         <div
           key={i}
@@ -116,14 +108,14 @@ function GhostBars() {
 function BestTimeSlide({ data }) {
   if (data.insufficient) {
     return (
-      <div className="relative">
+      <div className="relative min-h-[160px] sm:min-h-[180px]">
         <GhostChart />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
           <p className="font-sans font-semibold text-[13px] text-chrome-text">
-            Unlock send-time insights
+            Send 20 emails to reveal your best times
           </p>
-          <p className="text-[11px] text-chrome-muted font-mono">
-            {data.sent} / 20 emails sent · {data.replied} / 5 replies
+          <p className="text-[11px] text-chrome-muted font-sans">
+            {data.sent} of 20 sent · {data.replied} of 5 replied
           </p>
         </div>
       </div>
@@ -150,7 +142,7 @@ function BestTimeSlide({ data }) {
             >
               <div
                 className={`w-full rounded-t transition-all duration-300 ${
-                  isTop && h.sentCount > 0 ? 'bg-accent' : 'bg-chrome-surface'
+                  isTop && h.sentCount > 0 ? 'bg-accent' : 'bg-chrome-border'
                 }`}
                 style={{ height: `${Math.max(heightPct, h.sentCount > 0 ? 4 : 0)}%` }}
               />
@@ -197,10 +189,10 @@ function ResponseTimeSlide({ data }) {
         <GhostBars />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
           <p className="font-sans font-semibold text-[13px] text-chrome-text">
-            Unlock response time trend
+            Your response time trend builds here
           </p>
-          <p className="text-[11px] text-chrome-muted font-mono">
-            Need {10 - data.replied} more {10 - data.replied === 1 ? 'reply' : 'replies'} to unlock
+          <p className="text-[11px] text-chrome-muted font-sans">
+            {data.replied} of 10 replies in — {10 - data.replied} more to go
           </p>
         </div>
       </div>
@@ -255,10 +247,10 @@ function ReplyTrendSlide({ data }) {
         <GhostArea />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
           <p className="font-sans font-semibold text-[13px] text-chrome-text">
-            Unlock reply rate trend
+            Reply rate trend reveals itself over 30 days
           </p>
-          <p className="text-[11px] text-chrome-muted font-mono">
-            Need 30 days of data · {data.sent} / 10 emails sent
+          <p className="text-[11px] text-chrome-muted font-sans">
+            {data.sent} of 10 sent — keep the momentum going
           </p>
         </div>
       </div>
@@ -313,22 +305,9 @@ const SLIDES = [
   { key: 'replyTrend',    label: 'Reply Rate Trend',      Component: ReplyTrendSlide },
 ];
 
-function NavArrow({ direction, onClick, disabled }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={direction === 'prev' ? 'Previous insight' : 'Next insight'}
-      className="flex-shrink-0 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-chrome-border text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors disabled:opacity-20 disabled:pointer-events-none text-lg leading-none"
-    >
-      {direction === 'prev' ? '‹' : '›'}
-    </button>
-  );
-}
-
 export default function InsightsPanel({ dateFrom, dateTo, data, loading, error, onRangeChange }) {
   const [index, setIndex] = useState(0);
+  const [dir, setDir] = useState(null); // 'next' | 'prev' | null (initial)
 
   if (loading) {
     return (
@@ -348,8 +327,25 @@ export default function InsightsPanel({ dateFrom, dateTo, data, loading, error, 
 
   if (!data) return null;
 
-  const canPrev = index > 0;
-  const canNext = index < SLIDES.length - 1;
+  const n = SLIDES.length;
+
+  function navigate(d) {
+    setDir(d);
+    setIndex(i => d === 'next' ? (i + 1) % n : (i - 1 + n) % n);
+  }
+
+  function goTo(i) {
+    if (i === index) return;
+    setDir(i > index ? 'next' : 'prev');
+    setIndex(i);
+  }
+
+  const { key, Component } = SLIDES[index];
+  const animation = dir === 'next'
+    ? 'slide-in-from-right 300ms ease-in-out'
+    : dir === 'prev'
+    ? 'slide-in-from-left 300ms ease-in-out'
+    : undefined;
 
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto">
@@ -371,28 +367,52 @@ export default function InsightsPanel({ dateFrom, dateTo, data, loading, error, 
         <p className="text-xs text-chrome-muted">
           {dateFrom || dateTo
             ? `${dateFrom || 'all time'} – ${dateTo || 'today'}`
-            : 'All time · UTC'}
+            : 'All time'}
         </p>
       </div>
 
       {/* Carousel: arrow — window — arrow */}
       <div className="flex items-center gap-2 sm:gap-3">
-        <NavArrow direction="prev" onClick={() => setIndex(i => Math.max(0, i - 1))} disabled={!canPrev} />
+        <button
+          type="button"
+          onClick={() => navigate('prev')}
+          aria-label="Previous insight"
+          className="flex-shrink-0 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-chrome-border text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors"
+        >
+          <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />
+        </button>
 
         <div className="flex-1 overflow-hidden">
-          <div
-            className="flex transition-transform duration-300 ease-in-out"
-            style={{ transform: `translateX(-${index * 100}%)` }}
-          >
-            {SLIDES.map(({ key, Component }) => (
-              <div key={key} className="w-full flex-shrink-0">
-                <Component data={data[key]} />
-              </div>
-            ))}
+          {/* key changes on every navigation to re-trigger the CSS animation */}
+          <div key={`${index}-${dir}`} style={{ animation }}>
+            <Component data={data[key]} />
           </div>
         </div>
 
-        <NavArrow direction="next" onClick={() => setIndex(i => Math.min(SLIDES.length - 1, i + 1))} disabled={!canNext} />
+        <button
+          type="button"
+          onClick={() => navigate('next')}
+          aria-label="Next insight"
+          className="flex-shrink-0 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-chrome-border text-chrome-muted hover:text-chrome-text hover:bg-chrome-deep transition-colors"
+        >
+          <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+      </div>
+
+      {/* Slide position dots */}
+      <div className="flex justify-center gap-2 mt-3" role="tablist" aria-label="Insight slides">
+        {SLIDES.map((slide, i) => (
+          <button
+            key={slide.key}
+            role="tab"
+            aria-selected={i === index}
+            aria-label={slide.label}
+            onClick={() => goTo(i)}
+            className={`w-1.5 h-1.5 rounded-full transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 ${
+              i === index ? 'bg-accent scale-125' : 'bg-chrome-border hover:bg-chrome-muted'
+            }`}
+          />
+        ))}
       </div>
     </div>
   );

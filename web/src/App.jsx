@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { TOKEN_KEY } from './hooks/useAuth.js';
 import { UserProvider } from './hooks/useUser.jsx';
 import { Archive, Download, RefreshCw, Columns3, List, MoreVertical, Heart } from 'lucide-react';
@@ -95,6 +96,7 @@ function MobileFiltersSheet({ onClose, showFavoritesOnly, onToggleFavorites, onA
               dateFrom={dateFrom}
               dateTo={dateTo}
               onRangeChange={onRangeChange}
+              align="left"
             />
           </div>
 
@@ -127,7 +129,16 @@ function MobileFiltersSheet({ onClose, showFavoritesOnly, onToggleFavorites, onA
 
 // ── App ────────────────────────────────────────────────────────────────────
 
-export default function App({ initialSection = 'home' }) {
+function sectionFromPath(pathname) {
+  if (pathname.startsWith('/tracker')) return 'tracker';
+  if (pathname.startsWith('/settings')) return 'settings';
+  return 'home';
+}
+
+export default function App() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const activeSection = sectionFromPath(pathname);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem(TOKEN_KEY));
   const { records, error, refresh, updateStatus, toggleFavorite, toggleArchived, archiveAll, updateRecord, deleteRecord } = useOutreach();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -141,7 +152,6 @@ export default function App({ initialSection = 'home' }) {
   const [dateTo, setDateTo] = useState('');
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [activeSection, setActiveSection] = useState(initialSection);
   const columnPickerRef = useRef(null);
 
   // Insights state — lifted here so data persists across home/tracker navigation
@@ -197,11 +207,11 @@ export default function App({ initialSection = 'home' }) {
     : Math.round((statReplied / statSent) * 100) + '%';
 
   const sevenDaysAgo = useMemo(() => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), []);
-  const followUpCount = useMemo(
+  const followUps = useMemo(
     () => records.filter(r =>
       !r.archived && !r.hasReply && r.status === 'Sent' &&
       new Date(r.sentDate) < sevenDaysAgo
-    ).length,
+    ),
     [records, sevenDaysAgo]
   );
 
@@ -318,7 +328,7 @@ export default function App({ initialSection = 'home' }) {
     <div className="h-screen flex flex-col bg-chrome-bg">
 
       {/* ── Top Nav ─────────────────────────────────────────────────── */}
-      <TopNav activeSection={activeSection} onSectionChange={setActiveSection} />
+      <TopNav activeSection={activeSection} onSectionChange={s => navigate(s === 'home' ? '/dashboard' : `/${s}`)} />
 
       {/* ── Row A: tabs + stats + actions (no bottom border — merges with Row B) ── */}
       {activeSection === 'tracker' && (
@@ -531,8 +541,8 @@ export default function App({ initialSection = 'home' }) {
               insightsLoading={insightsLoading}
               insightsError={insightsError}
               onInsightsRangeChange={({ from, to }) => { setInsightsDateFrom(from); setInsightsDateTo(to); }}
-              followUpCount={followUpCount}
-              onGoToTracker={() => setActiveSection('tracker')}
+              followUps={followUps}
+              onGoToTracker={() => navigate('/tracker')}
             />
           ) : error && records.length === 0 ? (
             <div className="flex items-center justify-center flex-1 h-full text-red-500 text-sm">
