@@ -6,7 +6,7 @@ import InsightsPanel from './InsightsPanel';
 
 function ActionCard({ children, className = '' }) {
   return (
-    <div className={`bg-chrome-surface border border-chrome-rim rounded-xl p-5 ${className}`}>
+    <div className={`bg-chrome-surface border border-chrome-rim rounded-lg p-5 ${className}`}>
       {children}
     </div>
   );
@@ -14,37 +14,59 @@ function ActionCard({ children, className = '' }) {
 
 // ── Follow-up nudge ────────────────────────────────────────────────────────
 
-function FollowUpCard({ count, onGoToTracker }) {
-  if (count === 0) {
-    return (
-      <ActionCard>
-        <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
-          You're all caught up
-        </p>
-        <p className="text-[12px] text-chrome-muted leading-relaxed">
-          No follow-ups overdue. Keep the momentum going.
-        </p>
-      </ActionCard>
-    );
-  }
+function daysAgo(dateStr) {
+  return Math.floor((Date.now() - new Date(dateStr)) / (1000 * 60 * 60 * 24));
+}
+
+function FollowUpCard({ records = [], onGoToTracker }) {
+  const count = records.length;
 
   return (
-    <ActionCard>
+    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 h-full flex flex-col">
       <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
-        <span className="font-mono text-accent">{count}</span>{' '}
-        {count === 1 ? 'contact' : 'contacts'} to follow up with
+        {count === 0
+          ? "You're all caught up"
+          : <><span className="font-mono text-accent">{count}</span>{' '}{count === 1 ? 'contact' : 'contacts'} to follow up with</>
+        }
       </p>
       <p className="text-[12px] text-chrome-muted leading-relaxed mb-3">
-        {count === 1 ? "Hasn't" : "Haven't"} replied in 7+ days — worth a nudge.
+        {count === 0
+          ? 'No follow-ups overdue. Keep the momentum going.'
+          : `${count === 1 ? "Hasn't" : "Haven't"} replied in 7+ days — worth a nudge.`
+        }
       </p>
-      <button
-        type="button"
-        onClick={onGoToTracker}
-        className="text-[12px] font-semibold text-accent hover:text-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
-      >
-        Go to Job Tracker →
-      </button>
-    </ActionCard>
+
+      {count > 0 && (
+        <>
+          <div className="flex-1 overflow-y-auto -mx-5 min-h-0">
+            <ul className="divide-y divide-chrome-border">
+              {records.map(r => (
+                <li key={r.threadId} className="flex items-center justify-between gap-3 px-5 py-2.5">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-chrome-text truncate">{r.company}</p>
+                    {r.contactName && (
+                      <p className="text-[11px] text-chrome-muted truncate">{r.contactName}</p>
+                    )}
+                  </div>
+                  <span className="font-mono text-[11px] text-chrome-subtle flex-shrink-0">
+                    {daysAgo(r.sentDate)}d ago
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="pt-3 border-t border-chrome-border mt-3">
+            <button
+              type="button"
+              onClick={onGoToTracker}
+              className="text-[12px] font-semibold text-accent hover:text-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+            >
+              Go to Job Tracker →
+            </button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -94,7 +116,7 @@ function ProModal({ onClose }) {
       onClick={onClose}
     >
       <div
-        className="relative bg-chrome-surface rounded-2xl shadow-card-drag w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="relative bg-chrome-surface rounded-xl shadow-card-drag w-full max-w-2xl max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Close */}
@@ -117,7 +139,7 @@ function ProModal({ onClose }) {
         {/* Feature comparison */}
         <div className="px-4 sm:px-6 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Free */}
-          <div className="bg-chrome-bg rounded-xl p-5">
+          <div className="bg-chrome-bg rounded-lg p-5">
             <p className="font-sans font-bold text-[14px] text-chrome-text mb-1">Free</p>
             <p className="text-[11px] text-chrome-muted mb-4 leading-relaxed">Everything you need to get started. Free forever.</p>
             <ul className="space-y-2.5">
@@ -131,7 +153,7 @@ function ProModal({ onClose }) {
           </div>
 
           {/* Pro */}
-          <div className="bg-accent/[0.03] border border-accent/20 rounded-xl p-5">
+          <div className="bg-accent/[0.03] border border-accent/20 rounded-lg p-5">
             <p className="font-sans font-bold text-[14px] text-accent mb-1">Reach Pro</p>
             <p className="text-[11px] text-chrome-muted mb-4 leading-relaxed">The full suite, to help you close more opportunities.</p>
             <ul className="space-y-3">
@@ -153,7 +175,7 @@ function ProModal({ onClose }) {
         {/* Pricing */}
         <div className="px-4 sm:px-6 pb-6 grid grid-cols-2 gap-4">
           {/* Monthly */}
-          <div className="rounded-xl p-4 border border-chrome-border bg-chrome-bg">
+          <div className="rounded-lg p-4 border border-chrome-border bg-chrome-bg">
             <p className="text-[11px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted mb-1">Monthly</p>
             <p className="font-display text-[26px] font-bold text-chrome-text leading-none mb-0.5">
               $19<span className="text-[13px] font-sans font-normal text-chrome-muted"> / mo</span>
@@ -162,7 +184,7 @@ function ProModal({ onClose }) {
           </div>
 
           {/* Annual */}
-          <div className="rounded-xl p-4 border border-accent/40 bg-accent/[0.04] relative">
+          <div className="rounded-lg p-4 border border-accent/40 bg-accent/[0.04] relative">
             <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold font-sans uppercase tracking-[0.08em] bg-accent text-white px-2.5 py-0.5 rounded-full whitespace-nowrap">
               Save 21%
             </span>
@@ -178,7 +200,7 @@ function ProModal({ onClose }) {
         <div className="px-6 pb-8">
           <button
             type="button"
-            className="w-full py-3 bg-accent text-white font-semibold text-[14px] rounded-xl hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+            className="w-full py-3 bg-accent text-white font-semibold text-[14px] rounded-lg hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
           >
             Get Started
           </button>
@@ -202,7 +224,7 @@ function UpgradeCard() {
 
   return (
     <>
-      <ActionCard className="border-accent/20 bg-accent/[0.03] flex flex-col">
+      <ActionCard className="border-accent/20 bg-accent/[0.03] flex flex-col h-full">
         <div className="mb-3">
           <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
             Reach Pro
@@ -254,11 +276,11 @@ function DeveloperNote() {
 
 // ── Home page ──────────────────────────────────────────────────────────────
 
-export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange, followUpCount = 0, onGoToTracker }) {
+export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange, followUps = [], onGoToTracker }) {
   return (
-    <div className="h-full overflow-y-auto">
-      {/* Insights section — full-width at top */}
-      <div className="border-b border-chrome-border min-h-[280px]">
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Insights — natural height, does not scroll */}
+      <div className="border-b border-chrome-border flex-shrink-0">
         <InsightsPanel
           dateFrom={insightsDateFrom}
           dateTo={insightsDateTo}
@@ -269,28 +291,30 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
         />
       </div>
 
-      {/* Action cards grid */}
-      <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-4">
-          Your account
-        </p>
-        {/*
-          Mobile order: Pro first (above fold), then utility cards, then note.
-          Desktop order: utility | Pro | note  (via sm:order-* overrides).
-        */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Pro — mobile: first, desktop: center */}
-          <div className="order-1 sm:order-2">
-            <UpgradeCard />
-          </div>
-          {/* Utility cards — mobile: second, desktop: left */}
-          <div className="order-2 sm:order-1 flex flex-col gap-4">
-            <FollowUpCard count={followUpCount} onGoToTracker={onGoToTracker} />
-            <CompleteProfileCard />
-          </div>
-          {/* Developer note — mobile: third, desktop: right */}
-          <div className="order-3 sm:order-3">
-            <DeveloperNote />
+      {/* Cards — fills remaining viewport height */}
+      <div className="flex-1 min-h-0 overflow-y-auto sm:overflow-hidden p-4 sm:p-6">
+        <div className="max-w-5xl mx-auto sm:h-full sm:flex sm:flex-col">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-3 flex-shrink-0">
+            Your account
+          </p>
+          {/*
+            Mobile: natural-height stacked cards, scrollable.
+            Desktop: single-row grid that fills remaining height — all columns equal.
+          */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:flex-1 sm:min-h-0">
+            {/* Follow-up — fills full column height, list scrolls internally */}
+            <div className="order-2 sm:order-1 sm:h-full">
+              <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} />
+            </div>
+            {/* Pro — mobile: first, desktop: center */}
+            <div className="order-1 sm:order-2 sm:h-full">
+              <UpgradeCard />
+            </div>
+            {/* Profile + note — stacked right column */}
+            <div className="order-3 sm:order-3 flex flex-col gap-4 sm:h-full">
+              <CompleteProfileCard />
+              <DeveloperNote />
+            </div>
           </div>
         </div>
       </div>

@@ -13,7 +13,7 @@ function GoogleIcon() {
 
 function FeatureCard({ label }) {
   return (
-    <div className="feature-card rounded-xl border border-chrome-rim shadow-card bg-chrome-surface aspect-video overflow-hidden flex items-center justify-center cursor-default select-none">
+    <div className="feature-card rounded-lg border border-chrome-rim shadow-card bg-chrome-surface aspect-video overflow-hidden flex items-center justify-center cursor-default select-none">
       <span className="font-mono text-[11px] text-chrome-subtle uppercase tracking-widest">
         {label}
       </span>

@@ -50,7 +50,7 @@ export default function LoginPage({ onLogin }) {
       <button
         type="button"
         disabled
-        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-chrome-surface border border-chrome-border rounded-xl text-[14px] font-medium text-chrome-muted transition-colors cursor-pointer opacity-60"
+        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-chrome-surface border border-chrome-border rounded-lg text-[14px] font-medium text-chrome-muted transition-colors cursor-pointer opacity-60"
       >
         <GoogleIcon />
         Continue with Google
@@ -65,7 +65,7 @@ export default function LoginPage({ onLogin }) {
 
       {/* Error */}
       {error && (
-        <p className="mb-4 text-[13px] text-red-700 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5 font-sans">
+        <p className="mb-4 text-[13px] text-red-700 bg-red-50 border border-red-200 rounded-lg px-3.5 py-2.5 font-sans">
           {error}
         </p>
       )}
@@ -86,7 +86,7 @@ export default function LoginPage({ onLogin }) {
             placeholder="you@example.com"
             autoComplete="email"
             required
-            className="w-full px-3.5 py-2.5 rounded-xl border border-chrome-border bg-chrome-surface text-[14px] font-sans text-chrome-text placeholder:text-chrome-subtle focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
+            className="w-full px-3.5 py-2.5 rounded-lg border border-chrome-border bg-chrome-surface text-[14px] font-sans text-chrome-text placeholder:text-chrome-subtle focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
           />
         </div>
 
@@ -111,7 +111,7 @@ export default function LoginPage({ onLogin }) {
               placeholder="••••••••"
               autoComplete="current-password"
               required
-              className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-chrome-border bg-chrome-surface text-[14px] font-sans text-chrome-text placeholder:text-chrome-subtle focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
+              className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-chrome-border bg-chrome-surface text-[14px] font-sans text-chrome-text placeholder:text-chrome-subtle focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
             />
             <button
               type="button"
@@ -127,7 +127,7 @@ export default function LoginPage({ onLogin }) {
         <button
           type="submit"
           disabled={loading}
-          className="mt-1 w-full py-2.5 bg-accent text-white font-semibold text-[14px] rounded-xl hover:bg-accent-hover active:brightness-90 disabled:opacity-60 disabled:pointer-events-none transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+          className="mt-1 w-full py-2.5 bg-accent text-white font-semibold text-[14px] rounded-lg hover:bg-accent-hover active:brightness-90 disabled:opacity-60 disabled:pointer-events-none transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
