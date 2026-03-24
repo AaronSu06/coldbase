@@ -22,6 +22,16 @@ const DraftEmailSchema = z.object({
   draftType: z.string().min(1),
 }).passthrough();
 
+const FeedbackSchema = z.object({
+  company:     z.string().max(200).optional(),
+  contactName: z.string().max(200).optional(),
+  subject:     z.string().max(500).optional(),
+  status:      z.string().max(50).optional(),
+  sentDate:    z.string().optional().refine(v => !v || !isNaN(Date.parse(v)), { message: 'sentDate must be a valid date string' }),
+  snippet:     z.string().max(2000).optional(),
+  notes:       z.string().max(1000).optional(),
+});
+
 // ─── Draft prompt builder ─────────────────────────────────────────────────────
 
 function buildDraftPrompt({ draftType, company, contactName, subject, bodySnippet, notes, resumeText }) {
@@ -206,6 +216,14 @@ router.post('/draft-email', async (req, res, next) => {
 router.post('/feedback', async (req, res, next) => {
   const geminiKey = process.env.GEMINI_KEY;
   if (!geminiKey) return res.status(500).json({ ok: false, error: 'Gemini API key not configured on server.' });
+  const parsed = FeedbackSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: parsed.error.issues.map(i => i.message).join('; '),
+      statusCode: 400,
+    });
+  }
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
@@ -214,7 +232,7 @@ router.post('/feedback', async (req, res, next) => {
     if (!user || (!user.isAdmin && user.plan !== 'pro')) {
       return res.status(403).json({ ok: false, error: 'pro_required', message: 'Feedback AI is a Pro feature. Upgrade to use it.' });
     }
-    const { company, contactName, subject, status, sentDate, snippet, notes } = req.body;
+    const { company, contactName, subject, status, sentDate, snippet, notes } = parsed.data;
     const daysSince = sentDate ? Math.floor((Date.now() - new Date(sentDate).getTime()) / 86_400_000) : 0;
     const threadCtx = snippet
       ? `\nConversation (format: [OUT] = sent by candidate, [IN] = received):\n${snippet.slice(0, 1200)}`

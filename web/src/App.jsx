@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { TOKEN_KEY } from './hooks/useAuth.js';
 import { UserProvider } from './hooks/useUser.jsx';
+import ErrorBoundary from './components/ErrorBoundary';
 import { Archive, Download, RefreshCw, Columns3, List, MoreVertical, Heart } from 'lucide-react';
 import { useOutreach } from './hooks/useOutreach';
 import KanbanBoard from './components/KanbanBoard';
@@ -324,6 +325,7 @@ export default function App() {
   }
 
   return (
+    <ErrorBoundary>
     <UserProvider>
     <div className="h-screen flex flex-col bg-chrome-bg">
 
@@ -623,5 +625,6 @@ export default function App() {
       />
     </div>
     </UserProvider>
+    </ErrorBoundary>
   );
 }

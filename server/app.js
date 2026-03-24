@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import * as Sentry from '@sentry/node';
 import cors from 'cors';
+import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +27,8 @@ const { version } = JSON.parse(
 );
 
 const app = express();
+
+app.use(helmet());
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
@@ -67,18 +70,27 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Auth routes — public, must be mounted BEFORE requireAuth
-app.use('/api/auth', authRoutes);
+// ─── Rate limiters ─────────────────────────────────────────────────────────────
 
-// Billing routes — mounted before requireAuth because webhook is public (sig-verified).
-// checkout/portal inside billing.js apply requireAuth individually.
-app.use('/api/billing', billingRoutes);
+// Catch-all: 200 req / 15 min per IP across all /api/* routes
+const globalRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests' },
+});
 
-// All other /api/* routes require a valid JWT
-app.use('/api', requireAuth);
+// Brute-force protection on auth endpoints
+const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts, try again later' },
+});
 
-// ─── Rate limiter for expensive AI/DNS endpoints ───────────────────────────────
-
+// Expensive AI/DNS/lookup endpoints
 const expensiveRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10,
@@ -88,6 +100,21 @@ const expensiveRateLimit = rateLimit({
 });
 
 // ─── Route mounts ─────────────────────────────────────────────────────────────
+
+// Global rate limit — applies to all /api/* routes
+app.use('/api', globalRateLimit);
+
+// Auth routes — public, must be mounted BEFORE requireAuth
+app.use('/api/auth/login', authRateLimit);
+app.use('/api/auth/signup', authRateLimit);
+app.use('/api/auth', authRoutes);
+
+// Billing routes — mounted before requireAuth because webhook is public (sig-verified).
+// checkout/portal inside billing.js apply requireAuth individually.
+app.use('/api/billing', billingRoutes);
+
+// All other /api/* routes require a valid JWT
+app.use('/api', requireAuth);
 
 app.use('/api/outreach',   outreachRoutes);
 app.use('/api/profile',    profileRoutes);

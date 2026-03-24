@@ -19,6 +19,10 @@ router.get('/', async (req, res, next) => {
     const fromDate = from ? new Date(from) : null;
     const toDate = to ? new Date(to + 'T23:59:59.999Z') : null;
 
+    if ((fromDate && isNaN(fromDate)) || (toDate && isNaN(toDate))) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Invalid date format for from/to params' });
+    }
+
     // Build reusable date clauses for $queryRaw
     const fromClause = fromDate ? Prisma.sql`AND "sentDate" >= ${fromDate}` : Prisma.sql``;
     const toClause = toDate ? Prisma.sql`AND "sentDate" <= ${toDate}` : Prisma.sql``;
