@@ -72,12 +72,15 @@ app.get('/health', async (req, res) => {
 
 // ─── Rate limiters ─────────────────────────────────────────────────────────────
 
+const isTest = () => process.env.NODE_ENV === 'test';
+
 // Catch-all: 200 req / 15 min per IP across all /api/* routes
 const globalRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: isTest,
   message: { error: 'Too many requests' },
 });
 
@@ -87,15 +90,17 @@ const authRateLimit = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: isTest,
   message: { error: 'Too many attempts, try again later' },
 });
 
 // Expensive AI/DNS/lookup endpoints
 const expensiveRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: isTest,
   message: { error: 'Too many requests' },
 });
 

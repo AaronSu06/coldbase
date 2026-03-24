@@ -1,7 +1,9 @@
 // MUST be before any imports that transitively load prisma
-process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
-process.env.DIRECT_URL = process.env.TEST_DIRECT_URL;
-process.env.REACH_SECRET = 'test-secret';
+process.env.DATABASE_URL  = process.env.TEST_DATABASE_URL;
+process.env.DIRECT_URL    = process.env.TEST_DIRECT_URL;
+process.env.JWT_SECRET    = process.env.JWT_SECRET || 'test-jwt-secret';
+process.env.BCRYPT_ROUNDS = '1';
+process.env.NODE_ENV      = 'test';
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,6 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let server;
 let port;
+let authHeader;
 let request;
 
 before(async () => {
@@ -26,6 +29,21 @@ before(async () => {
   server = http.createServer(app);
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   port = server.address().port;
+
+  // Create a test user and get a JWT token
+  const signupRes = await new Promise((resolve, reject) => {
+    const data = JSON.stringify({ email: 'analytics@test.com', password: 'password123' });
+    const req = http.request({
+      hostname: '127.0.0.1', port, path: '/api/auth/signup', method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
+    }, res => {
+      let raw = ''; res.on('data', c => (raw += c));
+      res.on('end', () => resolve(JSON.parse(raw)));
+    });
+    req.on('error', reject); req.write(data); req.end();
+  });
+  authHeader = `Bearer ${signupRes.token}`;
+
   request = function(method, path, body, extraHeaders = {}) {
     return new Promise((resolve, reject) => {
       const data = body ? JSON.stringify(body) : null;
@@ -36,7 +54,7 @@ before(async () => {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-reach-secret': 'test-secret',
+          'Authorization': authHeader,
           'Content-Length': data ? Buffer.byteLength(data) : 0,
           ...extraHeaders,
         },
@@ -68,9 +86,9 @@ describe('GET /api/insights/best-time', () => {
     assert.strictEqual(typeof body.replied, 'number');
   });
 
-  it('requires x-reach-secret', async () => {
+  it('requires Authorization header', async () => {
     const { status } = await request('GET', '/api/insights/best-time', null, {
-      'x-reach-secret': 'wrong',
+      'Authorization': '',
     });
     assert.strictEqual(status, 401);
   });
@@ -107,9 +125,9 @@ describe('GET /api/insights', () => {
     assert.strictEqual(status, 200);
   });
 
-  it('requires x-reach-secret', async () => {
+  it('requires Authorization header', async () => {
     const { status } = await request('GET', '/api/insights', null, {
-      'x-reach-secret': 'wrong',
+      'Authorization': '',
     });
     assert.strictEqual(status, 401);
   });
