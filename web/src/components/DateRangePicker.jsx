@@ -152,7 +152,7 @@ export function DateRangePicker({ dateFrom, dateTo, onRangeChange, align = 'righ
         className={`flex items-center gap-1.5 font-mono text-[12px] px-3 py-[7px] border rounded-md transition-colors focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 ${
           hasRange
             ? 'border-accent/40 text-accent bg-accent/5'
-            : 'border-chrome-border text-chrome-muted bg-chrome-bg hover:border-chrome-rim'
+            : 'border-chrome-border text-chrome-muted bg-chrome-bg hover:border-chrome-muted hover:bg-chrome-deep'
         }`}
       >
         <CalendarIcon />

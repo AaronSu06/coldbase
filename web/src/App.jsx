@@ -32,17 +32,6 @@ function StatusDot({ status }) {
   );
 }
 
-// ── Compact inline stat ────────────────────────────────────────────────────
-
-function StatInline({ value, label }) {
-  return (
-    <span className="flex items-baseline gap-1">
-      <span className="font-mono text-[13px] font-semibold text-chrome-text leading-none">{value}</span>
-      <span className="font-sans text-[10px] font-medium text-chrome-muted uppercase tracking-[0.1em]">{label}</span>
-    </span>
-  );
-}
-
 // ── Mobile filters bottom sheet ───────────────────────────────────────────
 
 function MobileFiltersSheet({ onClose, showFavoritesOnly, onToggleFavorites, onArchiveAll, dateFrom, dateTo, onRangeChange, viewMode, visibleColumns, onToggleColumn }) {
@@ -198,15 +187,6 @@ export default function App() {
       .filter(r => dateTo ? new Date(r.sentDate) <= new Date(dateTo) : true);
   }, [records, query, activeTab, showFavoritesOnly, dateFrom, dateTo]);
 
-  const statSent    = useMemo(() => records.filter(r => !r.archived).length, [records]);
-  const statReplied = useMemo(
-    () => records.filter(r => !r.archived && ['Replied', 'Interviewing', 'Offer'].includes(r.status)).length,
-    [records]
-  );
-  const replyRate   = statSent === 0
-    ? '—'
-    : Math.round((statReplied / statSent) * 100) + '%';
-
   const sevenDaysAgo = useMemo(() => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), []);
   const followUps = useMemo(
     () => records.filter(r =>
@@ -355,12 +335,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* Stats — desktop only */}
-          <div className="hidden sm:flex items-center gap-5 ml-6 pl-6 border-l border-chrome-border" aria-label="Summary statistics">
-            <StatInline value={statSent}    label="sent" />
-            <StatInline value={statReplied} label="replied" />
-            <StatInline value={replyRate}   label="reply rate" />
-          </div>
 
           {/* Spacer */}
           <div className="flex-1" />

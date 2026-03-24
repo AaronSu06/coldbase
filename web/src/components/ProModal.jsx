@@ -104,7 +104,7 @@ export default function ProModal({ onClose }) {
             className={`rounded-lg p-4 border text-left transition-colors ${
               selectedPlan === 'monthly'
                 ? 'border-accent bg-accent/[0.04] ring-1 ring-accent/30'
-                : 'border-chrome-border bg-chrome-bg hover:border-chrome-muted'
+                : 'border-chrome-border bg-chrome-bg hover:border-chrome-muted hover:bg-chrome-deep'
             }`}
           >
             <p className="text-[11px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted mb-1">Monthly</p>
@@ -121,7 +121,7 @@ export default function ProModal({ onClose }) {
             className={`rounded-lg p-4 border relative text-left transition-colors ${
               selectedPlan === 'annual'
                 ? 'border-accent bg-accent/[0.04] ring-1 ring-accent/30'
-                : 'border-chrome-border bg-chrome-bg hover:border-chrome-muted'
+                : 'border-chrome-border bg-chrome-bg hover:border-chrome-muted hover:bg-chrome-deep'
             }`}
           >
             <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold font-sans uppercase tracking-[0.08em] bg-accent text-white px-2.5 py-0.5 rounded-full whitespace-nowrap">
