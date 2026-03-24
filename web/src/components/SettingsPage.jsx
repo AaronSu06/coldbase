@@ -462,7 +462,7 @@ export default function SettingsPage() {
                   ? 'border-accent/40 bg-accent/5 pointer-events-none'
                   : isDragging
                   ? 'border-accent bg-accent/5'
-                  : 'border-chrome-border bg-chrome-surface hover:border-chrome-muted'
+                  : 'border-chrome-border bg-chrome-surface hover:border-chrome-muted hover:bg-chrome-deep'
               }`}
             >
               <div className="w-10 h-10 rounded-lg bg-chrome-deep flex items-center justify-center">

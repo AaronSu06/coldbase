@@ -350,8 +350,15 @@ export default function InsightsPanel({ dateFrom, dateTo, data, loading, error, 
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto">
       {/* Top bar: stats (left) + date picker (right) */}
-      <div className="flex items-center justify-between gap-4 mb-4 sm:mb-6">
-        <StatsRow sent={data.sent} replied={data.replied} />
+      <div className="flex items-start justify-between gap-4 mb-4 sm:mb-6">
+        <div>
+          <StatsRow sent={data.sent} replied={data.replied} />
+          <p className="text-[11px] text-chrome-muted mt-1.5 font-mono">
+            {dateFrom || dateTo
+              ? `${dateFrom || '…'} – ${dateTo || 'today'}`
+              : 'All time'}
+          </p>
+        </div>
         <DateRangePicker
           dateFrom={dateFrom}
           dateTo={dateTo}
@@ -361,14 +368,9 @@ export default function InsightsPanel({ dateFrom, dateTo, data, loading, error, 
 
       {/* Slide heading */}
       <div className="mb-3 sm:mb-4">
-        <h2 className="font-display text-[16px] sm:text-[18px] font-bold text-chrome-text mb-0.5">
+        <h2 className="font-display text-[16px] sm:text-[18px] font-bold text-chrome-text">
           {SLIDES[index].label}
         </h2>
-        <p className="text-xs text-chrome-muted">
-          {dateFrom || dateTo
-            ? `${dateFrom || 'all time'} – ${dateTo || 'today'}`
-            : 'All time'}
-        </p>
       </div>
 
       {/* Carousel: arrow — window — arrow */}
