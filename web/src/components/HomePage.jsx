@@ -1,6 +1,9 @@
 // web/src/components/HomePage.jsx
-import { useState } from 'react'; // used by UpgradeCard
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import InsightsPanel from './InsightsPanel';
+import ProModal from './ProModal';
+import { fetchProfile } from '../lib/api';
 
 // ── Action card shell ──────────────────────────────────────────────────────
 
@@ -61,7 +64,7 @@ function FollowUpCard({ records = [], onGoToTracker }) {
               onClick={onGoToTracker}
               className="text-[12px] font-semibold text-accent hover:text-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
-              Go to Job Tracker →
+              Go to Job Tracker
             </button>
           </div>
         </>
@@ -72,143 +75,47 @@ function FollowUpCard({ records = [], onGoToTracker }) {
 
 // ── Complete your profile ──────────────────────────────────────────────────
 
-function CompleteProfileCard() {
+function CompleteProfileCard({ hasResume, onSetupProfile }) {
+  if (hasResume) {
+    return (
+      <ActionCard>
+        <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
+          You're all set!
+        </p>
+        <p className="text-[12px] text-chrome-muted leading-relaxed mb-4">
+          Your resume is uploaded and notifications are configured.
+        </p>
+        <button
+          type="button"
+          onClick={onSetupProfile}
+          className="text-[12px] font-semibold text-accent hover:text-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+        >
+          Check out your profile
+        </button>
+      </ActionCard>
+    );
+  }
+
   return (
     <ActionCard>
       <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
         Complete your profile
       </p>
       <p className="text-[12px] text-chrome-muted leading-relaxed mb-4">
-        Add your name and role so Reach can personalize your outreach suggestions.
+        Upload a resume and set up email updates so Reach can personalise your outreach.
       </p>
       <button
         type="button"
+        onClick={onSetupProfile}
         className="text-[12px] font-semibold text-accent hover:text-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
       >
-        Set up profile →
+        Set up profile
       </button>
     </ActionCard>
   );
 }
 
-// ── Reach Pro modal ────────────────────────────────────────────────────────
-
-function ProModal({ onClose }) {
-  const freeFeatures = [
-    'Unlimited contact tracking',
-    'Basic email templates',
-    'Reply tracking',
-    'Send-time insights (limited)',
-    'CSV export',
-  ];
-
-  const proFeatures = [
-    { title: 'Everything in Free', desc: null },
-    { title: 'AI-drafted follow-up emails', desc: 'Generate personalised follow-ups in one click based on your prior conversation.' },
-    { title: 'Advanced send-time analytics', desc: 'Full hourly breakdown once you hit the data threshold.' },
-    { title: 'Advanced reporting', desc: 'Track reply rates and pipeline health over time.' },
-    { title: 'Priority support', desc: null },
-  ];
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="relative bg-chrome-surface rounded-xl shadow-card-drag w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Close */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute top-4 right-5 text-chrome-muted hover:text-chrome-text text-lg leading-none transition-colors"
-        >
-          ✕
-        </button>
-
-        {/* Header */}
-        <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 text-center">
-          <p className="font-display text-[19px] font-bold text-chrome-text leading-snug">
-            Reach Pro users send smarter and get <span className="text-accent">more replies</span>.
-          </p>
-        </div>
-
-        {/* Feature comparison */}
-        <div className="px-4 sm:px-6 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Free */}
-          <div className="bg-chrome-bg rounded-lg p-5">
-            <p className="font-sans font-bold text-[14px] text-chrome-text mb-1">Free</p>
-            <p className="text-[11px] text-chrome-muted mb-4 leading-relaxed">Everything you need to get started. Free forever.</p>
-            <ul className="space-y-2.5">
-              {freeFeatures.map(f => (
-                <li key={f} className="flex items-start gap-2 text-[12px] text-chrome-text">
-                  <span className="mt-px text-chrome-muted text-[13px]">○</span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Pro */}
-          <div className="bg-accent/[0.03] border border-accent/20 rounded-lg p-5">
-            <p className="font-sans font-bold text-[14px] text-accent mb-1">Reach Pro</p>
-            <p className="text-[11px] text-chrome-muted mb-4 leading-relaxed">The full suite, to help you close more opportunities.</p>
-            <ul className="space-y-3">
-              {proFeatures.map(f => (
-                <li key={f.title} className="flex items-start gap-2.5">
-                  <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-accent flex items-center justify-center">
-                    <span className="text-white text-[9px] leading-none">✓</span>
-                  </span>
-                  <div>
-                    <p className="text-[12px] font-semibold text-chrome-text">{f.title}</p>
-                    {f.desc && <p className="text-[11px] text-chrome-muted leading-relaxed mt-0.5">{f.desc}</p>}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Pricing */}
-        <div className="px-4 sm:px-6 pb-6 grid grid-cols-2 gap-4">
-          {/* Monthly */}
-          <div className="rounded-lg p-4 border border-chrome-border bg-chrome-bg">
-            <p className="text-[11px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted mb-1">Monthly</p>
-            <p className="font-display text-[26px] font-bold text-chrome-text leading-none mb-0.5">
-              $19<span className="text-[13px] font-sans font-normal text-chrome-muted"> / mo</span>
-            </p>
-            <p className="text-[10px] text-chrome-muted">billed monthly</p>
-          </div>
-
-          {/* Annual */}
-          <div className="rounded-lg p-4 border border-accent/40 bg-accent/[0.04] relative">
-            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold font-sans uppercase tracking-[0.08em] bg-accent text-white px-2.5 py-0.5 rounded-full whitespace-nowrap">
-              Save 21%
-            </span>
-            <p className="text-[11px] font-semibold font-sans uppercase tracking-[0.1em] text-accent mb-1">Annual</p>
-            <p className="font-display text-[26px] font-bold text-chrome-text leading-none mb-0.5">
-              $15<span className="text-[13px] font-sans font-normal text-chrome-muted"> / mo</span>
-            </p>
-            <p className="text-[10px] text-chrome-muted">billed $180 / yr</p>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="px-6 pb-8">
-          <button
-            type="button"
-            className="w-full py-3 bg-accent text-white font-semibold text-[14px] rounded-lg hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
-          >
-            Get Started
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// ProModal is imported from ProModal.jsx
 
 // ── Reach Pro pricing card ─────────────────────────────────────────────────
 
@@ -277,6 +184,15 @@ function DeveloperNote() {
 // ── Home page ──────────────────────────────────────────────────────────────
 
 export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange, followUps = [], onGoToTracker }) {
+  const navigate = useNavigate();
+  const [resumeName, setResumeName] = useState(null);
+
+  useEffect(() => {
+    fetchProfile()
+      .then(data => setResumeName(data.resumeName ?? null))
+      .catch(e => console.error('[Reach] Failed to load profile:', e.message));
+  }, []);
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Insights — natural height, does not scroll */}
@@ -312,7 +228,10 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
             </div>
             {/* Profile + note — stacked right column */}
             <div className="order-3 sm:order-3 flex flex-col gap-4 sm:h-full">
-              <CompleteProfileCard />
+              <CompleteProfileCard
+                hasResume={!!resumeName}
+                onSetupProfile={() => navigate(resumeName ? '/settings' : '/settings?scrollTo=resume')}
+              />
               <DeveloperNote />
             </div>
           </div>

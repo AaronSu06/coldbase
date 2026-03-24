@@ -1,8 +1,10 @@
 // web/src/components/SettingsPage.jsx
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { TOKEN_KEY } from '../hooks/useAuth.js';
 import { Upload, X, Star, ChevronDown, Check, FileText, Eye, EyeOff } from 'lucide-react';
-import { fetchSettings, patchSettings, uploadResume, deleteResume, patchEmail, patchPassword, deleteAccount } from '../lib/api';
+import { fetchSettings, patchSettings, uploadResume, deleteResume, patchEmail, patchPassword, deleteAccount, createPortalSession } from '../lib/api';
+import ProModal from './ProModal';
 
 function SectionTitle({ children, className = '' }) {
   return (
@@ -116,7 +118,7 @@ const PRO_FEATURES = [
   'Priority email delivery',
 ];
 
-function PlanSection({ plan = 'free' }) {
+function PlanSection({ plan = 'free', onUpgrade, onManageSubscription }) {
   if (plan === 'pro') {
     return (
       <section aria-label="Plan">
@@ -146,8 +148,11 @@ function PlanSection({ plan = 'free' }) {
           </div>
           <div className="border-t border-chrome-border px-4 py-3 flex items-center justify-between">
             <span className="text-[12px] text-chrome-muted">Billing managed through Stripe</span>
-            <button className="text-[13px] font-medium text-accent hover:text-accent-hover transition-colors">
-              Manage subscription →
+            <button
+              onClick={onManageSubscription}
+              className="text-[13px] font-medium text-accent hover:text-accent-hover transition-colors"
+            >
+              Manage subscription
             </button>
           </div>
         </div>
@@ -177,8 +182,11 @@ function PlanSection({ plan = 'free' }) {
                 ))}
               </ul>
             </div>
-            <button className="flex-shrink-0 mt-0.5 px-4 py-2 rounded-lg bg-accent text-white text-[13px] font-semibold hover:bg-accent-hover transition-colors whitespace-nowrap">
-              Upgrade →
+            <button
+              onClick={onUpgrade}
+              className="flex-shrink-0 mt-0.5 px-4 py-2 rounded-lg bg-accent text-white text-[13px] font-semibold hover:bg-accent-hover transition-colors whitespace-nowrap"
+            >
+              Upgrade
             </button>
           </div>
         </div>
@@ -188,6 +196,8 @@ function PlanSection({ plan = 'free' }) {
 }
 
 export default function SettingsPage() {
+  const { search } = useLocation();
+
   // Settings loaded from server
   const [plan, setPlan] = useState('free');
   const [emailDigest, setEmailDigest] = useState('weekly');
@@ -197,6 +207,11 @@ export default function SettingsPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const resumeSectionRef = useRef(null);
+
+  // Billing
+  const [showProModal, setShowProModal] = useState(false);
+  const [stripeSuccess, setStripeSuccess] = useState(false);
 
   // Account — which row is expanded
   const [expandedRow, setExpandedRow] = useState(null);
@@ -216,6 +231,21 @@ export default function SettingsPage() {
       })
       .catch(e => console.error('[Reach] Failed to load settings:', e.message));
   }, []);
+
+  // Handle ?scrollTo=resume query param
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    if (params.get('scrollTo') === 'resume' && resumeSectionRef.current) {
+      resumeSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (params.get('stripe') === 'success') {
+      setStripeSuccess(true);
+      // Clear param from URL without navigation
+      const url = new URL(window.location.href);
+      url.searchParams.delete('stripe');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [search]);
 
   // Change email form
   const [newEmail, setNewEmail] = useState('');
@@ -355,6 +385,15 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleManageSubscription() {
+    try {
+      const { url } = await createPortalSession();
+      window.location.href = url;
+    } catch (e) {
+      console.error('[Reach] Failed to open billing portal:', e.message);
+    }
+  }
+
   async function handleDigestChange(value) {
     setEmailDigest(value);
     setDigestStatus(null);
@@ -369,14 +408,30 @@ export default function SettingsPage() {
   }
 
   return (
+    <>
     <div className="flex flex-col h-full">
+      {stripeSuccess && (
+        <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-3 flex items-center justify-between">
+          <p className="text-[13px] font-medium text-emerald-700">
+            🎉 Welcome to Reach Pro! Your subscription is now active.
+          </p>
+          <button
+            type="button"
+            onClick={() => setStripeSuccess(false)}
+            aria-label="Dismiss"
+            className="text-emerald-500 hover:text-emerald-700 transition-colors text-lg leading-none ml-4"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto bg-chrome-bg">
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-10">
 
         <div className="space-y-10">
 
         {/* ── Resume ─────────────────────────────────────────────────── */}
-        <section aria-label="Resume">
+        <section aria-label="Resume" ref={resumeSectionRef}>
           <SectionTitle>Resume</SectionTitle>
 
           {resumeName ? (
@@ -485,7 +540,11 @@ export default function SettingsPage() {
         </section>
 
         {/* ── Plan ───────────────────────────────────────────────────── */}
-        <PlanSection plan={plan} />
+        <PlanSection
+          plan={plan}
+          onUpgrade={() => setShowProModal(true)}
+          onManageSubscription={handleManageSubscription}
+        />
 
         {/* ── Account ────────────────────────────────────────────────── */}
         <section aria-label="Account">
@@ -645,5 +704,8 @@ export default function SettingsPage() {
       </div>
       </div>
     </div>
+
+    {showProModal && <ProModal onClose={() => setShowProModal(false)} />}
+    </>
   );
 }

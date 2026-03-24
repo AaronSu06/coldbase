@@ -16,6 +16,7 @@ import analyticsRoutes from './routes/analytics.js';
 import authRoutes      from './routes/auth.js';
 import profileRoutes   from './routes/profile.js';
 import settingsRoutes  from './routes/settings.js';
+import billingRoutes   from './routes/billing.js';
 import requireAuth     from './middleware/requireAuth.js';
 import checkQuota     from './middleware/checkQuota.js';
 
@@ -31,6 +32,9 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   : ['http://localhost:5173'];
 
 app.use(requestLogger);
+
+// Stripe webhook needs raw body — mount before express.json()
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -65,6 +69,10 @@ app.get('/health', async (req, res) => {
 
 // Auth routes — public, must be mounted BEFORE requireAuth
 app.use('/api/auth', authRoutes);
+
+// Billing routes — mounted before requireAuth because webhook is public (sig-verified).
+// checkout/portal inside billing.js apply requireAuth individually.
+app.use('/api/billing', billingRoutes);
 
 // All other /api/* routes require a valid JWT
 app.use('/api', requireAuth);

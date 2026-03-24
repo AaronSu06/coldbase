@@ -115,6 +115,15 @@ export const deleteAccount = () =>
     body: JSON.stringify({ confirm: 'DELETE' }),
   }).then(r => r.json());
 
+export const createCheckoutSession = (plan) =>
+  apiFetch(`${BASE}/billing/checkout`, {
+    method: 'POST',
+    body: JSON.stringify({ plan }),
+  }).then(r => r.json());
+
+export const createPortalSession = () =>
+  apiFetch(`${BASE}/billing/portal`, { method: 'POST' }).then(r => r.json());
+
 export const generateFeedback = (record) =>
   apiFetch(`${BASE}/feedback`, {
     method: 'POST',
