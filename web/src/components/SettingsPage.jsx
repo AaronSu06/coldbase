@@ -200,7 +200,7 @@ export default function SettingsPage() {
 
   // Settings loaded from server
   const [plan, setPlan] = useState('free');
-  const [emailDigest, setEmailDigest] = useState('weekly');
+  const [emailDigest, setEmailDigest] = useState(null);
 
   // Resume
   const [resumeName, setResumeName] = useState(null);
@@ -434,7 +434,7 @@ export default function SettingsPage() {
         <section aria-label="Resume" ref={resumeSectionRef}>
           <SectionTitle>Resume</SectionTitle>
 
-          {resumeName ? (
+          {settingsLoaded && (resumeName ? (
             <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-orange-200 bg-orange-50">
               <FileText size={16} strokeWidth={1.75} className="text-accent flex-shrink-0" aria-hidden="true" />
               <span className="flex-1 text-[13px] text-chrome-text font-medium truncate min-w-0">
@@ -489,7 +489,7 @@ export default function SettingsPage() {
                 onChange={e => handleFileSelect(e.target.files[0])}
               />
             </div>
-          )}
+          ))}
           {resumeError && (
             <p className="text-[13px] text-red-500 font-medium mt-2">{resumeError}</p>
           )}
@@ -502,8 +502,8 @@ export default function SettingsPage() {
           <div className="rounded-lg border border-chrome-rim bg-chrome-card overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3.5 gap-4">
               <span className="text-[14px] text-chrome-text font-medium">Email me updates</span>
-              <div
-                className={`flex rounded-lg border border-chrome-border overflow-hidden transition-opacity duration-200 ${settingsLoaded ? 'opacity-100' : 'opacity-0'}`}
+              {settingsLoaded && <div
+                className="flex rounded-lg border border-chrome-border overflow-hidden"
                 role="radiogroup"
                 aria-label="Email update frequency"
               >
@@ -529,7 +529,7 @@ export default function SettingsPage() {
                     </span>
                   </label>
                 ))}
-              </div>
+              </div>}
             </div>
             {digestStatus && (
               <p className={`text-[12px] font-medium mt-1 px-4 pb-2 ${digestStatus === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>

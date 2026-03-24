@@ -185,12 +185,12 @@ function DeveloperNote() {
 
 export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange, followUps = [], onGoToTracker }) {
   const navigate = useNavigate();
-  const [resumeName, setResumeName] = useState(null);
+  const [resumeName, setResumeName] = useState(undefined);
 
   useEffect(() => {
     fetchProfile()
       .then(data => setResumeName(data.resumeName ?? null))
-      .catch(e => console.error('[Reach] Failed to load profile:', e.message));
+      .catch(e => { console.error('[Reach] Failed to load profile:', e.message); setResumeName(null); });
   }, []);
 
   return (
@@ -228,10 +228,12 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
             </div>
             {/* Profile + note — stacked right column */}
             <div className="order-3 sm:order-3 flex flex-col gap-4 sm:h-full">
-              <CompleteProfileCard
-                hasResume={!!resumeName}
-                onSetupProfile={() => navigate(resumeName ? '/settings' : '/settings?scrollTo=resume')}
-              />
+              {resumeName !== undefined && (
+                <CompleteProfileCard
+                  hasResume={!!resumeName}
+                  onSetupProfile={() => navigate(resumeName ? '/settings' : '/settings?scrollTo=resume')}
+                />
+              )}
               <DeveloperNote />
             </div>
           </div>
