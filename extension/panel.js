@@ -27,7 +27,6 @@
         z-index: 2147483647;
         width: 300px;
         background: #ffffff;
-        border-radius: 16px;
         box-shadow:
           0 8px 32px rgba(0, 0, 0, 0.14),
           0 2px 8px rgba(0, 0, 0, 0.08),

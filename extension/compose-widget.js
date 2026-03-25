@@ -251,7 +251,6 @@ window.ColdbaseWidget = (function () {
     .panel {
       width: 320px;
       background: #ffffff;
-      border-radius: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.14);
       animation: cp-slide-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -626,7 +625,7 @@ window.ColdbaseWidget = (function () {
           <img src="${iconUrl}" alt="Coldbase" />
           <div class="header-text">
             <h1>Coldbase</h1>
-            <span class="tier-badge" id="cp-tier">- -</span>
+            <span class="tier-badge" id="cp-tier">- - -</span>
           </div>
           <button class="gear-btn" id="cp-gear-btn" title="Settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
@@ -1332,7 +1331,7 @@ window.ColdbaseWidget = (function () {
             <img src="${ICON_URL}" alt="Coldbase" />
             <div class="header-text">
               <h1>Coldbase</h1>
-              <span class="tier-badge">- -</span>
+              <span class="tier-badge">- - -</span>
             </div>
             <button class="close-btn" aria-label="Close">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
