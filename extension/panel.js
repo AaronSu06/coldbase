@@ -55,7 +55,6 @@
       .header img {
         width: 20px;
         height: 20px;
-        border-radius: 4px;
         flex-shrink: 0;
       }
       .header-text {
@@ -81,11 +80,13 @@
         border: none;
         cursor: pointer;
         color: #78716c;
-        font-size: 18px;
-        line-height: 1;
-        padding: 2px 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3px;
         border-radius: 4px;
         transition: color 120ms ease, background 120ms ease;
+        flex-shrink: 0;
       }
       .close-btn:hover {
         color: #1c1917;
@@ -286,7 +287,7 @@
           <h1>Coldbase</h1>
           <span class="subtitle">outreach tracker</span>
         </div>
-        <button class="close-btn" aria-label="Close">&times;</button>
+        <button class="close-btn" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="stats">
         <div class="stat">
@@ -355,7 +356,7 @@
           <h1>Coldbase</h1>
           <span class="subtitle">outreach tracker</span>
         </div>
-        <button class="close-btn" aria-label="Close">&times;</button>
+        <button class="close-btn" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="auth-gate">
         <div class="auth-ghost">

@@ -267,7 +267,7 @@ window.ColdbaseWidget = (function () {
       background: #f6f5f1;
       border-bottom: 1px solid #e6e3db;
     }
-    .header img { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
+    .header img { width: 18px; height: 18px; flex-shrink: 0; }
     .header-text { display: flex; align-items: baseline; gap: 6px; flex: 1; }
     .header h1 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #1c1917; letter-spacing: -0.02em; }
     .tier-badge {
@@ -626,17 +626,17 @@ window.ColdbaseWidget = (function () {
           <img src="${iconUrl}" alt="Coldbase" />
           <div class="header-text">
             <h1>Coldbase</h1>
-            <span class="tier-badge" id="cp-tier">Free</span>
+            <span class="tier-badge" id="cp-tier">- -</span>
           </div>
-          <button class="gear-btn" id="cp-gear-btn" title="Dashboard">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <button class="gear-btn" id="cp-gear-btn" title="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
               <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
           </button>
           <button class="close-btn" aria-label="Close">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
@@ -814,7 +814,7 @@ window.ColdbaseWidget = (function () {
     chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (res) => {
       const dashUrl = res?.config?.dashboardUrl ?? 'http://localhost:5173';
       shadow.getElementById('cp-open-dash').addEventListener('click', () => window.open(dashUrl, '_blank'));
-      shadow.getElementById('cp-gear-btn').addEventListener('click', () => window.open(dashUrl, '_blank'));
+      shadow.getElementById('cp-gear-btn').addEventListener('click', () => window.open(dashUrl + '/settings', '_blank'));
     });
 
     return loadOverviewData;
@@ -1332,12 +1332,10 @@ window.ColdbaseWidget = (function () {
             <img src="${ICON_URL}" alt="Coldbase" />
             <div class="header-text">
               <h1>Coldbase</h1>
-              <span class="tier-badge">Free</span>
+              <span class="tier-badge">- -</span>
             </div>
             <button class="close-btn" aria-label="Close">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
           <div class="tabs cp-tabs-locked">
