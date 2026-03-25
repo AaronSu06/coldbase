@@ -1,9 +1,9 @@
 // compose-widget.js — Compose panel UI widget
-// Classic script (no ES module imports). Exposes window.ReachWidget namespace.
-// Loaded before content.js per manifest order; window.ReachLogger is available.
+// Classic script (no ES module imports). Exposes window.ColdbaseWidget namespace.
+// Loaded before content.js per manifest order; window.ColdbaseLogger is available.
 
-window.ReachWidget = (function () {
-  const log = window.ReachLogger('compose-widget');
+window.ColdbaseWidget = (function () {
+  const log = window.ColdbaseLogger('compose-widget');
 
   // Module-local reference to shared state (set by init)
   let _state = null;
