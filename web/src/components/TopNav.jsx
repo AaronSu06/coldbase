@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 const NAV_SECTIONS = [
   { id: 'home',    label: 'Home',        Icon: Home },
-  { id: 'tracker', label: 'Job Tracker', Icon: Briefcase },
+  { id: 'tracker', label: 'Tracker', Icon: Briefcase },
 ];
 
 export default function TopNav({ activeSection, onSectionChange }) {

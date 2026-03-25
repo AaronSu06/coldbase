@@ -64,7 +64,7 @@ function FollowUpCard({ records = [], onGoToTracker }) {
               onClick={onGoToTracker}
               className="text-[12px] font-semibold text-accent hover:text-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
             >
-              Go to Job Tracker
+              Go to Tracker
             </button>
           </div>
         </>
