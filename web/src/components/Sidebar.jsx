@@ -203,6 +203,8 @@ export default function Sidebar({
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [editingField, setEditingField] = useState(null);
+  const [editValues, setEditValues] = useState({});
   const latestRef = useRef({ notes: '', record: null });
   const panelRef = useRef(null);
   const returnFocusRef = useRef(null);
@@ -216,6 +218,16 @@ export default function Sidebar({
       setShowFullThread(false);
       setShowDatePicker(false);
       setConfirmingDelete(false);
+      setEditingField(null);
+      setEditValues({
+        company:      record.company      || '',
+        contactName:  record.contactName  || '',
+        contactEmail: record.contactEmail || '',
+        subject:      record.subject      || '',
+        sentDate:     record.sentDate
+          ? new Date(record.sentDate).toISOString().split('T')[0]
+          : '',
+      });
       setNextActionDate(
         record.nextActionDate
           ? new Date(record.nextActionDate).toISOString().split('T')[0]
@@ -292,6 +304,33 @@ export default function Sidebar({
     onUpdateRecord(record.threadId, { notes });
   }, [record, notes, onUpdateRecord]);
 
+  const handleFieldBlur = useCallback((field) => {
+    const raw = editValues[field];
+    const original = field === 'sentDate'
+      ? (record?.sentDate ? new Date(record.sentDate).toISOString().split('T')[0] : '')
+      : (record?.[field] || '');
+    if (raw !== original) {
+      const patch = field === 'sentDate'
+        ? { sentDate: raw ? new Date(raw + 'T12:00:00.000Z').toISOString() : null }
+        : { [field]: raw };
+      onUpdateRecord(record.threadId, patch);
+    }
+    setEditingField(null);
+  }, [record, editValues, onUpdateRecord]);
+
+  const handleFieldKeyDown = useCallback((e, field) => {
+    if (e.key === 'Enter') { e.target.blur(); return; }
+    if (e.key === 'Escape') {
+      const original = field === 'sentDate'
+        ? (record?.sentDate ? new Date(record.sentDate).toISOString().split('T')[0] : '')
+        : (record?.[field] || '');
+      setEditValues(v => ({ ...v, [field]: original }));
+      setEditingField(null);
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, [record]);
+
   // Capture trigger element before opening, restore on close
   useEffect(() => {
     if (isOpen) {
@@ -365,10 +404,64 @@ export default function Sidebar({
             <div className="flex items-center gap-3 px-5 py-4 border-b border-chrome-border flex-shrink-0">
               <CompanyAvatar domain={record.domain} company={record.company} size="large" />
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[16px] text-chrome-text leading-tight truncate">{record.company}</p>
-                <p className="text-[13px] text-chrome-muted truncate">
-                  {record.contactName}{record.contactEmail ? ` · ${record.contactEmail}` : ''}
-                </p>
+                {editingField === 'company' ? (
+                  <input
+                    autoFocus
+                    value={editValues.company}
+                    onChange={e => setEditValues(v => ({ ...v, company: e.target.value }))}
+                    onBlur={() => handleFieldBlur('company')}
+                    onKeyDown={e => handleFieldKeyDown(e, 'company')}
+                    className="font-semibold text-[16px] text-chrome-text leading-tight w-full bg-transparent border-b border-accent outline-none"
+                  />
+                ) : (
+                  <p
+                    className="font-semibold text-[16px] text-chrome-text leading-tight truncate cursor-text hover:underline decoration-dashed underline-offset-2"
+                    onClick={() => setEditingField('company')}
+                    title="Click to edit"
+                  >
+                    {record.company}
+                  </p>
+                )}
+                <div className="flex gap-1 min-w-0">
+                  {editingField === 'contactName' ? (
+                    <input
+                      autoFocus
+                      value={editValues.contactName}
+                      onChange={e => setEditValues(v => ({ ...v, contactName: e.target.value }))}
+                      onBlur={() => handleFieldBlur('contactName')}
+                      onKeyDown={e => handleFieldKeyDown(e, 'contactName')}
+                      className="text-[13px] text-chrome-muted w-24 bg-transparent border-b border-accent outline-none"
+                    />
+                  ) : (
+                    <span
+                      className="text-[13px] text-chrome-muted truncate cursor-text hover:underline decoration-dashed underline-offset-2 shrink-0"
+                      onClick={() => setEditingField('contactName')}
+                      title="Click to edit"
+                    >
+                      {record.contactName || <span className="opacity-40">Name</span>}
+                    </span>
+                  )}
+                  {(record.contactName || record.contactEmail) && <span className="text-[13px] text-chrome-muted shrink-0">·</span>}
+                  {editingField === 'contactEmail' ? (
+                    <input
+                      autoFocus
+                      type="email"
+                      value={editValues.contactEmail}
+                      onChange={e => setEditValues(v => ({ ...v, contactEmail: e.target.value }))}
+                      onBlur={() => handleFieldBlur('contactEmail')}
+                      onKeyDown={e => handleFieldKeyDown(e, 'contactEmail')}
+                      className="text-[13px] text-chrome-muted flex-1 bg-transparent border-b border-accent outline-none"
+                    />
+                  ) : (
+                    <span
+                      className="text-[13px] text-chrome-muted truncate cursor-text hover:underline decoration-dashed underline-offset-2"
+                      onClick={() => setEditingField('contactEmail')}
+                      title="Click to edit"
+                    >
+                      {record.contactEmail || <span className="opacity-40">Email</span>}
+                    </span>
+                  )}
+                </div>
               </div>
               {confirmingDelete ? (
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -436,12 +529,47 @@ export default function Sidebar({
               {/* Left — scrollable content */}
               <div className="flex flex-col sm:overflow-hidden">
                 <div className="sm:flex-1 sm:overflow-y-auto p-5 flex flex-col gap-4">
-                  <h3 className="font-semibold text-sm text-chrome-text leading-snug">{record.subject}</h3>
+                  {editingField === 'subject' ? (
+                    <input
+                      autoFocus
+                      value={editValues.subject}
+                      onChange={e => setEditValues(v => ({ ...v, subject: e.target.value }))}
+                      onBlur={() => handleFieldBlur('subject')}
+                      onKeyDown={e => handleFieldKeyDown(e, 'subject')}
+                      className="font-semibold text-sm text-chrome-text w-full bg-transparent border-b border-accent outline-none leading-snug"
+                    />
+                  ) : (
+                    <h3
+                      className="font-semibold text-sm text-chrome-text leading-snug cursor-text hover:underline decoration-dashed underline-offset-2"
+                      onClick={() => setEditingField('subject')}
+                      title="Click to edit"
+                    >
+                      {record.subject}
+                    </h3>
+                  )}
 
                   {/* Date + badges */}
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-2 text-xs text-chrome-muted">
-                      <span>{formatShortDate(record.sentDate)}</span>
+                      {editingField === 'sentDate' ? (
+                        <input
+                          autoFocus
+                          type="date"
+                          value={editValues.sentDate}
+                          onChange={e => setEditValues(v => ({ ...v, sentDate: e.target.value }))}
+                          onBlur={() => handleFieldBlur('sentDate')}
+                          onKeyDown={e => handleFieldKeyDown(e, 'sentDate')}
+                          className="text-xs text-chrome-text bg-transparent border-b border-accent outline-none"
+                        />
+                      ) : (
+                        <span
+                          className="cursor-text hover:underline decoration-dashed underline-offset-2"
+                          onClick={() => setEditingField('sentDate')}
+                          title="Click to edit"
+                        >
+                          {formatShortDate(record.sentDate)}
+                        </span>
+                      )}
                       <span className="text-chrome-rim">·</span>
                       <span>{getDaysSince(record.sentDate)}d ago</span>
                     </div>
