@@ -38,9 +38,7 @@ export default function LoginPage({ onLogin }) {
     <AuthShell>
       {/* Logo + Wordmark — mobile only; desktop left panel provides brand anchor */}
       <div className="flex md:hidden items-center gap-2 mb-5">
-        <span className="w-6 h-6 rounded-sm bg-accent overflow-hidden flex items-center justify-center flex-shrink-0">
-          <img src="/logo.png" alt="" className="w-full h-full object-contain" onError={e => { e.currentTarget.style.display = 'none'; }} />
-        </span>
+        <img src="/logo.png" alt="" className="w-6 h-6 flex-shrink-0" onError={e => { e.currentTarget.style.display = 'none'; }} />
         <span className="font-display text-2xl font-bold text-chrome-text leading-none tracking-tight">
           Coldbase
         </span>

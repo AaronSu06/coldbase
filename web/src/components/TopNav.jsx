@@ -47,9 +47,7 @@ export default function TopNav({ activeSection, onSectionChange }) {
 
         {/* Left: Logo + Wordmark */}
         <div className="flex items-center gap-2 flex-shrink-0" aria-label="Coldbase">
-          <span className="w-5 h-5 rounded-sm bg-accent overflow-hidden flex items-center justify-center flex-shrink-0">
-            <img src="/logo.png" alt="" className="w-full h-full object-contain" onError={e => { e.currentTarget.style.display = 'none'; }} />
-          </span>
+          <img src="/logo.png" alt="" className="w-5 h-5 flex-shrink-0" onError={e => { e.currentTarget.style.display = 'none'; }} />
           <span className="font-display text-[18px] font-bold text-chrome-text leading-none tracking-tight">
             Coldbase
           </span>

@@ -33,9 +33,7 @@ export default function AuthShell({ children }) {
         <div className="px-12 py-16 pb-24">
 
           <div className="flex items-center gap-3">
-            <span className="w-12 h-12 rounded-md bg-accent overflow-hidden flex items-center justify-center flex-shrink-0">
-              <img src="/logo.png" alt="" className="w-full h-full object-contain" onError={e => { e.currentTarget.style.display = 'none'; }} />
-            </span>
+            <img src="/logo.png" alt="" className="w-10 h-10 flex-shrink-0" onError={e => { e.currentTarget.style.display = 'none'; }} />
             <h2 className="font-display text-5xl sm:text-6xl font-bold text-chrome-text leading-none tracking-tight">
               Coldbase
             </h2>
