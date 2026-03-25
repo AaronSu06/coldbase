@@ -55,11 +55,11 @@ export default function AuthPage({ onLogin }) {
   return (
     <AuthShell>
       {/* Logo + Wordmark */}
-      <div className="flex items-center gap-2 mb-3">
-        <span className="w-5 h-5 rounded-sm bg-accent overflow-hidden flex items-center justify-center flex-shrink-0">
+      <div className="flex items-center gap-3 mb-4">
+        <span className="w-8 h-8 rounded-md bg-accent overflow-hidden flex items-center justify-center flex-shrink-0">
           <img src="/logo.png" alt="" className="w-full h-full object-contain" onError={e => { e.currentTarget.style.display = 'none'; }} />
         </span>
-        <span className="font-display text-[18px] font-bold text-chrome-text leading-none tracking-tight">
+        <span className="font-display text-[28px] font-bold text-chrome-text leading-none tracking-tight">
           Coldbase
         </span>
       </div>
