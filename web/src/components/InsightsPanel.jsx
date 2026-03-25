@@ -45,7 +45,7 @@ function StatsRow({ sent, replied }) {
           <span className="text-[9px] sm:text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted">
             {s.label}
           </span>
-          <span className="font-display text-[18px] sm:text-[22px] font-bold text-chrome-text leading-none">
+          <span className="font-mono text-[18px] sm:text-[22px] font-medium text-chrome-text leading-none">
             {s.value}
           </span>
         </div>
