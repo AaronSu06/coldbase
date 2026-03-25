@@ -42,23 +42,23 @@
     }
   ],
   "icons": {
-    "16": "Coldbase.png",
-    "32": "Coldbase.png",
-    "48": "Coldbase.png",
-    "128": "Coldbase.png"
+    "16": "logo.png",
+    "32": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
   },
   "action": {
     "default_title": "Coldbase",
     "default_icon": {
-      "16": "Coldbase.png",
-      "32": "Coldbase.png",
-      "48": "Coldbase.png",
-      "128": "Coldbase.png"
+      "16": "logo.png",
+      "32": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
     }
   },
   "web_accessible_resources": [
     {
-      "resources": ["Coldbase.png", "Placeholder.png"],
+      "resources": ["logo.png", "Reach.png", "Placeholder.png"],
       "matches": ["<all_urls>"]
     }
   ],

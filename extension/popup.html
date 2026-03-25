@@ -26,11 +26,19 @@
       background: #f8f7f5;
       border-bottom: 1px solid #e8e6e1;
     }
-    .header img {
+    .logo-mark {
       width: 20px;
       height: 20px;
       border-radius: 4px;
+      background: #b85212;
+      overflow: hidden;
       flex-shrink: 0;
+    }
+    .logo-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
     }
     .header-text {
       display: flex;
@@ -118,7 +126,9 @@
 </head>
 <body>
   <div class="header">
-    <img src="Coldbase.png" alt="Coldbase logo" />
+    <div class="logo-mark">
+      <img src="logo.png" alt="" onerror="this.style.display='none'" />
+    </div>
     <div class="header-text">
       <h1>Coldbase</h1>
       <span class="subtitle">outreach tracker</span>

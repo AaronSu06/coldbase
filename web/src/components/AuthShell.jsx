@@ -32,14 +32,19 @@ export default function AuthShell({ children }) {
       <div className="hidden md:block flex-1 w-full overflow-y-auto bg-chrome-bg border-r border-chrome-border">
         <div className="px-12 py-16 pb-24">
 
-          <h2 className="font-display text-5xl sm:text-6xl font-bold text-chrome-text leading-none tracking-tight">
-            Coldbase
-          </h2>
+          <div className="flex items-center gap-3">
+            <span className="w-12 h-12 rounded-md bg-accent overflow-hidden flex items-center justify-center flex-shrink-0">
+              <img src="/logo.png" alt="" className="w-full h-full object-contain" onError={e => { e.currentTarget.style.display = 'none'; }} />
+            </span>
+            <h2 className="font-display text-5xl sm:text-6xl font-bold text-chrome-text leading-none tracking-tight">
+              Coldbase
+            </h2>
+          </div>
           <p className="mt-3 font-sans text-xl font-semibold text-chrome-muted leading-snug">
             Track every outreach. Land more replies.
           </p>
           <p className="mt-5 font-sans text-[15px] text-chrome-muted leading-relaxed">
-            Job searching is a numbers game. Coldbase makes sure none of those numbers slip through the cracks.
+            Job searching is a numbers game. Reach makes sure none of those numbers slip through the cracks.
           </p>
 
           <div className="mt-10 flex flex-col gap-5 w-full">

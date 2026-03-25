@@ -1,9 +1,9 @@
 // compose-widget.js — Compose panel UI widget
-// Classic script (no ES module imports). Exposes window.ColdbaseWidget namespace.
-// Loaded before content.js per manifest order; window.ColdbaseLogger is available.
+// Classic script (no ES module imports). Exposes window.ReachWidget namespace.
+// Loaded before content.js per manifest order; window.ReachLogger is available.
 
-window.ColdbaseWidget = (function () {
-  const log = window.ColdbaseLogger('compose-widget');
+window.ReachWidget = (function () {
+  const log = window.ReachLogger('compose-widget');
 
   // Module-local reference to shared state (set by init)
   let _state = null;
@@ -33,7 +33,7 @@ window.ColdbaseWidget = (function () {
   let stylesInjected = false;
 
   function injectStyles() {
-    if (stylesInjected || document.getElementById('cb-w-style')) return;
+    if (stylesInjected || document.getElementById('oiq-w-style')) return;
     stylesInjected = true;
     // Load brand fonts into the host document (font faces are not shadow-scoped)
     if (!document.getElementById('reach-widget-fonts')) {
@@ -44,9 +44,9 @@ window.ColdbaseWidget = (function () {
       document.head.appendChild(fontLink);
     }
     const s = document.createElement('style');
-    s.id = 'cb-w-style';
+    s.id = 'oiq-w-style';
     s.textContent = `
-      .cb-w {
+      .oiq-w {
         position: fixed !important;
         width: 24px !important;
         height: 24px !important;
@@ -59,10 +59,10 @@ window.ColdbaseWidget = (function () {
         box-shadow: 0 1px 5px rgba(0,0,0,0.22) !important;
         transition: opacity 0.2s ease, box-shadow 0.25s ease !important;
       }
-      .cb-w.cb-tracking-on {
+      .oiq-w.oiq-tracking-on {
         opacity: 1 !important;
       }
-      .cb-w img.cb-icon {
+      .oiq-w img.oiq-icon {
         width: 26px !important;
         height: 26px !important;
         display: block !important;
@@ -72,7 +72,7 @@ window.ColdbaseWidget = (function () {
     document.head.appendChild(s);
   }
 
-  const ICON_IMG = `<img class="cb-icon" src="${chrome.runtime.getURL('Coldbase.png')}" alt="Coldbase" />`;
+  const ICON_IMG = `<img class="oiq-icon" src="${chrome.runtime.getURL('logo.png')}" alt="Reach" />`;
 
   // ─── Widget DOM helpers ──────────────────────────────────────────────────────
 
@@ -120,7 +120,7 @@ window.ColdbaseWidget = (function () {
     for (const testY of probeYs) {
       const el = document.elementFromPoint(probeX, testY);
       if (!el || el === document.body || editorEl.contains(el) || el.contains(editorEl)) continue;
-      if (el.classList.contains('cb-w')) continue; // skip other Coldbase widgets
+      if (el.classList.contains('oiq-w')) continue; // skip other Reach widgets
       neighborRect = el.getBoundingClientRect();
       break;
     }
@@ -164,8 +164,8 @@ window.ColdbaseWidget = (function () {
   // on top of any extension (e.g. Mailtrack) that wraps the compose dialog with
   // overflow:hidden or otherwise acts as a clipping containing block.
   function getOrCreateWidget(editorEl) {
-    // Guard: _state is null if ColdbaseWidget.init() hasn't run yet (can happen if
-    // ColdbaseDetector.init() calls scanForEditors synchronously before ColdbaseWidget.init()).
+    // Guard: _state is null if ReachWidget.init() hasn't run yet (can happen if
+    // ReachDetector.init() calls scanForEditors synchronously before ReachWidget.init()).
     if (!_state) {
       return null;
     }
@@ -173,7 +173,7 @@ window.ColdbaseWidget = (function () {
     injectStyles();
 
     const w = document.createElement('div');
-    w.className = 'cb-w';
+    w.className = 'oiq-w';
     w.innerHTML = ICON_IMG;
     w.addEventListener('click', () => {
       _state.lastActiveEditor = editorEl;
@@ -223,11 +223,11 @@ window.ColdbaseWidget = (function () {
     const manualMode = _state.editorManualModes.get(editorEl) || 'force_track';
 
     if (manualMode === 'force_track') {
-      w.classList.add('cb-tracking-on');
-      w.title = 'Coldbase: tracking ON';
+      w.classList.add('oiq-tracking-on');
+      w.title = 'Reach: tracking ON';
     } else {
-      w.classList.remove('cb-tracking-on');
-      w.title = 'Coldbase: tracking OFF';
+      w.classList.remove('oiq-tracking-on');
+      w.title = 'Reach: tracking OFF';
     }
 
     // Show widget ONLY on the most-recently-focused editor (UI-SYNC-01)
@@ -252,7 +252,6 @@ window.ColdbaseWidget = (function () {
       width: 320px;
       background: #ffffff;
       border-radius: 16px;
-      overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.14);
       animation: cp-slide-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -624,9 +623,9 @@ window.ColdbaseWidget = (function () {
     return `
       <div class="panel">
         <div class="header">
-          <img src="${iconUrl}" alt="Coldbase" />
+          <img src="${iconUrl}" alt="Reach" />
           <div class="header-text">
-            <h1>Coldbase</h1>
+            <h1>Reach</h1>
             <span class="tier-badge" id="cp-tier">Free</span>
           </div>
           <button class="gear-btn" id="cp-gear-btn" title="Dashboard">
@@ -1177,7 +1176,7 @@ window.ColdbaseWidget = (function () {
           genBtn.textContent = 'Generate Draft \u2728';
           const textarea = shadow.getElementById('cp-draft-output');
           if (chrome.runtime.lastError || !res?.ok) {
-            textarea.value = res?.error || 'Error \u2014 check that the Coldbase server is running.';
+            textarea.value = res?.error || 'Error \u2014 check that the Reach server is running.';
             return;
           }
           textarea.value = res.text;
@@ -1220,7 +1219,7 @@ window.ColdbaseWidget = (function () {
   // ─── Build compose panel ─────────────────────────────────────────────────────
 
   function buildComposePanel() {
-    const ICON_URL = chrome.runtime.getURL('Coldbase.png');
+    const ICON_URL = chrome.runtime.getURL('logo.png');
     const host = document.createElement('div');
     host.id = 'reach-compose-panel-host';
     host.style.display = 'none';
@@ -1316,7 +1315,7 @@ window.ColdbaseWidget = (function () {
     }
 
     if (!_composeAuthGateHost) {
-      const ICON_URL = chrome.runtime.getURL('Coldbase.png');
+      const ICON_URL = chrome.runtime.getURL('logo.png');
       const host = document.createElement('div');
       host.id = 'reach-compose-auth-gate-host';
       host.style.display = 'none';
@@ -1330,9 +1329,9 @@ window.ColdbaseWidget = (function () {
         <style>${PANEL_STYLES}</style>
         <div class="panel">
           <div class="header">
-            <img src="${ICON_URL}" alt="Coldbase" />
+            <img src="${ICON_URL}" alt="Reach" />
             <div class="header-text">
-              <h1>Coldbase</h1>
+              <h1>Reach</h1>
               <span class="tier-badge">Free</span>
             </div>
             <button class="close-btn" aria-label="Close">
@@ -1362,8 +1361,8 @@ window.ColdbaseWidget = (function () {
               <div style="height:32px;background:#e6e3db;border-radius:8px;opacity:0.5;"></div>
             </div>
             <div class="cp-auth-overlay">
-              <img src="${ICON_URL}" class="cp-auth-logo" alt="Coldbase" />
-              <p class="cp-auth-heading">Sign in to unlock Coldbase</p>
+              <img src="${ICON_URL}" class="cp-auth-logo" alt="Reach" />
+              <p class="cp-auth-heading">Sign in to unlock Reach</p>
               <p class="cp-auth-sub">Track outreach, find contacts,<br>and draft emails.</p>
               <div class="cp-auth-btn-row">
                 <button class="cp-auth-btn-primary" id="cp-auth-login">Sign in</button>
@@ -1383,7 +1382,7 @@ window.ColdbaseWidget = (function () {
 
       // Auto-unlock when JWT is set
       function onStorageChanged(changes, area) {
-        if (area !== 'local' || !changes.coldbase_jwt?.newValue) return;
+        if (area !== 'local' || !changes.reach_jwt?.newValue) return;
         chrome.storage.onChanged.removeListener(onStorageChanged);
         _composeAuthGateHost.remove();
         _composeAuthGateHost = null;
@@ -1406,9 +1405,9 @@ window.ColdbaseWidget = (function () {
   async function openComposePanel(editorEl) {
     // Auth gate check
     const result = await new Promise(resolve =>
-      chrome.storage.local.get('coldbase_jwt', resolve)
+      chrome.storage.local.get('reach_jwt', resolve)
     );
-    if (!result.coldbase_jwt) {
+    if (!result.reach_jwt) {
       showComposeAuthGate(editorEl);
       return;
     }
@@ -1458,7 +1457,7 @@ window.ColdbaseWidget = (function () {
   function init(state) {
     _state = state;
     injectStyles();
-    log.debug('ColdbaseWidget initialized.');
+    log.debug('ReachWidget initialized.');
   }
 
   // attach: called externally, mirrors getOrCreateWidget

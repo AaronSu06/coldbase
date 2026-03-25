@@ -36,10 +36,15 @@ export default function LoginPage({ onLogin }) {
 
   return (
     <AuthShell>
-      {/* Wordmark — mobile only; desktop left panel provides brand anchor */}
-      <span className="block md:hidden font-display text-2xl font-bold text-chrome-text leading-none tracking-tight mb-5">
-        Coldbase
-      </span>
+      {/* Logo + Wordmark — mobile only; desktop left panel provides brand anchor */}
+      <div className="flex md:hidden items-center gap-2 mb-5">
+        <span className="w-6 h-6 rounded-sm bg-accent overflow-hidden flex items-center justify-center flex-shrink-0">
+          <img src="/logo.png" alt="" className="w-full h-full object-contain" onError={e => { e.currentTarget.style.display = 'none'; }} />
+        </span>
+        <span className="font-display text-2xl font-bold text-chrome-text leading-none tracking-tight">
+          Coldbase
+        </span>
+      </div>
 
       {/* Heading */}
       <h1 className="font-sans font-bold text-2xl text-chrome-text leading-snug mb-8">
