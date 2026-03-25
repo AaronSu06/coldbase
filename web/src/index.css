@@ -16,6 +16,47 @@ html, body, #root {
   to   { transform: translateX(0%);    }
 }
 
+/* ── Shared overlay animations ─────────────────────────────────────────── */
+
+@keyframes backdrop-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes backdrop-exit {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes sheet-enter {
+  from { opacity: 0.6; transform: translateY(60px); }
+  to   { opacity: 1;   transform: translateY(0);    }
+}
+@keyframes sheet-exit {
+  from { opacity: 1; transform: translateY(0);    }
+  to   { opacity: 0; transform: translateY(60px); }
+}
+@keyframes modal-enter {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+@keyframes modal-exit {
+  from { opacity: 1; transform: scale(1)    translateY(0);   }
+  to   { opacity: 0; transform: scale(0.96) translateY(6px); }
+}
+
+.overlay-backdrop         { animation: backdrop-enter 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.overlay-backdrop.closing { animation: backdrop-exit  180ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+.bottom-sheet-panel         { animation: sheet-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.bottom-sheet-panel.closing { animation: sheet-exit  180ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* ProModal: sheet on mobile, centered modal on desktop */
+.pro-modal-panel         { animation: sheet-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.pro-modal-panel.closing { animation: sheet-exit  180ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+@media (min-width: 640px) {
+  .pro-modal-panel         { animation: modal-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+  .pro-modal-panel.closing { animation: modal-exit  180ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

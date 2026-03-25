@@ -35,17 +35,24 @@ function StatusDot({ status }) {
 // ── Mobile filters bottom sheet ───────────────────────────────────────────
 
 function MobileFiltersSheet({ onClose, showFavoritesOnly, onToggleFavorites, onArchiveAll, dateFrom, dateTo, onRangeChange, viewMode, visibleColumns, onToggleColumn }) {
+  const [isClosing, setIsClosing] = useState(false);
+
+  function handleClose() {
+    setIsClosing(true);
+    setTimeout(() => onClose(), 180);
+  }
+
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} aria-hidden="true" />
+      <div className={`overlay-backdrop fixed inset-0 bg-black/20 z-40${isClosing ? ' closing' : ''}`} onClick={handleClose} aria-hidden="true" />
 
       {/* Sheet */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Filter options"
-        className="fixed bottom-0 left-0 right-0 z-50 bg-chrome-surface rounded-t-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.10)]"
+        className={`bottom-sheet-panel fixed bottom-0 left-0 right-0 z-50 bg-chrome-surface rounded-t-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.10)]${isClosing ? ' closing' : ''}`}
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
@@ -55,7 +62,7 @@ function MobileFiltersSheet({ onClose, showFavoritesOnly, onToggleFavorites, onA
         <div className="px-4 pt-1 pb-8 space-y-0.5">
           {/* Favorites toggle */}
           <button
-            onClick={() => { onToggleFavorites(); onClose(); }}
+            onClick={() => { onToggleFavorites(); handleClose(); }}
             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-colors ${
               showFavoritesOnly
                 ? 'bg-rose-500/10 text-rose-500'
@@ -70,7 +77,7 @@ function MobileFiltersSheet({ onClose, showFavoritesOnly, onToggleFavorites, onA
 
           {/* Archive all */}
           <button
-            onClick={() => { onArchiveAll(); onClose(); }}
+            onClick={() => { onArchiveAll(); handleClose(); }}
             className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left text-chrome-text hover:bg-chrome-deep transition-colors"
           >
             <Archive size={16} strokeWidth={2} />
