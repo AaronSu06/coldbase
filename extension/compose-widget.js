@@ -72,7 +72,7 @@ window.ColdbaseWidget = (function () {
     document.head.appendChild(s);
   }
 
-  const ICON_IMG = `<img class="oiq-icon" src="${chrome.runtime.getURL('logo.png')}" alt="Reach" />`;
+  const ICON_IMG = `<img class="oiq-icon" src="${chrome.runtime.getURL('logo.png')}" alt="Coldbase" />`;
 
   // ─── Widget DOM helpers ──────────────────────────────────────────────────────
 
@@ -224,10 +224,10 @@ window.ColdbaseWidget = (function () {
 
     if (manualMode === 'force_track') {
       w.classList.add('oiq-tracking-on');
-      w.title = 'Reach: tracking ON';
+      w.title = 'Coldbase: tracking ON';
     } else {
       w.classList.remove('oiq-tracking-on');
-      w.title = 'Reach: tracking OFF';
+      w.title = 'Coldbase: tracking OFF';
     }
 
     // Show widget ONLY on the most-recently-focused editor (UI-SYNC-01)
@@ -623,9 +623,9 @@ window.ColdbaseWidget = (function () {
     return `
       <div class="panel">
         <div class="header">
-          <img src="${iconUrl}" alt="Reach" />
+          <img src="${iconUrl}" alt="Coldbase" />
           <div class="header-text">
-            <h1>Reach</h1>
+            <h1>Coldbase</h1>
             <span class="tier-badge" id="cp-tier">Free</span>
           </div>
           <button class="gear-btn" id="cp-gear-btn" title="Dashboard">
@@ -1329,9 +1329,9 @@ window.ColdbaseWidget = (function () {
         <style>${PANEL_STYLES}</style>
         <div class="panel">
           <div class="header">
-            <img src="${ICON_URL}" alt="Reach" />
+            <img src="${ICON_URL}" alt="Coldbase" />
             <div class="header-text">
-              <h1>Reach</h1>
+              <h1>Coldbase</h1>
               <span class="tier-badge">Free</span>
             </div>
             <button class="close-btn" aria-label="Close">
@@ -1361,8 +1361,8 @@ window.ColdbaseWidget = (function () {
               <div style="height:32px;background:#e6e3db;border-radius:8px;opacity:0.5;"></div>
             </div>
             <div class="cp-auth-overlay">
-              <img src="${ICON_URL}" class="cp-auth-logo" alt="Reach" />
-              <p class="cp-auth-heading">Sign in to unlock Reach</p>
+              <img src="${ICON_URL}" class="cp-auth-logo" alt="Coldbase" />
+              <p class="cp-auth-heading">Sign in to unlock Coldbase</p>
               <p class="cp-auth-sub">Track outreach, find contacts,<br>and draft emails.</p>
               <div class="cp-auth-btn-row">
                 <button class="cp-auth-btn-primary" id="cp-auth-login">Sign in</button>
@@ -1382,7 +1382,7 @@ window.ColdbaseWidget = (function () {
 
       // Auto-unlock when JWT is set
       function onStorageChanged(changes, area) {
-        if (area !== 'local' || !changes.reach_jwt?.newValue) return;
+        if (area !== 'local' || !changes.coldbase_jwt?.newValue) return;
         chrome.storage.onChanged.removeListener(onStorageChanged);
         _composeAuthGateHost.remove();
         _composeAuthGateHost = null;
@@ -1405,9 +1405,9 @@ window.ColdbaseWidget = (function () {
   async function openComposePanel(editorEl) {
     // Auth gate check
     const result = await new Promise(resolve =>
-      chrome.storage.local.get('reach_jwt', resolve)
+      chrome.storage.local.get('coldbase_jwt', resolve)
     );
-    if (!result.reach_jwt) {
+    if (!result.coldbase_jwt) {
       showComposeAuthGate(editorEl);
       return;
     }

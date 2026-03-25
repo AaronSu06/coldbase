@@ -281,9 +281,9 @@
     panel.className = 'panel';
     panel.innerHTML = `
       <div class="header">
-        <img src="${ICON_URL}" alt="Reach" />
+        <img src="${ICON_URL}" alt="Coldbase" />
         <div class="header-text">
-          <h1>Reach</h1>
+          <h1>Coldbase</h1>
           <span class="subtitle">outreach tracker</span>
         </div>
         <button class="close-btn" aria-label="Close">&times;</button>
@@ -350,9 +350,9 @@
     panel.className = 'panel';
     panel.innerHTML = `
       <div class="header">
-        <img src="${ICON_URL}" alt="Reach" />
+        <img src="${ICON_URL}" alt="Coldbase" />
         <div class="header-text">
-          <h1>Reach</h1>
+          <h1>Coldbase</h1>
           <span class="subtitle">outreach tracker</span>
         </div>
         <button class="close-btn" aria-label="Close">&times;</button>
@@ -378,8 +378,8 @@
           </div>
         </div>
         <div class="auth-overlay">
-          <img src="${ICON_URL}" class="auth-logo" alt="Reach" />
-          <p class="auth-heading">Sign in to unlock Reach</p>
+          <img src="${ICON_URL}" class="auth-logo" alt="Coldbase" />
+          <p class="auth-heading">Sign in to unlock Coldbase</p>
           <p class="auth-sub">Track outreach, find contacts,<br>and draft emails.</p>
           <div class="auth-btn-row">
             <button class="auth-btn-primary" id="auth-login-btn">Log in</button>
@@ -400,7 +400,7 @@
 
     // Auto-unlock: when JWT is written to storage, rebuild as normal panel
     function onStorageChanged(changes, area) {
-      if (area !== 'local' || !changes.reach_jwt?.newValue) return;
+      if (area !== 'local' || !changes.coldbase_jwt?.newValue) return;
       chrome.storage.onChanged.removeListener(onStorageChanged);
       host.remove();
       host = null;
@@ -424,9 +424,9 @@
     if (!host) {
       await getRuntimeConfig();
       const result = await new Promise(resolve =>
-        chrome.storage.local.get('reach_jwt', resolve)
+        chrome.storage.local.get('coldbase_jwt', resolve)
       );
-      if (!result.reach_jwt) {
+      if (!result.coldbase_jwt) {
         buildAuthPanel();
         host.style.display = '';
         return;
