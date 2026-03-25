@@ -8,7 +8,7 @@
 import { DEBUG } from './config.js';
 
 export function makeLogger(module) {
-  const prefix = `[Reach/${module}]`;
+  const prefix = `[Coldbase/${module}]`;
   return {
     debug: (...a) => DEBUG && console.debug(prefix, ...a),
     info:  (...a) => DEBUG && console.log(prefix, ...a),

@@ -221,14 +221,14 @@ export default function App() {
         const requestId = `${type}-${Date.now()}`;
         const timeout = setTimeout(resolve, 12_000);
         function handler(e) {
-          if (e.data?.source === 'outreachiq-relay' && e.data?.requestId === requestId) {
+          if (e.data?.source === 'coldbase-relay' && e.data?.requestId === requestId) {
             window.removeEventListener('message', handler);
             clearTimeout(timeout);
             resolve();
           }
         }
         window.addEventListener('message', handler);
-        window.postMessage({ source: 'outreachiq-webapp', type, requestId }, '*');
+        window.postMessage({ source: 'coldbase-webapp', type, requestId }, '*');
       });
       await Promise.all([request('RESCAN'), request('RECHECK_REPLIES')]);
     } finally {
@@ -266,7 +266,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Reach ${new Date().toISOString().slice(0, 10)} Summary.csv`;
+    a.download = `Coldbase ${new Date().toISOString().slice(0, 10)} Summary.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -298,7 +298,7 @@ export default function App() {
       if (document.visibilityState !== 'visible') return;
       const requestId = `RECHECK_REPLIES-${Date.now()}`;
       window.postMessage(
-        { source: 'outreachiq-webapp', type: 'RECHECK_REPLIES', requestId },
+        { source: 'coldbase-webapp', type: 'RECHECK_REPLIES', requestId },
         '*'
       );
       setTimeout(() => { refresh(); refreshInsights(); }, 3_500);

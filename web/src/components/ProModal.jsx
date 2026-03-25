@@ -34,7 +34,7 @@ export default function ProModal({ onClose }) {
       const { url } = await createCheckoutSession(selectedPlan);
       window.location.href = url;
     } catch (e) {
-      console.error('[Reach] Checkout failed:', e.message);
+      console.error('[Coldbase] Checkout failed:', e.message);
       setLoading(false);
     }
   }
@@ -69,7 +69,7 @@ export default function ProModal({ onClose }) {
         {/* Header */}
         <div className="px-6 sm:px-8 pt-5 sm:pt-8 pb-5 sm:pb-6 sm:pr-12 text-center">
           <p className="font-display text-[17px] sm:text-[19px] font-bold text-chrome-text leading-snug">
-            Reach Pro users send smarter and get <span className="text-accent">more replies</span>.
+            Coldbase Pro users send smarter and get <span className="text-accent">more replies</span>.
           </p>
         </div>
 
@@ -91,7 +91,7 @@ export default function ProModal({ onClose }) {
 
           {/* Pro */}
           <div className="bg-accent/[0.03] border border-accent/20 rounded-lg p-4 sm:p-5">
-            <p className="font-sans font-bold text-[14px] text-accent mb-1">Reach Pro</p>
+            <p className="font-sans font-bold text-[14px] text-accent mb-1">Coldbase Pro</p>
             <p className="text-[11px] text-chrome-muted mb-4 leading-relaxed">The full suite, to help you close more opportunities.</p>
             <ul className="space-y-3">
               {proFeatures.map(f => (

@@ -129,7 +129,7 @@ function PlanSection({ plan = 'free', onUpgrade, onManageSubscription }) {
               <div className="min-w-0">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Star size={13} className="text-accent fill-accent flex-shrink-0" aria-hidden="true" />
-                  <span className="text-[14px] font-semibold text-chrome-text">Reach Pro</span>
+                  <span className="text-[14px] font-semibold text-chrome-text">Coldbase Pro</span>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-semibold text-emerald-700">
                     <Check size={10} strokeWidth={2.5} aria-hidden="true" />
                     Active
@@ -229,7 +229,7 @@ export default function SettingsPage() {
         setResumeName(data.resumeName ?? null);
         setSettingsLoaded(true);
       })
-      .catch(e => console.error('[Reach] Failed to load settings:', e.message));
+      .catch(e => console.error('[Coldbase] Failed to load settings:', e.message));
   }, []);
 
   // Handle ?scrollTo=resume query param
@@ -348,7 +348,7 @@ export default function SettingsPage() {
       localStorage.removeItem(TOKEN_KEY);
       window.location.href = '/login';
     } catch (e) {
-      console.error('[Reach] Account deletion failed:', e.message);
+      console.error('[Coldbase] Account deletion failed:', e.message);
     }
   }
 
@@ -369,7 +369,7 @@ export default function SettingsPage() {
       const { resumeName: name } = await uploadResume(file);
       setResumeName(name);
     } catch (e) {
-      console.error('[Reach] Resume upload failed:', e.message);
+      console.error('[Coldbase] Resume upload failed:', e.message);
       setResumeError('Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
@@ -381,7 +381,7 @@ export default function SettingsPage() {
       await deleteResume();
       setResumeName(null);
     } catch (e) {
-      console.error('[Reach] Resume delete failed:', e.message);
+      console.error('[Coldbase] Resume delete failed:', e.message);
     }
   }
 
@@ -390,7 +390,7 @@ export default function SettingsPage() {
       const { url } = await createPortalSession();
       window.location.href = url;
     } catch (e) {
-      console.error('[Reach] Failed to open billing portal:', e.message);
+      console.error('[Coldbase] Failed to open billing portal:', e.message);
     }
   }
 
@@ -402,7 +402,7 @@ export default function SettingsPage() {
       setDigestStatus('success');
       setTimeout(() => setDigestStatus(null), 2000);
     } catch (e) {
-      console.error('[Reach] Failed to save email digest:', e.message);
+      console.error('[Coldbase] Failed to save email digest:', e.message);
       setDigestStatus('error');
     }
   }
@@ -413,7 +413,7 @@ export default function SettingsPage() {
       {stripeSuccess && (
         <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-3 flex items-center justify-between">
           <p className="text-[13px] font-medium text-emerald-700">
-            🎉 Welcome to Reach Pro! Your subscription is now active.
+            🎉 Welcome to Coldbase Pro! Your subscription is now active.
           </p>
           <button
             type="button"

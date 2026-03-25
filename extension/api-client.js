@@ -3,7 +3,7 @@
 
 import { logger } from './logger-esm.js';
 import { SERVER_URL } from './config.js';
-import { getReachToken } from './reach-auth.js';
+import { getColdbaseToken } from './coldbase-auth.js';
 
 const log = logger('api-client');
 
@@ -58,13 +58,13 @@ export async function apiFetchRetry(url, token, getAuthToken) {
 // ─── Server API helpers ───────────────────────────────────────────────────────
 
 /**
- * Base fetch helper for the Reach server. Attaches the Authorization: Bearer
+ * Base fetch helper for the Coldbase server. Attaches the Authorization: Bearer
  * token (from chrome.storage.local) and prepends SERVER_URL to the path.
  * @param {string} path - Path relative to SERVER_URL (e.g. '/outreach').
  * @param {RequestInit} options - Standard fetch options.
  */
 export async function serverFetch(path, options = {}) {
-  const token = await getReachToken();
+  const token = await getColdbaseToken();
   const headers = {
     'Content-Type': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),

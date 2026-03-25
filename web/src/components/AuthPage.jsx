@@ -56,7 +56,7 @@ export default function AuthPage({ onLogin }) {
     <AuthShell>
       {/* Wordmark */}
       <span className="font-display text-[18px] font-bold text-chrome-text leading-none tracking-tight block mb-3">
-        Reach
+        Coldbase
       </span>
 
       {/* Mode tabs */}

@@ -48,9 +48,9 @@ export default function TopNav({ activeSection, onSectionChange }) {
         {/* Left: Wordmark */}
         <span
           className="font-display text-[18px] font-bold text-chrome-text leading-none tracking-tight flex-shrink-0"
-          aria-label="Reach"
+          aria-label="Coldbase"
         >
-          Reach
+          Coldbase
         </span>
 
         {/* Center: Section tabs */}

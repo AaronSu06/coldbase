@@ -1,4 +1,4 @@
-// content.js — Reach Gmail compose orchestrator
+// content.js — Coldbase Gmail compose orchestrator
 // Runs as a classic script (no ES module imports allowed in content scripts).
 // Owns shared state; delegates detection, widget, and tracking to module namespaces.
 //
@@ -10,7 +10,7 @@
   // Allow re-initialisation on every injection — module IIFEs have already reset _state.
   window.__reachLoaded = true;
 
-  const log = window.ReachLogger('content');
+  const log = window.ColdbaseLogger('content');
   log.info('Content script loaded.');
 
   // Compose-window widgets only attach on known email client domains.
@@ -76,7 +76,7 @@
           savedTrackingDefault = r.trackingDefault;
           for (const el of liveEditors) {
             editorManualModes.set(el, savedTrackingDefault);
-            window.ReachWidget.update(el);
+            window.ColdbaseWidget.update(el);
           }
         }
       });
@@ -84,12 +84,12 @@
         if (area !== 'local') return;
         if ('trackingDefault' in changes) {
           savedTrackingDefault = changes.trackingDefault.newValue || 'force_track';
-          window.ReachWidget.syncTrackMode();
+          window.ColdbaseWidget.syncTrackMode();
         }
         // Background notifies us when a scan completes — refresh the panel overview
         // so newly tracked emails appear without requiring manual interaction.
-        if ('outreachiq_scan_complete' in changes && changes.outreachiq_scan_complete.newValue) {
-          window.ReachWidget.refreshOverview();
+        if ('coldbase_scan_complete' in changes && changes.coldbase_scan_complete.newValue) {
+          window.ColdbaseWidget.refreshOverview();
         }
       });
     } catch (e) { log.error('initStorageListeners failed:', e); }
@@ -97,9 +97,9 @@
 
   // ─── Boot sequence ─────────────────────────────────────────────────────────────
 
-  try { window.ReachDetector.init(state); } catch (e) { log.error('ReachDetector.init() threw:', e); }
-  try { window.ReachWidget.init(state);   } catch (e) { log.error('ReachWidget.init() threw:', e); }
-  try { window.ReachTracking.init(state); } catch (e) { log.error('ReachTracking.init() threw:', e); }
+  try { window.ColdbaseDetector.init(state); } catch (e) { log.error('ColdbaseDetector.init() threw:', e); }
+  try { window.ColdbaseWidget.init(state);   } catch (e) { log.error('ColdbaseWidget.init() threw:', e); }
+  try { window.ColdbaseTracking.init(state); } catch (e) { log.error('ColdbaseTracking.init() threw:', e); }
   initStorageListeners();
 
   // ─── Message listener ──────────────────────────────────────────────────────────
@@ -109,6 +109,6 @@
     const editor = lastActiveEditor && document.body.contains(lastActiveEditor)
       ? lastActiveEditor
       : null;
-    window.ReachWidget.openComposePanel(editor);
+    window.ColdbaseWidget.openComposePanel(editor);
   });
 })();

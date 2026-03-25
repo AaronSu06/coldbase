@@ -102,7 +102,7 @@ function CompleteProfileCard({ hasResume, onSetupProfile }) {
         Complete your profile
       </p>
       <p className="text-[12px] text-chrome-muted leading-relaxed mb-4">
-        Upload a resume and set up email updates so Reach can personalise your outreach.
+        Upload a resume and set up email updates so Coldbase can personalise your outreach.
       </p>
       <button
         type="button"
@@ -117,7 +117,7 @@ function CompleteProfileCard({ hasResume, onSetupProfile }) {
 
 // ProModal is imported from ProModal.jsx
 
-// ── Reach Pro pricing card ─────────────────────────────────────────────────
+// ── Coldbase Pro pricing card ─────────────────────────────────────────────────
 
 function UpgradeCard() {
   const [open, setOpen] = useState(false);
@@ -134,7 +134,7 @@ function UpgradeCard() {
       <ActionCard className="border-accent/20 bg-accent/[0.03] flex flex-col h-full">
         <div className="mb-3">
           <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
-            Reach Pro
+            Coldbase Pro
           </p>
           <p className="text-[12px] text-chrome-muted leading-relaxed">
             AI-powered follow-ups, deep analytics, and priority support — for serious outreach.
@@ -157,7 +157,7 @@ function UpgradeCard() {
           onClick={() => setOpen(true)}
           className="w-full py-2 bg-accent text-white font-semibold text-[12px] rounded-lg hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
         >
-          Subscribe to Reach Pro
+          Subscribe to Coldbase Pro
         </button>
       </ActionCard>
 
@@ -175,7 +175,7 @@ function DeveloperNote() {
         A note from the developer
       </p>
       <p className="text-[12px] text-chrome-subtle leading-relaxed">
-        I built Reach because spreadsheet-based outreach tracking was eating my time. I wanted something minimal and honest. Pro keeps the lights on — thank you for being here.
+        I built Coldbase because spreadsheet-based outreach tracking was eating my time. I wanted something minimal and honest. Pro keeps the lights on — thank you for being here.
       </p>
     </ActionCard>
   );
@@ -190,7 +190,7 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
   useEffect(() => {
     fetchProfile()
       .then(data => setResumeName(data.resumeName ?? null))
-      .catch(e => { console.error('[Reach] Failed to load profile:', e.message); setResumeName(null); });
+      .catch(e => { console.error('[Coldbase] Failed to load profile:', e.message); setResumeName(null); });
   }, []);
 
   return (

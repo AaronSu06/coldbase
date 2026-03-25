@@ -53,7 +53,7 @@ function generateFakeFeedback(seed) {
 
   const tones     = ["The overall tone is professional and appropriately confident.", "Tone is warm but could be slightly more direct.", "The tone reads well — conversational without being too casual.", "Tone is polished; consider adding a touch more personality.", "Comes across as genuine, which is your strongest asset here."];
 
-  const nexts     = ["Given the current status, a short personalized bump in 5–7 days would be appropriate.", "Consider referencing a specific project or article from their team in your follow-up.", "A brief reply reaffirming your interest and availability would be a natural next move.", "Reach out to a second contact at the same company to broaden your touchpoints.", "Wait a few more days then send a one-line check-in — keep it light."];
+  const nexts     = ["Given the current status, a short personalized bump in 5–7 days would be appropriate.", "Consider referencing a specific project or article from their team in your follow-up.", "A brief reply reaffirming your interest and availability would be a natural next move.", "Coldbase out to a second contact at the same company to broaden your touchpoints.", "Wait a few more days then send a one-line check-in — keep it light."];
 
   return [
     `1. What you did well: ${pick(openings, 0)} ${pick(o_adj, 1)}, ${pick(o_follow, 2)}`,

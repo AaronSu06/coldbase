@@ -3,7 +3,7 @@ import { SERVER_URL, DASH_URL } from './config.js';
 import { getAuthToken } from './auth.js';
 import { serverFetch, fetchOutreach } from './api-client.js';
 import { checkReplies, trackLatestSent, trackFromPendingScan } from './reply-checker.js';
-import { setReachToken, clearReachToken } from './reach-auth.js';
+import { setColdbaseToken, clearColdbaseToken } from './coldbase-auth.js';
 import { makeLogger } from './logger-esm.js';
 
 const log = makeLogger('background');
@@ -16,10 +16,10 @@ const log = makeLogger('background');
 // yet be registered (imports not complete). chrome.storage.onChanged does not
 // have this problem — Chrome fully initializes the SW before dispatching it.
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && 'outreachiq_pending_scan' in changes) {
-    const pendingScan = changes.outreachiq_pending_scan?.newValue;
+  if (area === 'local' && 'coldbase_pending_scan' in changes) {
+    const pendingScan = changes.coldbase_pending_scan?.newValue;
     if (!pendingScan) return; // delete event fired by remove() below — ignore
-    chrome.storage.local.remove('outreachiq_pending_scan');
+    chrome.storage.local.remove('coldbase_pending_scan');
     log.info('Storage trigger received — running trackLatestSent.');
     trackLatestSent(false, pendingScan).then(async (tracked) => {
       // If Gmail API path failed (OAuth unavailable) AND the content script
@@ -35,10 +35,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
       // Notify all content scripts that a scan completed so they can refresh
       // the panel UI. We use storage (not sendMessage) to avoid the MV3
       // service-worker cold-start race, and to reach all open Gmail tabs at once.
-      chrome.storage.local.set({ outreachiq_scan_complete: { ts: Date.now(), tracked: !!tracked } }, () => {
+      chrome.storage.local.set({ coldbase_scan_complete: { ts: Date.now(), tracked: !!tracked } }, () => {
         void chrome.runtime.lastError; // suppress unchecked-error warning
         // Remove immediately after writing so onChanged fires on every send.
-        chrome.storage.local.remove('outreachiq_scan_complete', () => {
+        chrome.storage.local.remove('coldbase_scan_complete', () => {
           void chrome.runtime.lastError;
         });
       });
@@ -48,11 +48,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 chrome.runtime.onInstalled.addListener(() => {
   log.info('Extension installed.');
-  chrome.alarms.create('outreachiq-reply-check', { periodInMinutes: 30 });
+  chrome.alarms.create('coldbase-reply-check', { periodInMinutes: 30 });
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name === 'outreachiq-reply-check') {
+  if (alarm.name === 'coldbase-reply-check') {
     log.info('Alarm fired — checking for replies.');
     let token;
     try {
@@ -235,12 +235,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 // ─── Dashboard token sync ──────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg.type === 'SYNC_REACH_TOKEN' && msg.token) {
-    setReachToken(msg.token);
+  if (msg.type === 'SYNC_COLDBASE_TOKEN' && msg.token) {
+    setColdbaseToken(msg.token);
     return;
   }
-  if (msg.type === 'CLEAR_REACH_TOKEN') {
-    clearReachToken().then(() => sendResponse({ ok: true }));
+  if (msg.type === 'CLEAR_COLDBASE_TOKEN') {
+    clearColdbaseToken().then(() => sendResponse({ ok: true }));
     return true;
   }
 });

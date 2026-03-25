@@ -1,9 +1,9 @@
 // tracking.js — Tracking pixel injection + send toast
-// Classic script (no ES module imports). Exposes window.ReachTracking namespace.
-// Loaded before content.js per manifest order; window.ReachLogger is available.
+// Classic script (no ES module imports). Exposes window.ColdbaseTracking namespace.
+// Loaded before content.js per manifest order; window.ColdbaseLogger is available.
 
-window.ReachTracking = (function () {
-  const log = window.ReachLogger('tracking');
+window.ColdbaseTracking = (function () {
+  const log = window.ColdbaseLogger('tracking');
 
   // Module-local reference to shared state (set by init)
   let _state = null;
@@ -50,7 +50,7 @@ window.ReachTracking = (function () {
       // Stored on _state so fireSendToast can include it in the storage payload,
       // enabling the background to build a record without needing Gmail API auth.
       try {
-        const meta = window.ReachWidget.getComposeMetadata(editorEl);
+        const meta = window.ColdbaseWidget.getComposeMetadata(editorEl);
         const bodyText = (editorEl.innerText || editorEl.textContent || '').slice(0, 2000);
         _state.pendingEmailMeta = {
           subject: meta.subject || '',
@@ -91,7 +91,7 @@ window.ReachTracking = (function () {
     });
     banner.innerHTML = `
       <span style="font-size:18px">&#x26A0;&#xFE0F;</span>
-      <span><strong>Reach</strong>: extension was reloaded \u2014 this email was <em>not</em> tracked.<br>
+      <span><strong>Coldbase</strong>: extension was reloaded \u2014 this email was <em>not</em> tracked.<br>
       Reload Gmail to restore tracking.</span>
       <button id="reach-reload-btn" style="
         flex-shrink:0; background:#6366f1; color:#fff; border:none;
@@ -139,12 +139,12 @@ window.ReachTracking = (function () {
 
       if (_state.lastActiveEditor && document.body.contains(_state.lastActiveEditor)) {
         const manualMode = _state.editorManualModes.get(_state.lastActiveEditor) || 'force_track';
-        const meta = window.ReachWidget.getComposeMetadata(_state.lastActiveEditor);
+        const meta = window.ColdbaseWidget.getComposeMetadata(_state.lastActiveEditor);
         pendingScanPayload = {
           ts: Date.now(),
           overrideMode: manualMode,
-          subjectHint: window.ReachDetector.normalizeHint(meta.subject).slice(0, 120),
-          recipientsHint: window.ReachDetector.normalizeHint(meta.recipients).slice(0, 180),
+          subjectHint: window.ColdbaseDetector.normalizeHint(meta.subject).slice(0, 120),
+          recipientsHint: window.ColdbaseDetector.normalizeHint(meta.recipients).slice(0, 180),
           trackingId: _state.pendingTrackingId,
           // Prefer live metadata if compose is still open, else use captured snapshot.
           emailSubject: meta.subject || capturedMeta?.subject || '',
@@ -152,11 +152,11 @@ window.ReachTracking = (function () {
           emailBody: capturedMeta?.body || '',
         };
         _state.editorManualModes.set(_state.lastActiveEditor, _state.savedTrackingDefault || 'force_track');
-        window.ReachWidget.update(_state.lastActiveEditor);
+        window.ColdbaseWidget.update(_state.lastActiveEditor);
       }
       _state.pendingTrackingId = null;
 
-      chrome.storage.local.set({ outreachiq_pending_scan: pendingScanPayload }, () => {
+      chrome.storage.local.set({ coldbase_pending_scan: pendingScanPayload }, () => {
         if (chrome.runtime.lastError) {
           log.warn('Storage trigger failed:', chrome.runtime.lastError.message);
         } else {
@@ -170,7 +170,7 @@ window.ReachTracking = (function () {
 
   function init(state) {
     _state = state;
-    log.debug('ReachTracking initialized.');
+    log.debug('ColdbaseTracking initialized.');
     chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, (resp) => {
       if (chrome.runtime.lastError) {
         log.warn('GET_RUNTIME_CONFIG failed — using fallback serverBase:', chrome.runtime.lastError.message);

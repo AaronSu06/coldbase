@@ -1,15 +1,15 @@
 // web/src/hooks/useAuth.js
-export const TOKEN_KEY = 'reach_token';
+export const TOKEN_KEY = 'coldbase_token';
 
 export function useAuth() {
   function login(token) {
     localStorage.setItem(TOKEN_KEY, token);
-    window.postMessage({ source: 'reach-webapp', type: 'REACH_LOGIN', token }, '*');
+    window.postMessage({ source: 'coldbase-webapp', type: 'COLDBASE_LOGIN', token }, '*');
   }
 
   function logout() {
     localStorage.removeItem(TOKEN_KEY);
-    window.postMessage({ source: 'reach-webapp', type: 'REACH_LOGOUT' }, '*');
+    window.postMessage({ source: 'coldbase-webapp', type: 'COLDBASE_LOGOUT' }, '*');
   }
 
   function getToken() {

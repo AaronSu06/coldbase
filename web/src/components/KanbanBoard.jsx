@@ -9,7 +9,7 @@ import { COLUMNS } from '@shared/constants';
 import KanbanColumn from './KanbanColumn';
 import OutreachCard from './OutreachCard';
 
-const ORDER_KEY = 'outreachiq-card-order';
+const ORDER_KEY = 'coldbase-card-order';
 
 
 function loadOrder() {

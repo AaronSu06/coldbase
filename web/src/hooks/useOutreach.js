@@ -33,7 +33,7 @@ export function useOutreach() {
 
   const persistPatch = useCallback((threadId, patch, context) => {
     patchOutreach(threadId, patch)
-      .catch(e => console.error(`[Reach] Failed to persist ${context}:`, e.message));
+      .catch(e => console.error(`[Coldbase] Failed to persist ${context}:`, e.message));
   }, []);
 
   const applyOptimisticMutation = useCallback((threadId, mutate, toPatch, context) => {
@@ -101,7 +101,7 @@ export function useOutreach() {
       })
     );
     patchOutreach(threadId, patch).catch(e => {
-      console.error('[Reach] Failed to persist record update:', e.message);
+      console.error('[Coldbase] Failed to persist record update:', e.message);
       if (!previousValues) return;
       setRecords(prev =>
         prev.map(r => r.threadId === threadId ? { ...r, ...previousValues } : r)
@@ -111,7 +111,7 @@ export function useOutreach() {
 
   const deleteRecord = useCallback((threadId) => {
     setRecords(prev => prev.filter(r => r.threadId !== threadId));
-    deleteOutreach(threadId).catch(e => console.error('[Reach] deleteOutreach failed:', e.message));
+    deleteOutreach(threadId).catch(e => console.error('[Coldbase] deleteOutreach failed:', e.message));
   }, []);
 
   return { records, error, refresh: load, updateStatus, toggleFavorite, toggleArchived, archiveAll, updateRecord, deleteRecord };

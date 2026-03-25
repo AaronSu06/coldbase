@@ -1,9 +1,9 @@
 // email-detector.js — Send detection and DOM observation
-// Classic script (no ES module imports). Exposes window.ReachDetector namespace.
-// Loaded before content.js per manifest order; window.ReachLogger is available.
+// Classic script (no ES module imports). Exposes window.ColdbaseDetector namespace.
+// Loaded before content.js per manifest order; window.ColdbaseLogger is available.
 
-window.ReachDetector = (function () {
-  const log = window.ReachLogger('email-detector');
+window.ColdbaseDetector = (function () {
+  const log = window.ColdbaseLogger('email-detector');
 
   // Module-local reference to shared state (set by init)
   let _state = null;
@@ -22,7 +22,7 @@ window.ReachDetector = (function () {
       const existing = state.editorWidgets.get(el);
       if (existing && document.body.contains(existing)) return;
       state.observedEditors.delete(el);
-      window.ReachWidget.clearEditorState(el);
+      window.ColdbaseWidget.clearEditorState(el);
     }
     state.observedEditors.add(el);
     log.info('Attached to compose editor.');
@@ -30,19 +30,19 @@ window.ReachDetector = (function () {
     // Set lastActiveEditor BEFORE calling update() so widget visibility sees it (UI-SYNC-01)
     state.lastActiveEditor = el;
     state.editorManualModes.set(el, state.savedTrackingDefault || 'force_track');
-    // updateWidget is in ReachWidget — it's a callback path so ReachWidget is loaded by now
-    window.ReachWidget.update(el);
+    // updateWidget is in ColdbaseWidget — it's a callback path so ColdbaseWidget is loaded by now
+    window.ColdbaseWidget.update(el);
     // Hide widgets on all other live editors (UI-SYNC-01) — update(el) alone only shows the
     // new one; without this loop the old editors' widgets stay visible and appear to stack.
-    for (const e of state.liveEditors) { if (e !== el) window.ReachWidget.update(e); }
-    window.ReachWidget.syncTrackMode(); // sync panel if already open (UI-SYNC-02)
-    window.ReachTracking.watchSendButton(el);
+    for (const e of state.liveEditors) { if (e !== el) window.ColdbaseWidget.update(e); }
+    window.ColdbaseWidget.syncTrackMode(); // sync panel if already open (UI-SYNC-02)
+    window.ColdbaseTracking.watchSendButton(el);
 
     el.addEventListener('focus', () => {
       state.lastActiveEditor = el;
       // Update visibility on all live editors so only the focused one shows (UI-SYNC-01)
-      for (const e of state.liveEditors) window.ReachWidget.update(e);
-      window.ReachWidget.syncTrackMode();
+      for (const e of state.liveEditors) window.ColdbaseWidget.update(e);
+      window.ColdbaseWidget.syncTrackMode();
     });
 
     el.addEventListener('input', () => {
@@ -69,7 +69,7 @@ window.ReachDetector = (function () {
     const text = node.textContent || '';
     if (text.includes('Message sent')) {
       node.dataset.reachSeen = '1';
-      window.ReachTracking.fireSendToast();
+      window.ColdbaseTracking.fireSendToast();
     }
   }
 
@@ -81,7 +81,7 @@ window.ReachDetector = (function () {
       if (el.dataset.reachSeen) continue;
       if (el.textContent?.includes('Message sent')) {
         el.dataset.reachSeen = '1';
-        window.ReachTracking.fireSendToast();
+        window.ColdbaseTracking.fireSendToast();
         return;
       }
     }
@@ -101,7 +101,7 @@ window.ReachDetector = (function () {
     for (const mutation of mutations) {
       if (mutation.type === 'characterData') {
         const text = mutation.target.textContent || '';
-        if (text.includes('Message sent')) window.ReachTracking.fireSendToast();
+        if (text.includes('Message sent')) window.ColdbaseTracking.fireSendToast();
         continue;
       }
 
@@ -141,7 +141,7 @@ window.ReachDetector = (function () {
     // Update widget visibility for all live editors — cleans up removed editors and
     // promotes the next active one (UI-SYNC-01 widget promotion)
     if (shouldUpdateLive && _isEmailClient) {
-      for (const e of _state.liveEditors) window.ReachWidget.update(e);
+      for (const e of _state.liveEditors) window.ColdbaseWidget.update(e);
     }
   });
 
@@ -178,7 +178,7 @@ window.ReachDetector = (function () {
         if (!document.body.contains(editorEl)) continue;
         const w = state.editorWidgets.get(editorEl);
         if (!w) continue;
-        window.ReachWidget.placeWidget(editorEl, null, w);
+        window.ColdbaseWidget.placeWidget(editorEl, null, w);
       }
     });
 
@@ -189,11 +189,11 @@ window.ReachDetector = (function () {
     // Extension context health check
     setTimeout(() => {
       _healthInterval = setInterval(() => {
-        if (!chrome.runtime?.id) window.ReachTracking.showReloadBanner();
+        if (!chrome.runtime?.id) window.ColdbaseTracking.showReloadBanner();
       }, 5000);
     }, 10_000);
 
-    log.debug('ReachDetector initialized.');
+    log.debug('ColdbaseDetector initialized.');
   }
 
   return { init, scanForEditors, normalizeHint };

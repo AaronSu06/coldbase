@@ -21,7 +21,7 @@ async function apiFetch(url, options = {}) {
   const res = await fetch(url, { ...options, headers });
   if (res.status === 401) {
     localStorage.removeItem(TOKEN_KEY);
-    window.postMessage({ source: 'reach-webapp', type: 'REACH_LOGOUT' }, '*');
+    window.postMessage({ source: 'coldbase-webapp', type: 'COLDBASE_LOGOUT' }, '*');
     window.location.href = '/login';
     throw new Error('Session expired — redirecting to login');
   }

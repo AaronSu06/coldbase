@@ -259,7 +259,7 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
  * - gmailUrl points to the SENT label view rather than the specific thread
  * - Duplicate detection per-send is UUID-based (no 409 on re-scan of same thread)
  *
- * @param {object} pendingScan — payload from outreachiq_pending_scan storage key
+ * @param {object} pendingScan — payload from coldbase_pending_scan storage key
  * @returns {Promise<boolean>} true if a new record was saved, false otherwise
  */
 export async function trackFromPendingScan(pendingScan) {
