@@ -72,7 +72,7 @@ window.ReachWidget = (function () {
     document.head.appendChild(s);
   }
 
-  const ICON_IMG = `<img class="oiq-icon" src="${chrome.runtime.getURL('Reach.png')}" alt="Reach" />`;
+  const ICON_IMG = `<img class="oiq-icon" src="${chrome.runtime.getURL('logo.png')}" alt="Reach" />`;
 
   // ─── Widget DOM helpers ──────────────────────────────────────────────────────
 
@@ -1219,7 +1219,7 @@ window.ReachWidget = (function () {
   // ─── Build compose panel ─────────────────────────────────────────────────────
 
   function buildComposePanel() {
-    const ICON_URL = chrome.runtime.getURL('Reach.png');
+    const ICON_URL = chrome.runtime.getURL('logo.png');
     const host = document.createElement('div');
     host.id = 'reach-compose-panel-host';
     host.style.display = 'none';
@@ -1315,7 +1315,7 @@ window.ReachWidget = (function () {
     }
 
     if (!_composeAuthGateHost) {
-      const ICON_URL = chrome.runtime.getURL('Reach.png');
+      const ICON_URL = chrome.runtime.getURL('logo.png');
       const host = document.createElement('div');
       host.id = 'reach-compose-auth-gate-host';
       host.style.display = 'none';

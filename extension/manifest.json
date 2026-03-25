@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Reach",
+  "name": "Coldbase",
   "version": "1.0.0",
   "description": "Auto-detect cold outreach emails from Gmail and manage them in a kanban board.",
   "permissions": [
@@ -42,23 +42,23 @@
     }
   ],
   "icons": {
-    "16": "Reach.png",
-    "32": "Reach.png",
-    "48": "Reach.png",
-    "128": "Reach.png"
+    "16": "logo.png",
+    "32": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
   },
   "action": {
-    "default_title": "Reach",
+    "default_title": "Coldbase",
     "default_icon": {
-      "16": "Reach.png",
-      "32": "Reach.png",
-      "48": "Reach.png",
-      "128": "Reach.png"
+      "16": "logo.png",
+      "32": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
     }
   },
   "web_accessible_resources": [
     {
-      "resources": ["Reach.png", "Placeholder.png"],
+      "resources": ["logo.png", "Reach.png", "Placeholder.png"],
       "matches": ["<all_urls>"]
     }
   ],

@@ -275,7 +275,7 @@
     const style = document.createElement('style');
     style.textContent = PANEL_STYLE_TEXT;
 
-    const ICON_URL = chrome.runtime.getURL('Reach.png');
+    const ICON_URL = chrome.runtime.getURL('logo.png');
 
     const panel = document.createElement('div');
     panel.className = 'panel';
@@ -345,7 +345,7 @@
     style.textContent = PANEL_STYLE_TEXT;
     shadow.appendChild(style);
 
-    const ICON_URL = chrome.runtime.getURL('Reach.png');
+    const ICON_URL = chrome.runtime.getURL('logo.png');
     const panel = document.createElement('div');
     panel.className = 'panel';
     panel.innerHTML = `

@@ -45,13 +45,15 @@ export default function TopNav({ activeSection, onSectionChange }) {
     <header className="bg-chrome-bg border-b border-chrome-border flex-shrink-0">
       <div className="px-4 sm:px-8 h-12 flex items-center justify-between gap-6">
 
-        {/* Left: Wordmark */}
-        <span
-          className="font-display text-[18px] font-bold text-chrome-text leading-none tracking-tight flex-shrink-0"
-          aria-label="Reach"
-        >
-          Reach
-        </span>
+        {/* Left: Logo + Wordmark */}
+        <div className="flex items-center gap-2 flex-shrink-0" aria-label="Coldbase">
+          <span className="w-5 h-5 rounded-sm bg-accent overflow-hidden flex items-center justify-center flex-shrink-0">
+            <img src="/logo.png" alt="" className="w-full h-full object-contain" onError={e => { e.currentTarget.style.display = 'none'; }} />
+          </span>
+          <span className="font-display text-[18px] font-bold text-chrome-text leading-none tracking-tight">
+            Coldbase
+          </span>
+        </div>
 
         {/* Center: Section tabs */}
         <nav aria-label="Main sections" className="flex items-stretch h-full gap-1">
