@@ -304,26 +304,16 @@ export default function Sidebar({
 
   const handleFieldBlur = useCallback((field) => {
     const raw = editValues[field];
-    const original = field === 'sentDate'
-      ? (record?.sentDate ? new Date(record.sentDate).toISOString().split('T')[0] : '')
-      : (record?.[field] || '');
+    const original = record?.[field] || '';
     if (raw !== original) {
-      const patch = field === 'sentDate'
-        ? { sentDate: raw ? new Date(raw + 'T12:00:00.000Z').toISOString() : null }
-        : { [field]: raw };
-      onUpdateRecord(record.threadId, patch);
+      onUpdateRecord(record.threadId, { [field]: raw });
     }
-    setEditingField(null);
   }, [record, editValues, onUpdateRecord]);
 
   const handleFieldKeyDown = useCallback((e, field) => {
     if (e.key === 'Enter') { e.target.blur(); return; }
     if (e.key === 'Escape') {
-      const original = field === 'sentDate'
-        ? (record?.sentDate ? new Date(record.sentDate).toISOString().split('T')[0] : '')
-        : (record?.[field] || '');
-      setEditValues(v => ({ ...v, [field]: original }));
-      setEditingField(null);
+      setEditValues(v => ({ ...v, [field]: record?.[field] || '' }));
       e.preventDefault();
       e.stopPropagation();
     }
