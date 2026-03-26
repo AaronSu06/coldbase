@@ -392,60 +392,47 @@ export default function Sidebar({
             <div className="flex items-center gap-3 px-5 py-4 border-b border-chrome-border flex-shrink-0">
               <CompanyAvatar domain={record.domain} company={record.company} size="large" />
               <div className="flex-1 min-w-0">
-                {editingField === 'company' ? (
+                {isEditMode ? (
                   <input
-                    autoFocus
                     value={editValues.company}
                     onChange={e => setEditValues(v => ({ ...v, company: e.target.value }))}
                     onBlur={() => handleFieldBlur('company')}
                     onKeyDown={e => handleFieldKeyDown(e, 'company')}
-                    className="font-semibold text-[16px] text-chrome-text leading-tight w-full bg-transparent border-b border-accent outline-none"
+                    className="font-semibold text-[16px] text-chrome-text leading-tight w-full bg-transparent border border-chrome-rim rounded px-1 outline-none focus:border-accent"
                   />
                 ) : (
-                  <p
-                    className="font-semibold text-[16px] text-chrome-text leading-tight truncate cursor-text hover:underline decoration-dashed underline-offset-2"
-                    onClick={() => setEditingField('company')}
-                    title="Click to edit"
-                  >
+                  <p className="font-semibold text-[16px] text-chrome-text leading-tight truncate">
                     {record.company}
                   </p>
                 )}
                 <div className="flex gap-1 min-w-0">
-                  {editingField === 'contactName' ? (
+                  {isEditMode ? (
                     <input
-                      autoFocus
                       value={editValues.contactName}
                       onChange={e => setEditValues(v => ({ ...v, contactName: e.target.value }))}
                       onBlur={() => handleFieldBlur('contactName')}
                       onKeyDown={e => handleFieldKeyDown(e, 'contactName')}
-                      className="text-[13px] text-chrome-muted w-24 bg-transparent border-b border-accent outline-none"
+                      placeholder="Name"
+                      className="text-[13px] text-chrome-muted w-24 bg-transparent border border-chrome-rim rounded px-1 outline-none focus:border-accent"
                     />
                   ) : (
-                    <span
-                      className="text-[13px] text-chrome-muted truncate cursor-text hover:underline decoration-dashed underline-offset-2 shrink-0"
-                      onClick={() => setEditingField('contactName')}
-                      title="Click to edit"
-                    >
+                    <span className="text-[13px] text-chrome-muted truncate shrink-0">
                       {record.contactName || <span className="opacity-40">Name</span>}
                     </span>
                   )}
                   {(record.contactName || record.contactEmail) && <span className="text-[13px] text-chrome-muted shrink-0">·</span>}
-                  {editingField === 'contactEmail' ? (
+                  {isEditMode ? (
                     <input
-                      autoFocus
                       type="email"
                       value={editValues.contactEmail}
                       onChange={e => setEditValues(v => ({ ...v, contactEmail: e.target.value }))}
                       onBlur={() => handleFieldBlur('contactEmail')}
                       onKeyDown={e => handleFieldKeyDown(e, 'contactEmail')}
-                      className="text-[13px] text-chrome-muted flex-1 bg-transparent border-b border-accent outline-none"
+                      placeholder="Email"
+                      className="text-[13px] text-chrome-muted flex-1 bg-transparent border border-chrome-rim rounded px-1 outline-none focus:border-accent"
                     />
                   ) : (
-                    <span
-                      className="text-[13px] text-chrome-muted truncate cursor-text hover:underline decoration-dashed underline-offset-2"
-                      onClick={() => setEditingField('contactEmail')}
-                      title="Click to edit"
-                    >
+                    <span className="text-[13px] text-chrome-muted truncate">
                       {record.contactEmail || <span className="opacity-40">Email</span>}
                     </span>
                   )}
