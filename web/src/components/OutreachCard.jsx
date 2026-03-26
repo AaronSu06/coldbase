@@ -7,6 +7,7 @@ import BellIcon from './icons/BellIcon';
 import ChatIcon from './icons/ChatIcon';
 import EyeIcon from './icons/EyeIcon';
 import { getDaysSince } from '../lib/utils';
+import { Pencil } from 'lucide-react';
 
 
 function OutreachCard({ record, onCardClick, onToggleFavorite }) {
@@ -40,12 +41,19 @@ function OutreachCard({ record, onCardClick, onToggleFavorite }) {
       onClick={handleClick}
       className="group relative bg-chrome-card rounded-lg border border-chrome-rim py-3.5 px-4 cursor-grab shadow-card hover:shadow-card-hover hover:-translate-y-px transition-all duration-150"
     >
-      {/* Row 1: Avatar + Company name + Favorite */}
+      {/* Row 1: Avatar + Company name + Edit + Favorite */}
       <div className="flex items-center gap-2.5 mb-2.5">
         <CompanyAvatar domain={record.domain} company={record.company} />
         <p className="flex-1 font-bold text-[15px] text-chrome-text truncate leading-tight">
           {record.company}
         </p>
+        <button
+          onClick={e => { e.stopPropagation(); onCardClick?.(record); }}
+          aria-label="Edit record"
+          className="flex-shrink-0 p-1.5 rounded text-chrome-muted/50 hover:text-chrome-muted transition-colors duration-150"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
         <button
           onClick={e => { e.stopPropagation(); onToggleFavorite?.(record.threadId); }}
           aria-label={record.favorite ? 'Remove from favorites' : 'Add to favorites'}
@@ -102,6 +110,7 @@ function areEqual(prev, next) {
   return (
     prev.record.threadId    === next.record.threadId    &&
     prev.record.company     === next.record.company     &&
+    prev.record.domain      === next.record.domain      &&
     prev.record.subject     === next.record.subject     &&
     prev.record.contactName === next.record.contactName &&
     prev.record.status      === next.record.status      &&
