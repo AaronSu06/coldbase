@@ -471,6 +471,18 @@ export default function Sidebar({
               ) : (
                 <div className="flex items-center gap-0.5 flex-shrink-0">
                   <button
+                    onClick={() => setIsEditMode(v => !v)}
+                    aria-label={isEditMode ? 'Exit edit mode' : 'Edit record'}
+                    aria-pressed={isEditMode}
+                    className={`p-2 rounded-lg transition-colors ${
+                      isEditMode
+                        ? 'text-accent bg-accent/10'
+                        : 'text-chrome-muted hover:text-chrome-text hover:bg-black/5'
+                    }`}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() => onToggleFavorite(record.threadId)}
                     aria-label={record.favorite ? 'Remove from favorites' : 'Add to favorites'}
                     className={`p-2 rounded-lg transition-colors ${
