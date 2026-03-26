@@ -3,9 +3,9 @@
 
 import { logger } from './logger-esm.js';
 import { getAuthToken } from './auth.js';
-import { extractEmailAddress, normalizeForMatch } from './text-utils.js';
+import { extractEmailAddress } from './text-utils.js';
 import { apiFetch, apiFetchRetry, serverFetch, postOutreach, postTrackingPixel, fetchOutreach } from './api-client.js';
-import { isColdOutreach, extractCompanyFromEmail, extractCompanyFromText, fetchClearbitCompany, extractFirstName, isGenericDomain } from './classifier.js';
+import { extractCompanyFromEmail, extractCompanyFromText, fetchClearbitCompany, extractFirstName, isGenericDomain } from './classifier.js';
 
 const log = logger('reply-checker');
 
@@ -159,37 +159,6 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
   log.info(`Message parsed — subject: "${subject}" | to: "${toHeader}"`);
   log.debug(`Body excerpt: "${body.slice(0, 200).replace(/\n/g, ' ')}"`);
 
-  const normalizedSubject = normalizeForMatch(subject).slice(0, 120);
-  const normalizedRecipients = normalizeForMatch(toHeader).slice(0, 180);
-  let manualOverride = null;
-  if (pendingScan?.overrideMode) {
-    const subjectHint = normalizeForMatch(pendingScan.subjectHint).slice(0, 120);
-    const recipientsHint = normalizeForMatch(pendingScan.recipientsHint).slice(0, 180);
-    const subjectMatches = !subjectHint || normalizedSubject.includes(subjectHint);
-    const recipientsMatch = !recipientsHint || normalizedRecipients.includes(recipientsHint);
-    if (subjectMatches && recipientsMatch) {
-      manualOverride = pendingScan.overrideMode;
-    } else {
-      log.info('Manual override ignored (message hints did not match latest sent email).');
-    }
-  }
-
-  log.info('Running classification (keyword classifier)...');
-  let isColdEmail = isColdOutreach(subject + ' ' + body);
-
-  if (manualOverride === 'force_track') {
-    isColdEmail = true;
-  } else if (manualOverride === 'force_skip') {
-    isColdEmail = false;
-  }
-
-  log.info(`Classification → keyword=${isColdEmail} | override=${manualOverride ?? 'none'} | final=${isColdEmail}`);
-
-  if (!isColdEmail) {
-    log.info('Not classified as cold outreach — skipping.');
-    log.info('Tip: if this was a cold email, check that your email contains job-related keywords.');
-    return false;
-  }
 
   const domain = contactEmail.split('@')[1] || '';
   const company =
@@ -275,17 +244,6 @@ export async function trackFromPendingScan(pendingScan) {
   log.info('trackFromPendingScan() — building record from content-script data (OAuth unavailable).');
   log.info(`Subject: "${subject}" | Recipients: "${recipients}"`);
 
-  // Classification: same rules as the Gmail API path
-  let isColdEmail = isColdOutreach(subject + ' ' + body);
-  if (pendingScan?.overrideMode === 'force_track') isColdEmail = true;
-  if (pendingScan?.overrideMode === 'force_skip')  isColdEmail = false;
-
-  log.info(`Classification → isCold=${isColdEmail} | override=${pendingScan?.overrideMode ?? 'none'}`);
-
-  if (!isColdEmail) {
-    log.info('trackFromPendingScan: not classified as cold outreach — skipping.');
-    return false;
-  }
 
   // Parse first recipient as the contact
   const firstRecipient = recipients.split(',')[0].trim();
