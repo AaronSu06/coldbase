@@ -9,6 +9,7 @@ import { useUser } from '../hooks/useUser';
 import { getDaysSince, formatShortDate, STATUS_COLORS } from '../lib/utils';
 import { DayPicker } from 'react-day-picker';
 import { parseLocalDate, toDateString } from './DateRangePicker';
+import { Pencil } from 'lucide-react';
 
 const STEPPER_STEPS = ['Sent', 'Replied', 'Interviewing', 'Offer'];
 
@@ -203,7 +204,7 @@ export default function Sidebar({
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [editingField, setEditingField] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [editValues, setEditValues] = useState({});
   const latestRef = useRef({ notes: '', record: null });
   const panelRef = useRef(null);
@@ -218,15 +219,12 @@ export default function Sidebar({
       setShowFullThread(false);
       setShowDatePicker(false);
       setConfirmingDelete(false);
-      setEditingField(null);
+      setIsEditMode(false);
       setEditValues({
         company:      record.company      || '',
         contactName:  record.contactName  || '',
         contactEmail: record.contactEmail || '',
         subject:      record.subject      || '',
-        sentDate:     record.sentDate
-          ? new Date(record.sentDate).toISOString().split('T')[0]
-          : '',
       });
       setNextActionDate(
         record.nextActionDate
