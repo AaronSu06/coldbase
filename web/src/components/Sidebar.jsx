@@ -516,21 +516,16 @@ export default function Sidebar({
               {/* Left — scrollable content */}
               <div className="flex flex-col sm:overflow-hidden">
                 <div className="sm:flex-1 sm:overflow-y-auto p-5 flex flex-col gap-4">
-                  {editingField === 'subject' ? (
+                  {isEditMode ? (
                     <input
-                      autoFocus
                       value={editValues.subject}
                       onChange={e => setEditValues(v => ({ ...v, subject: e.target.value }))}
                       onBlur={() => handleFieldBlur('subject')}
                       onKeyDown={e => handleFieldKeyDown(e, 'subject')}
-                      className="font-semibold text-sm text-chrome-text w-full bg-transparent border-b border-accent outline-none leading-snug"
+                      className="font-semibold text-sm text-chrome-text w-full bg-transparent border border-chrome-rim rounded px-1 outline-none focus:border-accent leading-snug"
                     />
                   ) : (
-                    <h3
-                      className="font-semibold text-sm text-chrome-text leading-snug cursor-text hover:underline decoration-dashed underline-offset-2"
-                      onClick={() => setEditingField('subject')}
-                      title="Click to edit"
-                    >
+                    <h3 className="font-semibold text-sm text-chrome-text leading-snug">
                       {record.subject}
                     </h3>
                   )}
@@ -538,25 +533,7 @@ export default function Sidebar({
                   {/* Date + badges */}
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-2 text-xs text-chrome-muted">
-                      {editingField === 'sentDate' ? (
-                        <input
-                          autoFocus
-                          type="date"
-                          value={editValues.sentDate}
-                          onChange={e => setEditValues(v => ({ ...v, sentDate: e.target.value }))}
-                          onBlur={() => handleFieldBlur('sentDate')}
-                          onKeyDown={e => handleFieldKeyDown(e, 'sentDate')}
-                          className="text-xs text-chrome-text bg-transparent border-b border-accent outline-none"
-                        />
-                      ) : (
-                        <span
-                          className="cursor-text hover:underline decoration-dashed underline-offset-2"
-                          onClick={() => setEditingField('sentDate')}
-                          title="Click to edit"
-                        >
-                          {formatShortDate(record.sentDate)}
-                        </span>
-                      )}
+                      <span>{formatShortDate(record.sentDate)}</span>
                       <span className="text-chrome-rim">·</span>
                       <span>{getDaysSince(record.sentDate)}d ago</span>
                     </div>
