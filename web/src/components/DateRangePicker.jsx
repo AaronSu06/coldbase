@@ -181,15 +181,17 @@ export function DateRangePicker({ dateFrom, dateTo, onRangeChange, align = 'righ
           // max-w prevents overflow on very small screens
           className={`absolute top-full mt-1.5 z-50 bg-chrome-surface border border-chrome-border rounded-lg shadow-lg p-3 max-w-[calc(100vw-2rem)] ${align === 'left' ? 'left-0' : 'right-0'}`}
         >
-          <DayPicker
-            mode="range"
-            navLayout="around"
-            selected={draft ?? undefined}
-            onSelect={handleSelect}
-            styles={RDP_STYLES}
-            fixedWeeks
-            showOutsideDays
-          />
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <DayPicker
+              mode="range"
+              navLayout="around"
+              selected={draft ?? undefined}
+              onSelect={handleSelect}
+              styles={RDP_STYLES}
+              fixedWeeks
+              showOutsideDays
+            />
+          </div>
           {/* Step hint */}
           <p className={`text-[11px] text-center pb-0.5 transition-colors ${awaitingEnd ? 'text-accent/70' : 'text-chrome-muted/50'}`}>
             {awaitingEnd ? 'Now pick an end date' : 'Pick a start date'}

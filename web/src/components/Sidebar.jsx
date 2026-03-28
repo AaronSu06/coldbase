@@ -405,7 +405,7 @@ export default function Sidebar({
                     {record.company}
                   </p>
                 )}
-                <div className="flex gap-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1 min-w-0">
                   {isEditMode ? (
                     <input
                       value={editValues.contactName}
@@ -416,11 +416,11 @@ export default function Sidebar({
                       className="text-[13px] text-chrome-muted w-24 bg-transparent border border-chrome-rim rounded px-1 outline-none focus:border-accent"
                     />
                   ) : (
-                    <span className="text-[13px] text-chrome-muted truncate shrink-0">
+                    <span className="text-[13px] text-chrome-muted truncate">
                       {record.contactName || <span className="opacity-40">Name</span>}
                     </span>
                   )}
-                  {(record.contactName || record.contactEmail) && <span className="text-[13px] text-chrome-muted shrink-0">·</span>}
+                  {(record.contactName || record.contactEmail) && <span className="hidden sm:inline text-[13px] text-chrome-muted shrink-0">·</span>}
                   {isEditMode ? (
                     <input
                       type="email"
