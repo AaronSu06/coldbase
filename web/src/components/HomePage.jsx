@@ -170,7 +170,7 @@ function UpgradeCard() {
 
 function DeveloperNote() {
   return (
-    <ActionCard>
+    <ActionCard className="flex-1">
       <p className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted mb-2">
         A note from the developer
       </p>

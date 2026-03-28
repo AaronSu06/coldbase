@@ -311,7 +311,7 @@ export default function InsightsPanel({ dateFrom, dateTo, data, loading, error, 
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-chrome-muted text-sm min-h-[220px]">
+      <div className="flex items-center justify-center h-full text-chrome-muted text-sm min-h-[340px]">
         Loading insights…
       </div>
     );
@@ -319,7 +319,7 @@ export default function InsightsPanel({ dateFrom, dateTo, data, loading, error, 
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full text-red-400 text-sm min-h-[220px]">
+      <div className="flex items-center justify-center h-full text-red-400 text-sm min-h-[340px]">
         Failed to load insights. Please refresh.
       </div>
     );
