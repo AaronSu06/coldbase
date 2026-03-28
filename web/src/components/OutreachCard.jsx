@@ -81,7 +81,7 @@ function OutreachCard({ record, onCardClick, onToggleFavorite }) {
         })()}
         <div className="flex items-center gap-1.5 ml-auto">
           {getDaysSince(record.sentDate) >= 3 && (
-            <span role="img" aria-label="Follow up recommended" title="Follow up recommended" className="text-amber-600">
+            <span role="img" aria-label="Follow up recommended" title="Follow up recommended" className="text-sky-600">
               <BellIcon className="w-3.5 h-3.5" />
             </span>
           )}
