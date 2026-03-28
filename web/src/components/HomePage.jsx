@@ -21,6 +21,16 @@ function daysAgo(dateStr) {
   return Math.floor((Date.now() - new Date(dateStr)) / (1000 * 60 * 60 * 24));
 }
 
+function daysAgoColor(days) {
+  if (days >= 5) return 'text-red-500';
+  if (days >= 3) return 'text-amber-600';
+  return 'text-chrome-subtle';
+}
+
+function daysAgoLabel(days) {
+  return days >= 5 ? '5+d ago' : `${days}d ago`;
+}
+
 function FollowUpCard({ records = [], onGoToTracker }) {
   const count = records.length;
 
@@ -35,7 +45,7 @@ function FollowUpCard({ records = [], onGoToTracker }) {
       <p className="text-[12px] text-chrome-muted leading-relaxed mb-3">
         {count === 0
           ? 'No follow-ups overdue. Keep the momentum going.'
-          : `${count === 1 ? "Hasn't" : "Haven't"} replied in 7+ days — worth a nudge.`
+          : `${count === 1 ? "Hasn't" : "Haven't"} replied in 3+ days — worth a nudge.`
         }
       </p>
 
@@ -51,8 +61,8 @@ function FollowUpCard({ records = [], onGoToTracker }) {
                       <p className="text-[11px] text-chrome-muted truncate">{r.contactName}</p>
                     )}
                   </div>
-                  <span className="font-mono text-[11px] text-chrome-subtle flex-shrink-0">
-                    {daysAgo(r.sentDate)}d ago
+                  <span className={`font-mono text-[11px] flex-shrink-0 ${daysAgoColor(daysAgo(r.sentDate))}`}>
+                    {daysAgoLabel(daysAgo(r.sentDate))}
                   </span>
                 </li>
               ))}

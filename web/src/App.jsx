@@ -194,13 +194,20 @@ export default function App() {
       .filter(r => dateTo ? new Date(r.sentDate) <= new Date(dateTo) : true);
   }, [records, query, activeTab, showFavoritesOnly, dateFrom, dateTo]);
 
-  const sevenDaysAgo = useMemo(() => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), []);
+  const threeDaysAgo = useMemo(() => new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), []);
   const followUps = useMemo(
-    () => records.filter(r =>
-      !r.archived && !r.hasReply && r.status === 'Sent' &&
-      new Date(r.sentDate) < sevenDaysAgo
-    ),
-    [records, sevenDaysAgo]
+    () => records
+      .filter(r =>
+        !r.archived && !r.hasReply && r.status === 'Sent' &&
+        new Date(r.sentDate) < threeDaysAgo
+      )
+      .sort((a, b) => {
+        const daysA = Math.floor((Date.now() - new Date(a.sentDate)) / (1000 * 60 * 60 * 24));
+        const daysB = Math.floor((Date.now() - new Date(b.sentDate)) / (1000 * 60 * 60 * 24));
+        if (daysB !== daysA) return daysB - daysA;
+        return (a.company ?? '').localeCompare(b.company ?? '');
+      }),
+    [records, threeDaysAgo]
   );
 
   function refreshInsights() {
