@@ -7,7 +7,6 @@ import BellIcon from './icons/BellIcon';
 import ChatIcon from './icons/ChatIcon';
 import EyeIcon from './icons/EyeIcon';
 import { getDaysSince } from '../lib/utils';
-import { Pencil } from 'lucide-react';
 
 
 function OutreachCard({ record, onCardClick, onToggleFavorite }) {
@@ -47,13 +46,6 @@ function OutreachCard({ record, onCardClick, onToggleFavorite }) {
         <p className="flex-1 font-bold text-[15px] text-chrome-text truncate leading-tight">
           {record.company}
         </p>
-        <button
-          onClick={e => { e.stopPropagation(); onCardClick?.(record); }}
-          aria-label="Edit record"
-          className="flex-shrink-0 p-1.5 rounded text-chrome-muted/50 hover:text-chrome-muted transition-colors duration-150"
-        >
-          <Pencil className="w-3.5 h-3.5" />
-        </button>
         <button
           onClick={e => { e.stopPropagation(); onToggleFavorite?.(record.threadId); }}
           aria-label={record.favorite ? 'Remove from favorites' : 'Add to favorites'}
