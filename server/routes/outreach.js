@@ -4,6 +4,20 @@ import { prisma } from '../lib/prisma.js';
 
 const router = Router();
 
+// ─── Company canonicalization ─────────────────────────────────────────────────
+// When storing a company name, check if the user already has a record with the
+// same name (case-insensitive). If so, reuse the existing canonical casing so
+// "openai" and "OpenAI" resolve to the same company.
+
+async function resolveCanonicalCompany(userId, rawCompany) {
+  const existing = await prisma.outreach.findFirst({
+    where: { userId, company: { equals: rawCompany, mode: 'insensitive' } },
+    orderBy: { sentDate: 'asc' }, // oldest = the original/canonical entry
+    select: { company: true },
+  });
+  return existing?.company ?? rawCompany;
+}
+
 // ─── Zod schemas ──────────────────────────────────────────────────────────────
 
 const CreateOutreachSchema = z.object({
@@ -49,7 +63,8 @@ router.post('/', async (req, res, next) => {
   }
   const { userId } = req.user;
   try {
-    const record = await prisma.outreach.create({ data: { ...parsed.data, userId } });
+    const company = await resolveCanonicalCompany(userId, parsed.data.company);
+    const record = await prisma.outreach.create({ data: { ...parsed.data, company, userId } });
     res.status(201).json(record);
   } catch (e) {
     next(e);
@@ -90,6 +105,9 @@ router.patch('/:threadId', async (req, res, next) => {
     if (!existing) return res.status(404).json({ error: 'Not Found' });
     // Strip system/immutable fields from the patch data
     const { userId: _u, id: _id, createdAt: _ca, updatedAt: _ua, ...patchData } = parsed.data;
+    if (patchData.company) {
+      patchData.company = await resolveCanonicalCompany(userId, patchData.company);
+    }
     const record = await prisma.outreach.update({
       where: { id: existing.id },
       data: patchData,
