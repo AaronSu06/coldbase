@@ -770,35 +770,39 @@ export default function Sidebar({
                   )}
                   {(!nextActionDate || showDatePicker) && (
                     <div className="mt-2 border border-chrome-border rounded-lg bg-chrome-surface w-fit sm:w-full p-0 sm:p-3">
-                      <DayPicker
-                        mode="single"
-                        navLayout="around"
-                        selected={parseLocalDate(nextActionDate)}
-                        disabled={{ before: new Date() }}
-                        onSelect={(date) => {
-                          setNextActionDate(toDateString(date));
-                          setShowDatePicker(false);
-                        }}
-                        styles={{
-                          root: {
-                            '--rdp-accent-color': '#b85212',
-                            '--rdp-accent-background-color': 'rgba(184, 82, 18, 0.1)',
-                            '--rdp-day-height': '32px',
-                            '--rdp-day-width': '32px',
-                            '--rdp-day_button-height': '30px',
-                            '--rdp-day_button-width': '30px',
-                            '--rdp-day_button-border-radius': '6px',
-                            '--rdp-nav-height': '2rem',
-                            '--rdp-today-color': '#b85212',
-                            '--rdp-selected-border': '2px solid #b85212',
-                            fontFamily: "'Plus Jakarta Sans', sans-serif",
-                          },
-                          month_caption: { fontSize: '13px', fontWeight: '500', letterSpacing: '-0.01em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
-                          caption_label: { fontSize: '13px', fontWeight: '500', fontFamily: "'Plus Jakarta Sans', sans-serif" },
-                          day_button: { fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px' },
-                          weekday: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
-                        }}
-                      />
+                      <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <DayPicker
+                          mode="single"
+                          navLayout="around"
+                          selected={parseLocalDate(nextActionDate)}
+                          disabled={{ before: new Date() }}
+                          onSelect={(date) => {
+                            setNextActionDate(toDateString(date));
+                            setShowDatePicker(false);
+                          }}
+                          styles={{
+                            root: {
+                              '--rdp-accent-color': '#b85212',
+                              '--rdp-accent-background-color': 'rgba(184, 82, 18, 0.1)',
+                              '--rdp-day-height': '32px',
+                              '--rdp-day-width': '32px',
+                              '--rdp-day_button-height': '30px',
+                              '--rdp-day_button-width': '30px',
+                              '--rdp-day_button-border-radius': '6px',
+                              '--rdp-nav-height': '2rem',
+                              '--rdp-today-color': '#b85212',
+                              '--rdp-selected-border': '2px solid #b85212',
+                              fontFamily: "'Plus Jakarta Sans', sans-serif",
+                            },
+                            month: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
+                            month_caption: { width: '100%', fontSize: '13px', fontWeight: '700', letterSpacing: '-0.01em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+                            caption_label: { fontSize: '13px', fontWeight: '700', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+                            month_grid: { margin: '0 auto' },
+                            day_button: { fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px' },
+                            weekday: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+                          }}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
