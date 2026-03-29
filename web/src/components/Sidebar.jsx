@@ -721,7 +721,7 @@ export default function Sidebar({
                         <button
                           key={step}
                           onClick={() => onStatusChange(record.threadId, step)}
-                          className="relative flex items-center gap-3 w-full text-left py-1.5 px-2 rounded-md transition-colors hover:bg-black/5"
+                          className="relative flex items-center gap-3 w-full text-left py-1.5 pr-2 rounded-md transition-colors hover:bg-black/5"
                         >
                           <div
                             className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 z-10 bg-chrome-bg"
