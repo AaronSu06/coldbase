@@ -1,6 +1,7 @@
 // web/src/components/HomePage.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowUpRight } from 'lucide-react';
 import InsightsPanel from './InsightsPanel';
 import ProModal from './ProModal';
 import { fetchProfile } from '../lib/api';
@@ -59,9 +60,10 @@ function FollowUpCard({ records = [], onGoToTracker, onSelectRecord }) {
                     <button
                       type="button"
                       onClick={() => onSelectRecord?.(r)}
-                      className="text-[13px] font-medium text-chrome-text truncate hover:text-accent transition-colors text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 max-w-full"
+                      className="group flex items-center gap-0.5 text-[13px] font-medium text-chrome-text hover:text-accent transition-colors text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 max-w-full"
                     >
-                      {r.company}
+                      <span className="truncate">{r.company}</span>
+                      <ArrowUpRight size={11} className="flex-shrink-0 text-chrome-muted group-hover:text-accent transition-colors" />
                     </button>
                     {r.contactName && (
                       <p className="text-[11px] text-chrome-muted truncate">{r.contactName}</p>
