@@ -31,7 +31,7 @@ function daysAgoLabel(days) {
   return days >= 5 ? '5+d ago' : `${days}d ago`;
 }
 
-function FollowUpCard({ records = [], onGoToTracker }) {
+function FollowUpCard({ records = [], onGoToTracker, onSelectRecord }) {
   const count = records.length;
 
   return (
@@ -56,7 +56,13 @@ function FollowUpCard({ records = [], onGoToTracker }) {
               {records.map(r => (
                 <li key={r.threadId} className="flex items-center justify-between gap-3 px-5 py-2.5">
                   <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-chrome-text truncate">{r.company}</p>
+                    <button
+                      type="button"
+                      onClick={() => onSelectRecord?.(r)}
+                      className="text-[13px] font-medium text-chrome-text truncate hover:text-accent transition-colors text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 max-w-full"
+                    >
+                      {r.company}
+                    </button>
                     {r.contactName && (
                       <p className="text-[11px] text-chrome-muted truncate">{r.contactName}</p>
                     )}
@@ -193,7 +199,7 @@ function DeveloperNote() {
 
 // ── Home page ──────────────────────────────────────────────────────────────
 
-export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange, followUps = [], onGoToTracker }) {
+export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange, followUps = [], onGoToTracker, onSelectRecord }) {
   const navigate = useNavigate();
   const [resumeName, setResumeName] = useState(undefined);
 
@@ -230,7 +236,7 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:flex-1 sm:min-h-0">
             {/* Follow-up — fills full column height, list scrolls internally */}
             <div className="order-2 sm:order-1 sm:h-full">
-              <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} />
+              <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} onSelectRecord={onSelectRecord} />
             </div>
             {/* Pro — mobile: first, desktop: center */}
             <div className="order-1 sm:order-2 sm:h-full">

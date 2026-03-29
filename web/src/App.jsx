@@ -533,6 +533,7 @@ export default function App() {
               onInsightsRangeChange={({ from, to }) => { setInsightsDateFrom(from); setInsightsDateTo(to); }}
               followUps={followUps}
               onGoToTracker={() => navigate('/tracker')}
+              onSelectRecord={(r) => { navigate('/tracker'); setSelectedThreadId(r.threadId); }}
             />
           ) : error && records.length === 0 ? (
             <div className="flex items-center justify-center flex-1 h-full text-red-500 text-sm">
