@@ -133,8 +133,9 @@ export default function KanbanBoard({ records, onStatusChange, onCardClick, visi
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
+      autoScroll={{ threshold: { x: 0.15, y: 0.15 }, acceleration: 8, interval: 5 }}
     >
-      <div className="h-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory sm:snap-none">
+      <div className={`h-full overflow-x-auto overflow-y-hidden sm:snap-none ${activeId ? '' : 'snap-x snap-mandatory'}`}>
         <div className="h-full min-w-full flex items-stretch sm:justify-center">
           {COLUMNS.filter(col => cols.includes(col)).map(col => (
             <KanbanColumn
