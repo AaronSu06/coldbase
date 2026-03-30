@@ -135,9 +135,9 @@ function scoreBodyCandidates(body) {
       if (len > 1 && words.slice(i, i + len).some((w, idx) => idx > 0 && STOP_WORDS.has(w))) continue;
       let score = (scores.get(phrase) || 0) + 1; // +1 per occurrence
 
-      // +2 if within 6 tokens of a role noun
-      const lo = Math.max(0, i - 6);
-      const hi = Math.min(words.length, i + len + 6);
+      // +2 if within 3 tokens of a role noun
+      const lo = Math.max(0, i - 3);
+      const hi = Math.min(words.length, i + len + 3);
       if (words.slice(lo, hi).some(w => ROLE_NOUNS.has(w))) score += 2;
 
       scores.set(phrase, score);
@@ -163,7 +163,8 @@ async function fetchClearbitByName(query) {
     const match = data.find(c => {
       const n = c.name?.toLowerCase();
       if (!n) return false;
-      return n.startsWith(q) || q.startsWith(n);
+      const firstWord = n.split(' ')[0];
+      return (n.startsWith(q) && q.length >= firstWord.length * 0.75) || q.startsWith(n);
     });
     return match?.name || null;
   } catch (err) {
