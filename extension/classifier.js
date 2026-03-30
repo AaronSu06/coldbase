@@ -109,6 +109,72 @@ const SKIP_WORDS = new Set([
   'Position', 'Role', 'Job', 'Team'
 ]);
 
+// Lowercase stop words for body tokenisation (suppresses common English words as candidates)
+const STOP_WORDS = new Set([
+  'i', 'hi', 'the', 'for', 'our', 'your', 'we', 'my', 'in', 'on', 'an', 'a',
+  'to', 'from', 'best', 'thank', 'thanks', 'dear', 'and', 'or', 'but', 'if',
+  'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does',
+  'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'not', 'no',
+  'so', 'than', 'too', 'just', 'as', 'of', 'at', 'by', 'about', 'into',
+  'through', 'before', 'after', 'up', 'out', 'over', 'then', 'once', 'here',
+  'there', 'when', 'where', 'how', 'all', 'any', 'this', 'that', 'these',
+  'those', 'with', 'it', 'he', 'she', 'they', 'them', 'what', 'who', 'you',
+  'him', 'his', 'her', 'us', 'me', 'its', 'their',
+]);
+
+const ROLE_NOUNS = new Set([
+  'ceo', 'cto', 'cfo', 'coo', 'vp', 'founder', 'president',
+  'director', 'head', 'manager', 'owner',
+]);
+
+// Returns candidates sorted by score descending. Pure function — no I/O.
+function scoreBodyCandidates(body) {
+  const words = body.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+  const scores = new Map();
+
+  for (let i = 0; i < words.length; i++) {
+    for (let len = 1; len <= 3; len++) {
+      if (i + len > words.length) break;
+      const first = words[i];
+      if (STOP_WORDS.has(first) || first.length <= 2) continue;
+
+      const phrase = words.slice(i, i + len).join(' ');
+      let score = (scores.get(phrase) || 0) + 1; // +1 per occurrence
+
+      // +2 if within 6 tokens of a role noun
+      const lo = Math.max(0, i - 6);
+      const hi = Math.min(words.length, i + len + 6);
+      if (words.slice(lo, hi).some(w => ROLE_NOUNS.has(w))) score += 2;
+
+      scores.set(phrase, score);
+    }
+  }
+
+  return Array.from(scores.entries())
+    .map(([phrase, score]) => ({ phrase, score }))
+    .sort((a, b) => b.score - a.score);
+}
+
+// Query Clearbit autocomplete by company name (not domain).
+// Returns the official company name if a close match is found, else null.
+async function fetchClearbitByName(query) {
+  try {
+    const res = await fetch(
+      `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(query)}`,
+      { signal: AbortSignal.timeout(2000) }
+    );
+    const data = await res.json();
+    const q = query.toLowerCase();
+    const match = data.find(c =>
+      c.name?.toLowerCase().startsWith(q) || q.startsWith(c.name?.toLowerCase() || '')
+    );
+    return match?.name || null;
+  } catch (err) {
+    log.error('fetchClearbitByName failed for query', query, err);
+    return null;
+  }
+}
+
 // Match up to 3 consecutive capitalized words (e.g. "Jane Street Capital")
 const COMPANY_PATTERN = /[A-Z][A-Za-z0-9.]+(?:\s[A-Z][A-Za-z0-9.]+){0,2}/;
 
