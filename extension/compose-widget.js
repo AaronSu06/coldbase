@@ -94,7 +94,6 @@ window.ColdbaseWidget = (function () {
     const recipients = Array.from(container.querySelectorAll('[email]'))
       .map((el) => el.getAttribute('email'))
       .filter(Boolean)
-      .sort()
       .join(',');
     return {
       subject: (subjectEl?.value || '').trim(),

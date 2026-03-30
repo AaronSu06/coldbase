@@ -245,10 +245,12 @@ export async function trackFromPendingScan(pendingScan) {
   log.info(`Subject: "${subject}" | Recipients: "${recipients}"`);
 
 
-  // Parse first recipient as the contact
-  const firstRecipient = recipients.split(',')[0].trim();
-  const contactEmail   = extractEmailAddress(firstRecipient) || firstRecipient;
-  const domain         = contactEmail.split('@')[1] || '';
+  // Prefer the first non-generic-domain recipient (To field contacts come before CC/BCC
+  // in the DOM order preserved by getComposeMetadata). Alphabetical sorting was removed
+  // from getComposeMetadata to avoid generic-domain CC recipients shadowing the target.
+  const recipientList = recipients.split(',').map(r => r.trim()).filter(Boolean);
+  const contactEmail  = recipientList.find(e => !isGenericDomain(e)) || recipientList[0] || '';
+  const domain        = contactEmail.split('@')[1] || '';
 
   if (!contactEmail || !domain) {
     log.warn('trackFromPendingScan: could not parse a valid recipient email — skipping.');
@@ -261,7 +263,7 @@ export async function trackFromPendingScan(pendingScan) {
     || (!isGenericDomain(contactEmail) ? extractCompanyFromEmail(contactEmail) : null)
     || 'Unknown';
 
-  const contactName = extractFirstName(firstRecipient);
+  const contactName = extractFirstName(contactEmail);
   const sentDate    = new Date().toISOString();
 
   // Synthetic threadId: unique per send so it never collides with a real Gmail threadId.
