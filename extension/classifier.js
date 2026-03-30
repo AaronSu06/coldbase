@@ -220,6 +220,7 @@ export async function fetchClearbitCompany(domain) {
       `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(domain)}`,
       { signal: AbortSignal.timeout(2000) }
     );
+    if (!res.ok) return null;
     const data = await res.json();
     const match = data.find(c => c.domain === domain || domain.endsWith(c.domain));
     return match?.name || null;
