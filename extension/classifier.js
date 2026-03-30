@@ -139,6 +139,8 @@ function scoreBodyCandidates(body) {
       if (STOP_WORDS.has(first) || first.length <= 2) continue;
 
       const phrase = words.slice(i, i + len).join(' ');
+      // Skip if any token in the phrase is a stop word (first-token guard already handled above)
+      if (len > 1 && words.slice(i, i + len).some((w, idx) => idx > 0 && STOP_WORDS.has(w))) continue;
       let score = (scores.get(phrase) || 0) + 1; // +1 per occurrence
 
       // +2 if within 6 tokens of a role noun
@@ -163,11 +165,14 @@ async function fetchClearbitByName(query) {
       `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(query)}`,
       { signal: AbortSignal.timeout(2000) }
     );
+    if (!res.ok) return null;
     const data = await res.json();
     const q = query.toLowerCase();
-    const match = data.find(c =>
-      c.name?.toLowerCase().startsWith(q) || q.startsWith(c.name?.toLowerCase() || '')
-    );
+    const match = data.find(c => {
+      const n = c.name?.toLowerCase();
+      if (!n) return false;
+      return n.startsWith(q) || q.startsWith(n);
+    });
     return match?.name || null;
   } catch (err) {
     log.error('fetchClearbitByName failed for query', query, err);
