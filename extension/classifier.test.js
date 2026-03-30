@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { extractCompanyFromText, isColdOutreach, countKeywordMatches, extractCompanyFromEmail } from './classifier.js';
+import { extractCompanyFromText, isColdOutreach, countKeywordMatches } from './classifier.js';
 
 describe('extractCompanyFromText', () => {
   it('BUG-01: extracts company name from bracket format without trailing bracket', () => {
@@ -12,12 +12,6 @@ describe('extractCompanyFromText', () => {
       extractCompanyFromText('[Jane Street Capital] Summer Intern', ''),
       'Jane Street Capital'
     );
-  });
-
-  it('no bracket subject — falls through to body patterns: extracts from body', () => {
-    // "at Acme Corp" in body
-    const result = extractCompanyFromText('Software Internship', 'reach out at Acme Corp');
-    assert.strictEqual(result, 'Acme Corp');
   });
 
   it('bracket word in SKIP_WORDS: does not return SKIP_WORD company name', () => {
@@ -44,14 +38,6 @@ describe('extractCompanyFromText', () => {
     assert.ok(result === null || typeof result === 'string', 'should return null or string without throwing');
   });
 
-  it('HTML in body: at pattern after tag removal captures company', () => {
-    // HTML tags become spaces after normalizeText stripping in body patterns
-    // body = 'work at <b>Acme</b> Corp' — the 'at' pattern looks at raw body
-    // extractCompanyFromText does not strip HTML internally; test that it does not throw
-    const result = extractCompanyFromText('Software Role', 'work at <b>Acme</b> Corp');
-    assert.ok(result === null || typeof result === 'string', 'should return null or string without throwing');
-  });
-
   it('forwarded subject: Fwd: prefix interferes with subject prefix extraction', () => {
     // 'Fwd: Google - Summer Internship' — the 'Fwd:' prefix may prevent prefix match
     // Document the actual behavior rather than assuming
@@ -59,6 +45,57 @@ describe('extractCompanyFromText', () => {
     // suffix pattern '- X' should still capture 'Google' from after the dash, but 'Summer' might be returned
     // Key: function must not throw
     assert.ok(result === null || typeof result === 'string', 'should return null or string without throwing');
+  });
+
+  it('lowercase company near role noun: CEO of amazon → scores and confirms via Clearbit mock', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (url) => ({
+      json: async () => [{ name: 'Amazon', domain: 'amazon.com' }],
+    });
+    try {
+      const result = await extractCompanyFromText(
+        'Coffee chat request',
+        'Hi Jeff, I noticed you were the CEO of amazon! Would love to chat.'
+      );
+      assert.strictEqual(result, 'Amazon');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('no role context, company not confirmed by Clearbit: returns null', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => ({ json: async () => [] });
+    try {
+      const result = await extractCompanyFromText('Hello', 'Just reaching out to say hi.');
+      assert.strictEqual(result, null);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('Clearbit fetch throws: returns null without throwing', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => { throw new Error('network error'); };
+    try {
+      const result = await extractCompanyFromText('Hello', 'CEO of stripe');
+      assert.strictEqual(result, null);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('fast-path bracket still works synchronously (no Clearbit call needed)', async () => {
+    const originalFetch = globalThis.fetch;
+    let fetchCalled = false;
+    globalThis.fetch = async () => { fetchCalled = true; return { json: async () => [] }; };
+    try {
+      const result = await extractCompanyFromText('[Stripe] Internship', '');
+      assert.strictEqual(result, 'Stripe');
+      assert.strictEqual(fetchCalled, false);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
 
@@ -132,19 +169,5 @@ describe('countKeywordMatches', () => {
 
   it('no keywords → 0', () => {
     assert.strictEqual(countKeywordMatches('no job keywords here'), 0);
-  });
-});
-
-describe('extractCompanyFromEmail', () => {
-  it('rocketbrew domain → Rocketbrew', () => {
-    assert.strictEqual(extractCompanyFromEmail('rachel@rocketbrew.com'), 'Rocketbrew');
-  });
-
-  it('stripe domain → Stripe', () => {
-    assert.strictEqual(extractCompanyFromEmail('hr@stripe.com'), 'Stripe');
-  });
-
-  it('google domain → Google', () => {
-    assert.strictEqual(extractCompanyFromEmail('noreply@google.com'), 'Google');
   });
 });
