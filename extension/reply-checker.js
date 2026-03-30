@@ -5,7 +5,7 @@ import { logger } from './logger-esm.js';
 import { getAuthToken } from './auth.js';
 import { extractEmailAddress } from './text-utils.js';
 import { apiFetch, apiFetchRetry, serverFetch, postOutreach, postTrackingPixel, fetchOutreach } from './api-client.js';
-import { extractCompanyFromEmail, extractCompanyFromText, fetchClearbitCompany, extractFirstName, isGenericDomain } from './classifier.js';
+import { extractCompanyFromText, fetchClearbitCompany, extractFirstName, isGenericDomain } from './classifier.js';
 
 const log = logger('reply-checker');
 
@@ -162,9 +162,8 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
 
   const domain = contactEmail.split('@')[1] || '';
   const company =
-    extractCompanyFromText(subject, body)
-    || (!isGenericDomain(contactEmail) ? await fetchClearbitCompany(domain) : null)
-    || (!isGenericDomain(contactEmail) ? extractCompanyFromEmail(contactEmail) : null)
+    (!isGenericDomain(contactEmail) ? await fetchClearbitCompany(domain) : null)
+    || await extractCompanyFromText(subject, body)
     || 'Unknown';
   const contactName = extractFirstName(toHeader);
   const dateHeader = extractHeader(fullMsg, 'Date');
@@ -258,9 +257,8 @@ export async function trackFromPendingScan(pendingScan) {
   }
 
   const company =
-    extractCompanyFromText(subject, body)
-    || (!isGenericDomain(contactEmail) ? await fetchClearbitCompany(domain).catch(() => null) : null)
-    || (!isGenericDomain(contactEmail) ? extractCompanyFromEmail(contactEmail) : null)
+    (!isGenericDomain(contactEmail) ? await fetchClearbitCompany(domain).catch(() => null) : null)
+    || await extractCompanyFromText(subject, body)
     || 'Unknown';
 
   const contactName = extractFirstName(contactEmail);
