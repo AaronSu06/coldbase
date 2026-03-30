@@ -93,14 +93,6 @@ export function isColdOutreach(body) {
   return countKeywordMatches(body) >= 1;
 }
 
-export function extractCompanyFromEmail(emailAddress) {
-  // rachel@rocketbrew.com → "Rocketbrew"
-  // john@mail.stripe.com → "Stripe" (use part before TLD, not first subdomain)
-  const domain = emailAddress.split('@')[1] || '';
-  const parts = domain.split('.');
-  const name = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
 
 const SKIP_WORDS = new Set([
   'I', 'Hi', 'The', 'For', 'Our', 'Your', 'We', 'My', 'In', 'On',
@@ -190,38 +182,33 @@ function matchCompany(text, pattern) {
   return name && !SKIP_WORDS.has(name.split(' ')[0]) ? name : null;
 }
 
-export function extractCompanyFromText(subject, body) {
-  // "[Company Name]" bracket pattern in subject — highest confidence
+export async function extractCompanyFromText(subject, body) {
+  // Fast-path 1: "[Company Name]" bracket pattern in subject
   const bracketMatch = subject.match(/\[([A-Z][A-Za-z0-9. ]+)\]/);
   if (bracketMatch) {
     const name = bracketMatch[1].trim();
     if (!SKIP_WORDS.has(name.split(' ')[0])) return name;
   }
 
-  // "at [Company]" in body
-  const atMatch = matchCompany(body, new RegExp(`\\bat\\s+(${COMPANY_PATTERN.source})`));
-  if (atMatch) return atMatch;
-
-  // "from [Company]" in body
-  const fromMatch = matchCompany(body, new RegExp(`\\bfrom\\s+(${COMPANY_PATTERN.source})`));
-  if (fromMatch) return fromMatch;
-
-  // "on behalf of [Company]" in body
-  const onBehalfMatch = matchCompany(body, new RegExp(`\\bon behalf of\\s+(${COMPANY_PATTERN.source})`));
-  if (onBehalfMatch) return onBehalfMatch;
-
-  // "Company -" subject prefix (company name before dash)
+  // Fast-path 2: "Company -" subject prefix
   const subjectPrefixMatch = subject.match(new RegExp(`^(${COMPANY_PATTERN.source})\\s*[-–]`));
   if (subjectPrefixMatch) {
     const name = subjectPrefixMatch[1];
     if (!SKIP_WORDS.has(name.split(' ')[0])) return name;
   }
 
-  // "- Company" in subject (e.g. "Internship - Jane Street Capital")
+  // Fast-path 3: "- Company" subject suffix
   const subjectSuffixMatch = subject.match(new RegExp(`[-–]\\s*(${COMPANY_PATTERN.source})`));
   if (subjectSuffixMatch) {
     const name = subjectSuffixMatch[1];
     if (!SKIP_WORDS.has(name.split(' ')[0])) return name;
+  }
+
+  // Token scoring on body — validate top 2 candidates via Clearbit
+  const candidates = scoreBodyCandidates(body || '');
+  for (const { phrase } of candidates.slice(0, 2)) {
+    const name = await fetchClearbitByName(phrase);
+    if (name) return name;
   }
 
   return null;

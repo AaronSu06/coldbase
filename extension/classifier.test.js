@@ -3,59 +3,78 @@ import assert from 'node:assert/strict';
 import { extractCompanyFromText, isColdOutreach, countKeywordMatches } from './classifier.js';
 
 describe('extractCompanyFromText', () => {
-  it('BUG-01: extracts company name from bracket format without trailing bracket', () => {
-    assert.strictEqual(extractCompanyFromText('[Stripe] Internship', ''), 'Stripe');
+  it('BUG-01: extracts company name from bracket format without trailing bracket', async () => {
+    assert.strictEqual(await extractCompanyFromText('[Stripe] Internship', ''), 'Stripe');
   });
 
-  it('multi-word bracket: extracts full multi-word company name from brackets', () => {
+  it('multi-word bracket: extracts full multi-word company name from brackets', async () => {
     assert.strictEqual(
-      extractCompanyFromText('[Jane Street Capital] Summer Intern', ''),
+      await extractCompanyFromText('[Jane Street Capital] Summer Intern', ''),
       'Jane Street Capital'
     );
   });
 
-  it('bracket word in SKIP_WORDS: does not return SKIP_WORD company name', () => {
+  it('bracket word in SKIP_WORDS: does not return SKIP_WORD company name', async () => {
     // 'Internship' is in SKIP_WORDS — should not return it
-    const result = extractCompanyFromText('[Internship] Available', '');
+    const result = await extractCompanyFromText('[Internship] Available', '');
     assert.notStrictEqual(result, 'Internship');
   });
 
-  it('non-bracket subject with dash prefix: extracts company from subject prefix', () => {
+  it('non-bracket subject with dash prefix: extracts company from subject prefix', async () => {
     assert.strictEqual(
-      extractCompanyFromText('Google - Summer Internship 2026', ''),
+      await extractCompanyFromText('Google - Summer Internship 2026', ''),
       'Google'
     );
   });
 
-  it('no match anywhere: returns null', () => {
-    assert.strictEqual(extractCompanyFromText('Hello World', ''), null);
+  it('no match anywhere: returns null', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => ({ ok: true, json: async () => [] });
+    try {
+      assert.strictEqual(await extractCompanyFromText('Hello World', ''), null);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
-  it('non-English company name in brackets: does not crash', () => {
+  it('non-English company name in brackets: does not crash', async () => {
     // Bracket pattern requires ASCII [A-Z] start — non-ASCII name won't match bracket pattern
     // Function should not throw; returns null or falls through to other patterns
-    const result = extractCompanyFromText('[Müller GmbH] Internship', '');
-    assert.ok(result === null || typeof result === 'string', 'should return null or string without throwing');
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => ({ ok: true, json: async () => [] });
+    try {
+      const result = await extractCompanyFromText('[Müller GmbH] Internship', '');
+      assert.ok(result === null || typeof result === 'string', 'should return null or string without throwing');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
-  it('forwarded subject: Fwd: prefix interferes with subject prefix extraction', () => {
+  it('forwarded subject: Fwd: prefix interferes with subject prefix extraction', async () => {
     // 'Fwd: Google - Summer Internship' — the 'Fwd:' prefix may prevent prefix match
     // Document the actual behavior rather than assuming
-    const result = extractCompanyFromText('Fwd: Google - Summer Internship', '');
-    // suffix pattern '- X' should still capture 'Google' from after the dash, but 'Summer' might be returned
-    // Key: function must not throw
-    assert.ok(result === null || typeof result === 'string', 'should return null or string without throwing');
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => ({ ok: true, json: async () => [] });
+    try {
+      const result = await extractCompanyFromText('Fwd: Google - Summer Internship', '');
+      // suffix pattern '- X' should still capture 'Google' from after the dash, but 'Summer' might be returned
+      // Key: function must not throw
+      assert.ok(result === null || typeof result === 'string', 'should return null or string without throwing');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it('lowercase company near role noun: CEO of amazon → scores and confirms via Clearbit mock', async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (url) => ({
+      ok: true,
       json: async () => [{ name: 'Amazon', domain: 'amazon.com' }],
     });
     try {
       const result = await extractCompanyFromText(
         'Coffee chat request',
-        'Hi Jeff, I noticed you were the CEO of amazon! Would love to chat.'
+        'I saw you are CEO of amazon. I love what amazon is doing.'
       );
       assert.strictEqual(result, 'Amazon');
     } finally {
@@ -65,7 +84,7 @@ describe('extractCompanyFromText', () => {
 
   it('no role context, company not confirmed by Clearbit: returns null', async () => {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = async () => ({ json: async () => [] });
+    globalThis.fetch = async () => ({ ok: true, json: async () => [] });
     try {
       const result = await extractCompanyFromText('Hello', 'Just reaching out to say hi.');
       assert.strictEqual(result, null);
@@ -88,7 +107,7 @@ describe('extractCompanyFromText', () => {
   it('fast-path bracket still works synchronously (no Clearbit call needed)', async () => {
     const originalFetch = globalThis.fetch;
     let fetchCalled = false;
-    globalThis.fetch = async () => { fetchCalled = true; return { json: async () => [] }; };
+    globalThis.fetch = async () => { fetchCalled = true; return { ok: true, json: async () => [] }; };
     try {
       const result = await extractCompanyFromText('[Stripe] Internship', '');
       assert.strictEqual(result, 'Stripe');
