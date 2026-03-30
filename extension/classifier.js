@@ -114,11 +114,6 @@ const STOP_WORDS = new Set([
   'him', 'his', 'her', 'us', 'me', 'its', 'their',
 ]);
 
-const ROLE_NOUNS = new Set([
-  'ceo', 'cto', 'cfo', 'coo', 'vp', 'founder', 'president',
-  'director', 'head', 'manager', 'owner',
-]);
-
 // Returns candidates sorted by score descending. Pure function — no I/O.
 function scoreBodyCandidates(body) {
   const words = body.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
@@ -133,14 +128,8 @@ function scoreBodyCandidates(body) {
       const phrase = words.slice(i, i + len).join(' ');
       // Skip if any token in the phrase is a stop word (first-token guard already handled above)
       if (len > 1 && words.slice(i, i + len).some((w, idx) => idx > 0 && STOP_WORDS.has(w))) continue;
-      let score = (scores.get(phrase) || 0) + 1; // +1 per occurrence
 
-      // +2 if within 3 tokens of a role noun
-      const lo = Math.max(0, i - 3);
-      const hi = Math.min(words.length, i + len + 3);
-      if (words.slice(lo, hi).some(w => ROLE_NOUNS.has(w))) score += 2;
-
-      scores.set(phrase, score);
+      scores.set(phrase, (scores.get(phrase) || 0) + 1); // +1 per occurrence
     }
   }
 
