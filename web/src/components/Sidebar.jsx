@@ -655,6 +655,7 @@ export default function Sidebar({
                         {feedbackError && <p className="text-red-500 text-xs mt-1">{feedbackError}</p>}
                         <div className="text-xs text-chrome-subtle leading-relaxed bg-chrome-surface rounded-lg p-3 border border-chrome-border">
                           <ReactMarkdown components={{
+                            h4: ({ children }) => <p className="font-semibold text-chrome-text mt-3 first:mt-0 mb-0.5">{children}</p>,
                             p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                             strong: ({ children }) => <strong className="font-semibold text-chrome-text">{children}</strong>,
                             ol: ({ children }) => <ol className="list-decimal list-outside pl-4 space-y-2">{children}</ol>,

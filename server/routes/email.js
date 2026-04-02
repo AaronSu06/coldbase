@@ -251,11 +251,19 @@ Context:
 - Status: ${status || 'Sent'}
 - Days since sent: ${daysSince}${threadCtx}${notesCtx}
 
-Provide concise, specific feedback in four labeled sections:
-1. What the candidate did well (1-2 sentences)
-2. What to improve (1-2 sentences, specific)
-3. Tone assessment (1 sentence)
-4. Suggested next move given the current status (1-2 sentences)
+Provide concise, specific feedback in four sections using this exact markdown format:
+
+#### What the candidate did well
+1-2 sentences.
+
+#### What to improve
+1-2 sentences, specific.
+
+#### Tone assessment
+1 sentence.
+
+#### Suggested next move
+1-2 sentences given the current status.
 
 Be direct and actionable. No filler phrases.`;
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
