@@ -4,6 +4,7 @@ process.env.DIRECT_URL    = process.env.TEST_DIRECT_URL;
 process.env.JWT_SECRET    = 'test-jwt-secret';
 process.env.BCRYPT_ROUNDS = '1';
 process.env.HUNTER_KEY    = 'test-hunter-key';
+process.env.NODE_ENV      = 'test';
 
 import { describe, it, before, after, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -190,5 +191,85 @@ describe('POST /api/find-email', () => {
 
     const calledUrl = mockFetch.mock.calls[0]?.arguments[0] || '';
     assert.ok(calledUrl.includes('domain-search'), `Expected domain-search URL, got: ${calledUrl}`);
+  });
+});
+
+describe('POST /api/feedback', () => {
+  let proToken, proUserId;
+
+  before(async () => {
+    const bcrypt = (await import('bcrypt')).default;
+    const user = await prisma.user.create({
+      data: {
+        email: 'feedback-test@example.com',
+        passwordHash: await bcrypt.hash('pass', 1),
+        plan: 'pro',
+        resumeText: 'Sarah Chen — Software Engineer\nSkills: TypeScript, React, Node.js\nExperience: 2 years at Shopify',
+      },
+    });
+    proUserId = user.id;
+    proToken = jwt.sign({ userId: user.id, email: user.email }, 'test-jwt-secret');
+  });
+
+  it('returns 403 for non-pro user', async () => {
+    const res = await request('POST', '/api/feedback',
+      { company: 'Stripe', status: 'Sent' },
+      { Authorization: authHeader }
+    );
+    assert.equal(res.status, 403);
+    assert.equal(res.body.error, 'pro_required');
+  });
+
+  it('returns 500 when GEMINI_KEY not set', async () => {
+    const saved = process.env.GEMINI_KEY;
+    delete process.env.GEMINI_KEY;
+    const res = await request('POST', '/api/feedback',
+      { company: 'Stripe', status: 'Sent' },
+      { Authorization: `Bearer ${proToken}` }
+    );
+    process.env.GEMINI_KEY = saved;
+    assert.equal(res.status, 500);
+  });
+
+  it('calls Gemini with resume context when user has resumeText', async () => {
+    process.env.GEMINI_KEY = 'test-gemini-key';
+    let capturedBody;
+    mockFetchImpl = async (_url, opts) => {
+      capturedBody = JSON.parse(opts.body);
+      return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: 'Great job!' }] } }] }) };
+    };
+
+    const res = await request('POST', '/api/feedback',
+      { company: 'Stripe', subject: 'Internship inquiry', status: 'Sent', snippet: '[OUT] Me: Hi there\n\n[IN] Recruiter: Thanks for reaching out' },
+      { Authorization: `Bearer ${proToken}` }
+    );
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.ok, true);
+    assert.equal(res.body.text, 'Great job!');
+
+    const prompt = capturedBody.contents[0].parts[0].text;
+    assert.ok(prompt.includes('Sarah Chen'), 'prompt should include resume content');
+    assert.ok(prompt.includes('[OUT]'), 'prompt should include full snippet');
+    delete process.env.GEMINI_KEY;
+  });
+
+  it('calls Gemini without resume block when user has no resumeText', async () => {
+    process.env.GEMINI_KEY = 'test-gemini-key';
+    await prisma.user.update({ where: { id: proUserId }, data: { resumeText: null } });
+    let capturedBody;
+    mockFetchImpl = async (_url, opts) => {
+      capturedBody = JSON.parse(opts.body);
+      return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: 'OK' }] } }] }) };
+    };
+
+    await request('POST', '/api/feedback',
+      { company: 'Stripe', status: 'Sent' },
+      { Authorization: `Bearer ${proToken}` }
+    );
+
+    const prompt = capturedBody.contents[0].parts[0].text;
+    assert.ok(!prompt.includes('Candidate background'), 'resume block should not appear when resumeText is null');
+    delete process.env.GEMINI_KEY;
   });
 });

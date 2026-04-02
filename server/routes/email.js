@@ -214,8 +214,6 @@ router.post('/draft-email', async (req, res, next) => {
 
 // POST /feedback — AI conversation feedback (pro + admin only)
 router.post('/feedback', async (req, res, next) => {
-  const geminiKey = process.env.GEMINI_KEY;
-  if (!geminiKey) return res.status(500).json({ ok: false, error: 'Gemini API key not configured on server.' });
   const parsed = FeedbackSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({
@@ -227,19 +225,24 @@ router.post('/feedback', async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { plan: true, isAdmin: true },
+      select: { plan: true, isAdmin: true, resumeText: true },
     });
     if (!user || (!user.isAdmin && user.plan !== 'pro')) {
       return res.status(403).json({ ok: false, error: 'pro_required', message: 'Feedback AI is a Pro feature. Upgrade to use it.' });
     }
+    const geminiKey = process.env.GEMINI_KEY;
+    if (!geminiKey) return res.status(500).json({ ok: false, error: 'Gemini API key not configured on server.' });
     const { company, contactName, subject, status, sentDate, snippet, notes } = parsed.data;
     const daysSince = sentDate ? Math.floor((Date.now() - new Date(sentDate).getTime()) / 86_400_000) : 0;
+    const resumeCtx = user.resumeText
+      ? `\nCandidate background:\n${user.resumeText.slice(0, 3000)}`
+      : '';
     const threadCtx = snippet
-      ? `\nConversation (format: [OUT] = sent by candidate, [IN] = received):\n${snippet.slice(0, 1200)}`
+      ? `\nConversation (format: [OUT] = sent by candidate, [IN] = received):\n${snippet.slice(0, 2000)}`
       : '';
     const notesCtx = notes ? `\nCandidate notes: ${notes}` : '';
     const prompt = `You are an expert career coach reviewing a job outreach email thread.
-
+${resumeCtx}
 Context:
 - Company: ${company || 'the company'}
 - Contact: ${contactName || 'the recruiter'}
