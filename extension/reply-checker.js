@@ -268,7 +268,7 @@ export async function trackFromPendingScan(pendingScan) {
 
   const record = {
     threadId:      syntheticThreadId,
-    gmailUrl:      null,
+    gmailUrl:      '',
     company,
     contactName,
     contactEmail,
