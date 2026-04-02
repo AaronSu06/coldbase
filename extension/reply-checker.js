@@ -318,6 +318,14 @@ export async function checkReplies(token) {
   let records;
   try {
     const res = await fetchOutreach();
+    if (!res.ok) {
+      if (res.status === 401) {
+        log.warn('Reply check aborted: JWT missing or invalid. Open the web dashboard to sync your session.');
+      } else {
+        log.error(`Reply check aborted: fetchOutreach returned ${res.status}`);
+      }
+      return;
+    }
     records = (await res.json()).data;
     log.info(`Reply check: ${records.length} tracked record(s).`);
   } catch (e) {
