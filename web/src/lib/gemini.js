@@ -32,9 +32,18 @@ Context:
 - Contact: ${record.contactName || 'the recruiter'}
 - Original subject: ${record.subject}
 - Days since first email: ${daysSince}
-- Status: ${isGhosted ? 'Ghosted — this is a last-ditch check-in' : 'No reply yet'}${notesCtx}
+- Status: ${isGhosted ? 'Ghosted - this is a last-ditch check-in' : 'No reply yet'}${notesCtx}
 
-Write a ${isGhosted ? 'brief, low-pressure final check-in (2 sentences max)' : 'short 2-3 sentence follow-up'}. Casual but professional. Don't open with "I hope this email finds you well." Reference the original email naturally. Sign off using the name from the resume if available, otherwise sign off naturally.
+Write a ${isGhosted ? '1-2 sentence final bump. Extremely low pressure - just resurfacing, no desperation' : '2-3 sentence follow-up that feels like a real person sent it'}.
+
+Rules you must follow:
+- Never use em-dashes (—). Use commas, periods, or rewrite the sentence instead.
+- Never open with "I hope this finds you well", "Just circling back", "I wanted to follow up", or any other cliche opener.
+- No buzzwords: do not write "passionate", "leverage", "excited", "opportunity", "reach out", "touch base", "synergy", "impactful".
+- Don't grovel or over-explain. Keep it short and confident.
+- Reference the original outreach naturally in one clause, not as a whole sentence.
+- A good bump sounds like a real person nudging a thread, e.g. "Bumping this up in case it got buried." or "Still interested if there's a good time to connect."
+- Sign off using the sender's name from the resume if available, otherwise sign off naturally.
 
 Return ONLY the email text (subject line + body). No preamble, commentary, or explanation.`;
 
@@ -66,7 +75,15 @@ Context:
 - Contact: ${record.contactName || 'the recruiter'}
 - Original subject: ${record.subject}${lastMessage ? `\n- Their message: "${lastMessage}"` : ''}${notesCtx}
 
-Write a short, natural reply (2-4 sentences) that directly responds to what they said. Conversational, not stiff. No buzzwords. Sign off using the name from the resume if available, otherwise sign off naturally.
+Write a short, natural reply (2-4 sentences) that directly responds to what they said.
+
+Rules you must follow:
+- Never use em-dashes (—). Use commas, periods, or rewrite the sentence instead.
+- No buzzwords: do not write "passionate", "leverage", "excited about the opportunity", "reach out", "touch base", "synergy", "impactful", "looking forward to connecting".
+- Mirror their energy - if they are casual, be casual. If they asked a question, answer it first before anything else.
+- Don't start with "Thank you for getting back to me" or "Thanks for reaching out" as the opener - it is filler.
+- Sound like a real person. Short sentences. No corporate stiffness.
+- Sign off using the sender's name from the resume if available, otherwise sign off naturally.
 
 Return ONLY the email text. No preamble, commentary, or explanation.`;
 
@@ -84,7 +101,16 @@ Context:
 - Contact: ${record.contactName || 'the interviewer'}
 - Original subject: ${record.subject}${notesCtx}
 
-Write a concise 3-4 sentence follow-up. Thank them for their time, reaffirm enthusiasm, mention you're looking forward to next steps. Professional but warm. Sign off using the name from the resume if available, otherwise sign off naturally.
+Write a concise 3-4 sentence follow-up that feels genuine, not templated.
+
+Rules you must follow:
+- Never use em-dashes (—). Use commas, periods, or rewrite the sentence instead.
+- No buzzwords: avoid "passionate", "leverage", "exciting opportunity", "touch base", "synergy", "impactful", "circle back".
+- Do not open with "I wanted to reach out to thank you" or "I hope this email finds you well."
+- Thank them briefly and specifically - if notes give a hint of what was discussed, reference it. Otherwise keep it general but not generic.
+- Reaffirm interest in one direct sentence, not multiple effusive ones.
+- Keep it warm but short. 3-4 sentences total.
+- Sign off using the sender's name from the resume if available, otherwise sign off naturally.
 
 Return ONLY the email text. No preamble, commentary, or explanation.`;
 
@@ -97,7 +123,7 @@ export async function generateConversationFeedback(record, resumeText) {
   const threadCtx = record.snippet
     ? `\nConversation (format: [OUT] = sent by candidate, [IN] = received):\n${record.snippet.slice(0, 2000)}`
     : '';
-  const prompt = `You are an expert career coach reviewing a job outreach email thread.${resumeCtx}
+  const prompt = `You are an expert career coach reviewing a job outreach email thread. You specialize in cold email and have strong opinions about what works.${resumeCtx}
 
 Context:
 - Company: ${record.company}
@@ -108,10 +134,14 @@ Context:
 
 Provide concise, specific feedback in four labeled sections:
 1. What the candidate did well (1-2 sentences)
-2. What to improve (1-2 sentences, specific)
+2. What to improve (1-2 sentences, specific - call out any buzzwords, cliches, or em-dashes used)
 3. Tone assessment (1 sentence)
 4. Suggested next move given the current status (1-2 sentences)
 
-Be direct and actionable. No filler phrases.`;
+Your feedback must also follow these rules:
+- Never use em-dashes (—) in your feedback text. Use commas or periods instead.
+- No filler phrases. Be direct.
+- Call out any AI-sounding or corporate language in the email if present (words like "passionate", "leverage", "synergy", "impactful", "circle back", "touch base").
+- If there are em-dashes in the original email, flag that as something to fix.`;
   return callGemini(prompt);
 }

@@ -40,14 +40,23 @@ function buildDraftPrompt({ draftType, company, contactName, subject, bodySnippe
   const co = company || 'the company';
   const notesCtx = notes ? `\nExtra context: ${notes}` : '';
   const resumeCtx = resumeText ? `\n\nSender's resume for context:\n${resumeText.slice(0, 3000)}` : '';
+  const sharedRules = `
+Rules you must follow:
+- Never use em-dashes (—). Use commas, periods, or rewrite the sentence instead.
+- No buzzwords: never write "passionate", "leverage", "excited about the opportunity", "reach out", "touch base", "synergy", "impactful", "circle back", "looking forward to connecting".
+- Do not open with "I hope this email finds you well", "I wanted to reach out", or any cliche opener.
+- Sound like a real person. Short sentences. No corporate stiffness.
+- Sign off using the sender's name from the resume if available, otherwise sign off naturally.`;
+
   if (draftType === 'cold') {
-    return `You are helping a job seeker write a cold outreach email.${resumeCtx}
+    return `You are helping a job seeker write a cold outreach email. The best cold emails are short, specific, and human.${resumeCtx}
 
 Company: ${co}
 Contact: ${who}
 Subject: ${subject || ''}${notesCtx}
 
-Write a short, personalized cold email (3–4 sentences). Casual but professional. Sign off using the sender's name from the resume if available, otherwise sign off naturally.
+Write a 3-4 sentence cold email. Lead with a specific, genuine reason for reaching out (a project, a product detail, something real). State what you bring in one sentence. End with a single, low-pressure ask - not "I would love to connect", but something concrete like asking if there is a good time to chat or if they have 15 minutes.
+${sharedRules}
 Return ONLY the email body. No subject line, no preamble.`;
   }
   if (draftType === 'bump') {
@@ -57,7 +66,8 @@ Company: ${co}
 Contact: ${who}
 Original subject: ${subject || ''}${bodySnippet ? `\nOriginal email excerpt: ${bodySnippet.slice(0, 200)}` : ''}${notesCtx}
 
-Write a short 2–3 sentence follow-up. Low pressure. Reference the original email naturally. Sign off using the sender's name from the resume if available, otherwise sign off naturally.
+Write a 1-2 sentence bump. The goal is to resurface the thread without pressure. A good bump sounds like: "Bumping this up in case it got buried." or "Still very interested if there's a good time to connect this week." Reference the original email in at most one clause.
+${sharedRules}
 Return ONLY the email body. No subject line, no preamble.`;
   }
   return `You are helping a job seeker write a reply to a recruiter or contact.${resumeCtx}
@@ -66,7 +76,8 @@ Company: ${co}
 Contact: ${who}
 Their message: ${bodySnippet || '(context not available)'}${notesCtx}
 
-Write a short, natural reply (2–4 sentences). Conversational. Sign off using the sender's name from the resume if available, otherwise sign off naturally.
+Write a 2-3 sentence reply. Answer their question or respond to their point first, before anything else. Mirror their tone - casual if they are casual. Do not open with "Thank you for getting back to me" as a standalone opener.
+${sharedRules}
 Return ONLY the email body. No subject line, no preamble.`;
 }
 
@@ -242,7 +253,7 @@ router.post('/feedback', async (req, res, next) => {
       ? `\nConversation (format: [OUT] = sent by candidate, [IN] = received):\n${snippet.slice(0, 2000)}`
       : '';
     const notesCtx = notes ? `\nCandidate notes: ${notes}` : '';
-    const prompt = `You are an expert career coach reviewing a job outreach email thread.
+    const prompt = `You are an expert career coach reviewing a job outreach email thread. You specialize in cold email and have strong opinions about what works.
 ${resumeCtx}
 Context:
 - Company: ${company || 'the company'}
@@ -257,7 +268,7 @@ Provide concise, specific feedback in four sections using this exact markdown fo
 1-2 sentences.
 
 #### What to improve
-1-2 sentences, specific.
+1-2 sentences, specific. Call out any buzzwords, cliches, em-dashes, or AI-sounding phrases in the email if present (e.g. "passionate", "leverage", "synergy", "impactful", "touch base", "circle back", em-dashes used as separators).
 
 #### Tone assessment
 1 sentence.
@@ -265,7 +276,10 @@ Provide concise, specific feedback in four sections using this exact markdown fo
 #### Suggested next move
 1-2 sentences given the current status.
 
-Be direct and actionable. No filler phrases.`;
+Your feedback must follow these rules:
+- Never use em-dashes (—) in your response. Use commas or periods instead.
+- Be direct and actionable. No filler phrases.
+- Write like a real person talking to someone, not a formal report.`;
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
     const gemRes = await fetch(endpoint, {
       method: 'POST',
