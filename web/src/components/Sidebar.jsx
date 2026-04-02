@@ -702,113 +702,120 @@ export default function Sidebar({
               {/* Right — Metadata + Status + Next Action + Notes + Tips */}
               <div className="flex flex-col sm:overflow-y-auto p-5 gap-6 border-t sm:border-t-0 border-chrome-border">
 
-                {/* ── Status Stepper ── */}
-                <div>
-                  <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-3">Status</p>
-                  <div className="relative">
-                    <div className="absolute left-[10px] top-3 bottom-3 w-px bg-chrome-border" />
+                {/* ── Status + Follow-up Reminder (side by side on small screens) ── */}
+                <div className="grid grid-cols-[auto_1fr] gap-x-4 lg:grid-cols-1 lg:gap-x-0 lg:gap-y-6">
 
-                    {[...STEPPER_STEPS, 'Ghosted'].map((step, i) => {
-                      const isGhostedStep = step === 'Ghosted';
-                      const isCompleted = !isGhosted && !isGhostedStep && i < currentStepIndex;
-                      const isActive = (!isGhosted && !isGhostedStep && i === currentStepIndex) ||
-                                       (isGhosted && isGhostedStep);
+                  {/* ── Status Stepper ── */}
+                  <div className="flex flex-col lg:block">
+                    <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-3">Status</p>
+                    <div className="relative flex-1 flex flex-col lg:block">
+                      <div className="absolute left-[10px] top-3 bottom-3 w-px bg-chrome-border" />
 
-                      // Active: use the status's own color for the dot
-                      // Completed: accent
-                      // Inactive: transparent with rim border
-                      const activeColor = isGhostedStep ? T.GRAY_400 : (STATUS_COLORS[step] || T.ACCENT);
-                      const dotBg = isActive ? activeColor : isCompleted ? T.ACCENT : 'transparent';
-                      const dotBorder = isActive ? activeColor : isCompleted ? T.ACCENT : T.CHROME_RIM;
+                      <div className="flex flex-col justify-between h-full lg:block">
+                      {[...STEPPER_STEPS, 'Ghosted'].map((step, i) => {
+                        const isGhostedStep = step === 'Ghosted';
+                        const isCompleted = !isGhosted && !isGhostedStep && i < currentStepIndex;
+                        const isActive = (!isGhosted && !isGhostedStep && i === currentStepIndex) ||
+                                         (isGhosted && isGhostedStep);
 
-                      return (
-                        <button
-                          key={step}
-                          onClick={() => onStatusChange(record.threadId, step)}
-                          className="relative flex items-center gap-3 w-full text-left py-1.5 pr-2 rounded-md transition-colors hover:bg-black/5"
-                        >
-                          <div
-                            className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 z-10 bg-chrome-bg"
-                            style={{ backgroundColor: dotBg, borderColor: dotBorder }}
+                        // Active: use the status's own color for the dot
+                        // Completed: accent
+                        // Inactive: transparent with rim border
+                        const activeColor = isGhostedStep ? T.GRAY_400 : (STATUS_COLORS[step] || T.ACCENT);
+                        const dotBg = isActive ? activeColor : isCompleted ? T.ACCENT : 'transparent';
+                        const dotBorder = isActive ? activeColor : isCompleted ? T.ACCENT : T.CHROME_RIM;
+
+                        return (
+                          <button
+                            key={step}
+                            onClick={() => onStatusChange(record.threadId, step)}
+                            className="relative flex items-center gap-3 w-full text-left py-1.5 pr-2 rounded-md transition-colors hover:bg-black/5"
                           >
-                            {isCompleted && <CheckIcon />}
-                            {isActive && !isGhostedStep && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                            {isActive && isGhostedStep && <XSmallIcon />}
-                          </div>
-                          <span
-                            className="text-[13px]"
-                            style={{
-                              color: isActive
-                                ? (isGhostedStep ? T.GRAY_400 : T.CHROME_TEXT)
-                                : isCompleted ? T.CHROME_TEXT : T.CHROME_SUBTLE,
-                              fontWeight: isActive ? 600 : 400,
-                            }}
-                          >
-                            {step}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* ── Follow-up Reminder ── */}
-                <div>
-                  <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-2">
-                    Follow-up Reminder
-                  </p>
-                  {nextActionDate ? (
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setShowDatePicker(v => !v)}
-                        className="inline-flex items-center gap-1.5 bg-accent/10 text-accent text-[12px] font-medium px-3 py-1 rounded-lg hover:bg-accent/20 transition-colors">
-                        Follow up by {formatShortDate(nextActionDate + 'T12:00:00.000Z')}
-                      </button>
-                      <button onClick={() => { setNextActionDate(''); setShowDatePicker(false); }}
-                        aria-label="Clear reminder"
-                        className="text-chrome-muted hover:text-chrome-text transition-colors">
-                        <CloseIcon />
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-chrome-muted">Set a reminder</p>
-                  )}
-                  {(!nextActionDate || showDatePicker) && (
-                    <div className="mt-2 border border-chrome-border rounded-lg bg-chrome-surface w-fit sm:w-full p-0 sm:p-3">
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <DayPicker
-                          mode="single"
-                          navLayout="around"
-                          selected={parseLocalDate(nextActionDate)}
-                          disabled={{ before: new Date() }}
-                          onSelect={(date) => {
-                            setNextActionDate(toDateString(date));
-                            setShowDatePicker(false);
-                          }}
-                          styles={{
-                            root: {
-                              '--rdp-accent-color': '#b85212',
-                              '--rdp-accent-background-color': 'rgba(184, 82, 18, 0.1)',
-                              '--rdp-day-height': '32px',
-                              '--rdp-day-width': '32px',
-                              '--rdp-day_button-height': '30px',
-                              '--rdp-day_button-width': '30px',
-                              '--rdp-day_button-border-radius': '6px',
-                              '--rdp-nav-height': '2rem',
-                              '--rdp-today-color': '#b85212',
-                              '--rdp-selected-border': '2px solid #b85212',
-                              fontFamily: "'Plus Jakarta Sans', sans-serif",
-                            },
-                            month: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-                            month_caption: { width: '100%', fontSize: '13px', fontWeight: '700', letterSpacing: '-0.01em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
-                            caption_label: { fontSize: '13px', fontWeight: '700', fontFamily: "'Plus Jakarta Sans', sans-serif" },
-                            month_grid: { margin: '0 auto' },
-                            day_button: { fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px' },
-                            weekday: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
-                          }}
-                        />
+                            <div
+                              className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 z-10 bg-chrome-bg"
+                              style={{ backgroundColor: dotBg, borderColor: dotBorder }}
+                            >
+                              {isCompleted && <CheckIcon />}
+                              {isActive && !isGhostedStep && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                              {isActive && isGhostedStep && <XSmallIcon />}
+                            </div>
+                            <span
+                              className="text-[13px]"
+                              style={{
+                                color: isActive
+                                  ? (isGhostedStep ? T.GRAY_400 : T.CHROME_TEXT)
+                                  : isCompleted ? T.CHROME_TEXT : T.CHROME_SUBTLE,
+                                fontWeight: isActive ? 600 : 400,
+                              }}
+                            >
+                              {step}
+                            </span>
+                          </button>
+                        );
+                      })}
                       </div>
                     </div>
-                  )}
+                  </div>
+
+                  {/* ── Follow-up Reminder ── */}
+                  <div className="min-w-0 self-start">
+                    <p className="font-sans text-[10px] font-semibold text-chrome-muted uppercase tracking-[0.1em] mb-2">
+                      Follow-up Reminder
+                    </p>
+                    {nextActionDate ? (
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setShowDatePicker(v => !v)}
+                          className="inline-flex items-center gap-1.5 bg-accent/10 text-accent text-[12px] font-medium px-3 py-1 rounded-lg hover:bg-accent/20 transition-colors">
+                          Follow up by {formatShortDate(nextActionDate + 'T12:00:00.000Z')}
+                        </button>
+                        <button onClick={() => { setNextActionDate(''); setShowDatePicker(false); }}
+                          aria-label="Clear reminder"
+                          className="text-chrome-muted hover:text-chrome-text transition-colors">
+                          <CloseIcon />
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-chrome-muted">Set a reminder</p>
+                    )}
+                    {(!nextActionDate || showDatePicker) && (
+                      <div className="mt-2 border border-chrome-border rounded-lg bg-chrome-surface w-fit sm:w-full p-0 sm:p-3">
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                          <DayPicker
+                            mode="single"
+                            navLayout="around"
+                            selected={parseLocalDate(nextActionDate)}
+                            disabled={{ before: new Date() }}
+                            onSelect={(date) => {
+                              setNextActionDate(toDateString(date));
+                              setShowDatePicker(false);
+                            }}
+                            styles={{
+                              root: {
+                                '--rdp-accent-color': '#b85212',
+                                '--rdp-accent-background-color': 'rgba(184, 82, 18, 0.1)',
+                                '--rdp-day-height': '32px',
+                                '--rdp-day-width': '32px',
+                                '--rdp-day_button-height': '30px',
+                                '--rdp-day_button-width': '30px',
+                                '--rdp-day_button-border-radius': '6px',
+                                '--rdp-nav-height': '2rem',
+                                '--rdp-today-color': '#b85212',
+                                '--rdp-selected-border': '2px solid #b85212',
+                                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                              },
+                              month: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
+                              month_caption: { width: '100%', fontSize: '13px', fontWeight: '700', letterSpacing: '-0.01em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+                              caption_label: { fontSize: '13px', fontWeight: '700', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+                              month_grid: { margin: '0 auto' },
+                              day_button: { fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px' },
+                              weekday: { fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                 </div>
 
                 {/* ── Notes ── */}
