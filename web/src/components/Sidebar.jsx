@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import CompanyAvatar from './CompanyAvatar';
 import HeartIcon from './icons/HeartIcon';
 import BellIcon from './icons/BellIcon';
@@ -24,7 +25,6 @@ const T = {
   GRAY_400:      '#9ca3af', // ghosted state
 };
 
-const SHOW_FEEDBACK_UPSELL = false;
 
 const TIPS = {
   Sent:         ["Personalize your follow-up if no reply within 5 days. Mention something specific from their work.", "Keep the subject line identical in your follow-up so it threads correctly."],
@@ -650,7 +650,7 @@ export default function Sidebar({
                       Conversation Feedback
                     </p>
 
-                    {SHOW_FEEDBACK_UPSELL ? (
+                    {!canUseFeedback ? (
                       <div className="relative rounded-lg overflow-hidden">
                         {/* Blurred fake feedback */}
                         <div aria-hidden="true" className="text-xs text-chrome-subtle leading-relaxed whitespace-pre-wrap p-3 bg-chrome-surface border border-chrome-border rounded-lg select-none"
@@ -662,7 +662,7 @@ export default function Sidebar({
                           style={{ background: `linear-gradient(to bottom, transparent, ${T.CHROME_BG})` }} />
                         {/* CTA overlay */}
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <button className="flex items-center gap-1.5 bg-accent text-white text-[12px] font-semibold px-4 py-2 rounded-md shadow-lg hover:bg-accent-hover transition-colors">
+                          <button onClick={() => onUpgradePrompt?.()} className="flex items-center gap-1.5 bg-accent text-white text-[12px] font-semibold px-4 py-2 rounded-md shadow-lg hover:bg-accent-hover transition-colors">
                             ✦ View Personalized Feedback
                           </button>
                         </div>
@@ -670,26 +670,23 @@ export default function Sidebar({
                     ) : (
                       <div>
                         {!feedback && !feedbackLoading && (
-                          canUseFeedback ? (
-                            <button onClick={handleFeedback} disabled={feedbackLoading}
-                              className="w-full flex items-center justify-center gap-1.5 bg-accent text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-accent-hover disabled:opacity-50 transition-colors">
-                              <GeminiIcon />
-                              ✦ Generate Feedback
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => onUpgradePrompt?.()}
-                              className="w-full flex items-center justify-center gap-1.5 bg-accent text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-accent-hover transition-colors">
-                              <GeminiIcon />
-                              ✦ Generate Feedback
-                            </button>
-                          )
+                          <button onClick={handleFeedback} disabled={feedbackLoading}
+                            className="w-full flex items-center justify-center gap-1.5 bg-accent text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-accent-hover disabled:opacity-50 transition-colors">
+                            <GeminiIcon />
+                            ✦ Generate Feedback
+                          </button>
                         )}
                         {feedbackLoading && <p className="text-xs text-chrome-muted italic">Generating feedback...</p>}
                         {feedbackError && <p className="text-red-500 text-xs mt-1">{feedbackError}</p>}
                         {feedback && (
-                          <div className="text-xs text-chrome-subtle leading-relaxed whitespace-pre-wrap bg-chrome-surface rounded-lg p-3 border border-chrome-border">
-                            {feedback}
+                          <div className="text-xs text-chrome-subtle leading-relaxed bg-chrome-surface rounded-lg p-3 border border-chrome-border">
+                            <ReactMarkdown components={{
+                              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                              strong: ({ children }) => <strong className="font-semibold text-chrome-text">{children}</strong>,
+                              ol: ({ children }) => <ol className="list-decimal list-outside pl-4 space-y-2">{children}</ol>,
+                              ul: ({ children }) => <ul className="list-disc list-outside pl-4 space-y-1">{children}</ul>,
+                              li: ({ children }) => <li>{children}</li>,
+                            }}>{feedback}</ReactMarkdown>
                           </div>
                         )}
                       </div>
