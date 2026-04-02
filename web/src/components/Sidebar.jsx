@@ -682,7 +682,7 @@ export default function Sidebar({
                         {/* CTA overlay */}
                         <div className="absolute inset-0 flex items-center justify-center">
                           {feedbackLoading ? (
-                            <p className="text-xs text-chrome-muted italic bg-chrome-bg px-3 py-1.5 rounded-md">Generating feedback...</p>
+                            <p className="text-xs text-chrome-muted italic bg-chrome-deep border border-chrome-rim px-3 py-1.5 rounded-md shadow-sm">Generating feedback...</p>
                           ) : canUseFeedback ? (
                             <button onClick={handleFeedback} className="flex items-center gap-1.5 bg-accent text-white text-[12px] font-semibold px-4 py-2 rounded-md shadow-lg hover:bg-accent-hover transition-colors">
                               ✦ View Personalized Feedback
