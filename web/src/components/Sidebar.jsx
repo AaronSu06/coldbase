@@ -650,7 +650,20 @@ export default function Sidebar({
                       Conversation Feedback
                     </p>
 
-                    {!canUseFeedback ? (
+                    {feedback ? (
+                      <div>
+                        {feedbackError && <p className="text-red-500 text-xs mt-1">{feedbackError}</p>}
+                        <div className="text-xs text-chrome-subtle leading-relaxed bg-chrome-surface rounded-lg p-3 border border-chrome-border">
+                          <ReactMarkdown components={{
+                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                            strong: ({ children }) => <strong className="font-semibold text-chrome-text">{children}</strong>,
+                            ol: ({ children }) => <ol className="list-decimal list-outside pl-4 space-y-2">{children}</ol>,
+                            ul: ({ children }) => <ul className="list-disc list-outside pl-4 space-y-1">{children}</ul>,
+                            li: ({ children }) => <li>{children}</li>,
+                          }}>{feedback}</ReactMarkdown>
+                        </div>
+                      </div>
+                    ) : (
                       <div className="relative rounded-lg overflow-hidden">
                         {/* Blurred fake feedback */}
                         <div aria-hidden="true" className="text-xs text-chrome-subtle leading-relaxed whitespace-pre-wrap p-3 bg-chrome-surface border border-chrome-border rounded-lg select-none"
@@ -662,33 +675,18 @@ export default function Sidebar({
                           style={{ background: `linear-gradient(to bottom, transparent, ${T.CHROME_BG})` }} />
                         {/* CTA overlay */}
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <button onClick={() => onUpgradePrompt?.()} className="flex items-center gap-1.5 bg-accent text-white text-[12px] font-semibold px-4 py-2 rounded-md shadow-lg hover:bg-accent-hover transition-colors">
-                            ✦ View Personalized Feedback
-                          </button>
+                          {feedbackLoading ? (
+                            <p className="text-xs text-chrome-muted italic bg-chrome-bg px-3 py-1.5 rounded-md">Generating feedback...</p>
+                          ) : canUseFeedback ? (
+                            <button onClick={handleFeedback} className="flex items-center gap-1.5 bg-accent text-white text-[12px] font-semibold px-4 py-2 rounded-md shadow-lg hover:bg-accent-hover transition-colors">
+                              ✦ View Personalized Feedback
+                            </button>
+                          ) : (
+                            <button onClick={() => onUpgradePrompt?.()} className="flex items-center gap-1.5 bg-accent text-white text-[12px] font-semibold px-4 py-2 rounded-md shadow-lg hover:bg-accent-hover transition-colors">
+                              ✦ View Personalized Feedback
+                            </button>
+                          )}
                         </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {!feedback && !feedbackLoading && (
-                          <button onClick={handleFeedback} disabled={feedbackLoading}
-                            className="w-full flex items-center justify-center gap-1.5 bg-accent text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-accent-hover disabled:opacity-50 transition-colors">
-                            <GeminiIcon />
-                            ✦ Generate Feedback
-                          </button>
-                        )}
-                        {feedbackLoading && <p className="text-xs text-chrome-muted italic">Generating feedback...</p>}
-                        {feedbackError && <p className="text-red-500 text-xs mt-1">{feedbackError}</p>}
-                        {feedback && (
-                          <div className="text-xs text-chrome-subtle leading-relaxed bg-chrome-surface rounded-lg p-3 border border-chrome-border">
-                            <ReactMarkdown components={{
-                              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                              strong: ({ children }) => <strong className="font-semibold text-chrome-text">{children}</strong>,
-                              ol: ({ children }) => <ol className="list-decimal list-outside pl-4 space-y-2">{children}</ol>,
-                              ul: ({ children }) => <ul className="list-disc list-outside pl-4 space-y-1">{children}</ul>,
-                              li: ({ children }) => <li>{children}</li>,
-                            }}>{feedback}</ReactMarkdown>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
