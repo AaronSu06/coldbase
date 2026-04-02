@@ -3,7 +3,7 @@ import { SERVER_URL, DASH_URL } from './config.js';
 import { getAuthToken } from './auth.js';
 import { serverFetch, fetchOutreach } from './api-client.js';
 import { checkReplies, trackLatestSent, trackFromPendingScan } from './reply-checker.js';
-import { setColdbaseToken, clearColdbaseToken } from './coldbase-auth.js';
+import { getColdbaseToken, setColdbaseToken, clearColdbaseToken } from './coldbase-auth.js';
 import { makeLogger } from './logger-esm.js';
 
 const log = makeLogger('background');
@@ -46,9 +46,21 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
+async function checkJwtPresent() {
+  const token = await getColdbaseToken();
+  if (!token) {
+    log.warn('No Coldbase JWT in storage. Visit http://localhost:5173 and log in to sync your session.');
+  }
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   log.info('Extension installed.');
+  checkJwtPresent();
   chrome.alarms.create('coldbase-reply-check', { periodInMinutes: 30 });
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  checkJwtPresent();
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {

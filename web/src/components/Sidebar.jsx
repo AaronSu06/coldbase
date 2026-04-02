@@ -362,9 +362,9 @@ export default function Sidebar({
   const currentStepIndex = record ? STEPPER_STEPS.indexOf(record.status) : -1;
   const isGhosted = record?.status === 'Ghosted';
   const gmailUrl =
-    record?.gmailThreadUrl ||
-    record?.gmailUrl ||
-    (record?.threadId ? `https://mail.google.com/mail/u/0/#all/${record.threadId}` : '');
+    (record?.threadId && !record.threadId.startsWith('reach_'))
+      ? `https://mail.google.com/mail/u/0/#all/${record.threadId}`
+      : (record?.gmailThreadUrl || record?.gmailUrl || '');
 
   return (
     <>

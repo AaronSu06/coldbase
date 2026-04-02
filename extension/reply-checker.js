@@ -268,7 +268,7 @@ export async function trackFromPendingScan(pendingScan) {
 
   const record = {
     threadId:      syntheticThreadId,
-    gmailUrl:      'https://mail.google.com/mail/u/0/#sent',
+    gmailUrl:      null,
     company,
     contactName,
     contactEmail,
@@ -318,6 +318,14 @@ export async function checkReplies(token) {
   let records;
   try {
     const res = await fetchOutreach();
+    if (!res.ok) {
+      if (res.status === 401) {
+        log.warn('Reply check aborted: JWT missing or invalid. Open the web dashboard to sync your session.');
+      } else {
+        log.error(`Reply check aborted: fetchOutreach returned ${res.status}`);
+      }
+      return;
+    }
     records = (await res.json()).data;
     log.info(`Reply check: ${records.length} tracked record(s).`);
   } catch (e) {
@@ -328,9 +336,10 @@ export async function checkReplies(token) {
   for (const record of records) {
     if (!record.threadId) continue;
     try {
-      const thread = await apiFetch(
+      const thread = await apiFetchRetry(
         `${GMAIL_API}/threads/${record.threadId}?format=full`,
-        token
+        token,
+        getAuthToken
       );
       const msgCount = thread.messages?.length || 1;
       // Also re-build snippet if messageCount > 1 but snippet was never updated to
