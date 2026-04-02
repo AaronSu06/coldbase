@@ -134,4 +134,35 @@ router.delete('/:threadId', async (req, res, next) => {
   }
 });
 
+// ─── POST /backfill-gmail-urls — one-time migration ─────────────────────────
+
+router.post('/backfill-gmail-urls', async (req, res, next) => {
+  const { userId } = req.user;
+  try {
+    const records = await prisma.outreach.findMany({
+      where: {
+        userId,
+        NOT: { threadId: { startsWith: 'reach_' } },
+        OR: [
+          { gmailUrl: { contains: '#sent' } },
+          { gmailUrl: { contains: '#inbox' } },
+          { gmailUrl: null },
+        ],
+      },
+      select: { id: true, threadId: true },
+    });
+    let updated = 0;
+    for (const r of records) {
+      await prisma.outreach.update({
+        where: { id: r.id },
+        data: { gmailUrl: `https://mail.google.com/mail/u/0/#all/${r.threadId}` },
+      });
+      updated++;
+    }
+    res.json({ updated });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;
