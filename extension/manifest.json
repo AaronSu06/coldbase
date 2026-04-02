@@ -2,7 +2,6 @@
   "manifest_version": 3,
   "name": "Coldbase",
   "version": "1.0.0",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApgWM/nTCMjo6ZfbZ8wt5sU8qHjlcIgfbmC4JlabYmuKTLYB8Hk/ewkhYzQolB+aFk8zOiu0/p4FvMNR61FZo882CvN6kkBPxjiHJ37OdBT8M4BfCiaRbX/mRdtRwV1JANFXStPHykOmb/tttFYG5jLxX5MGTiR//1G5U+SYYgLErOyS1jfcyuvuPg8TPV1ay2A/4MSdwSf46yLX8YbdiIlStkVRTtWxpK1y8VKu3kICUso264eSl1ns3c9QisJ0Uw4XZEbMvwkOnWbm/pfZAub4+ft0YVXvuasGPkFKUnzrUr/0NxctqBrypxYxG0+paSf+4KO5UtPALkvIm2fUJ9wIDAQAB",
   "description": "Auto-detect cold outreach emails from Gmail and manage them in a kanban board.",
   "permissions": [
     "identity",

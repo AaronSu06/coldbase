@@ -334,7 +334,7 @@ export async function checkReplies(token) {
   }
 
   for (const record of records) {
-    if (!record.threadId) continue;
+    if (!record.threadId || record.threadId.startsWith('reach_')) continue;
     try {
       const thread = await apiFetchRetry(
         `${GMAIL_API}/threads/${record.threadId}?format=full`,
