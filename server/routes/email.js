@@ -23,6 +23,7 @@ const DraftEmailSchema = z.object({
 }).passthrough();
 
 const FeedbackSchema = z.object({
+  threadId:    z.string().optional(),
   company:     z.string().max(200).optional(),
   contactName: z.string().max(200).optional(),
   subject:     z.string().max(500).optional(),
@@ -232,7 +233,7 @@ router.post('/feedback', async (req, res, next) => {
     }
     const geminiKey = process.env.GEMINI_KEY;
     if (!geminiKey) return res.status(500).json({ ok: false, error: 'Gemini API key not configured on server.' });
-    const { company, contactName, subject, status, sentDate, snippet, notes } = parsed.data;
+    const { threadId, company, contactName, subject, status, sentDate, snippet, notes } = parsed.data;
     const daysSince = sentDate ? Math.floor((Date.now() - new Date(sentDate).getTime()) / 86_400_000) : 0;
     const resumeCtx = user.resumeText
       ? `\nCandidate background:\n${user.resumeText.slice(0, 3000)}`
@@ -269,6 +270,12 @@ Be direct and actionable. No filler phrases.`;
     }
     const data = await gemRes.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    if (threadId) {
+      await prisma.outreach.updateMany({
+        where: { threadId, userId: req.user.userId },
+        data: { feedbackText: text },
+      });
+    }
     res.json({ ok: true, text });
   } catch (e) {
     next(e);

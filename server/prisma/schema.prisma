@@ -55,6 +55,7 @@ model Outreach {
   openCount      Int       @default(0)
   lastOpenedAt   DateTime?
   nextActionDate DateTime?
+  feedbackText   String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

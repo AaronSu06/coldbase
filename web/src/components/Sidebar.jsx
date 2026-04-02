@@ -214,7 +214,7 @@ export default function Sidebar({
   useEffect(() => {
     if (record) {
       setNotes(record.notes || '');
-      setFeedback('');
+      setFeedback(record.feedbackText || '');
       setFeedbackError(null);
       setConversationExpanded(true);
       setShowFullThread(false);
@@ -662,6 +662,10 @@ export default function Sidebar({
                             li: ({ children }) => <li>{children}</li>,
                           }}>{feedback}</ReactMarkdown>
                         </div>
+                        <button onClick={handleFeedback} disabled={feedbackLoading}
+                          className="mt-2 text-[11px] text-chrome-muted hover:text-chrome-text disabled:opacity-50 transition-colors">
+                          {feedbackLoading ? 'Regenerating...' : '↻ Regenerate'}
+                        </button>
                       </div>
                     ) : (
                       <div className="relative rounded-lg overflow-hidden">
