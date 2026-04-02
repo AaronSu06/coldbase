@@ -11,6 +11,7 @@ import Sidebar from './components/Sidebar';
 import EmptyState from './components/EmptyState';
 import TopNav from './components/TopNav';
 import HomePage from './components/HomePage';
+import ProModal from './components/ProModal';
 import LoginPage from './components/LoginPage';
 import SettingsPage from './components/SettingsPage';
 import { DateRangePicker } from './components/DateRangePicker';
@@ -154,6 +155,7 @@ export default function App() {
   // Insights state — lifted here so data persists across home/tracker navigation
   const [insightsDateFrom, setInsightsDateFrom] = useState('');
   const [insightsDateTo, setInsightsDateTo] = useState('');
+  const [proModalOpen, setProModalOpen] = useState(false);
   const [insightsData, setInsightsData] = useState(null);
   const [insightsLoading, setInsightsLoading] = useState(true);
   const [insightsError, setInsightsError] = useState(null);
@@ -209,6 +211,12 @@ export default function App() {
       }),
     [records, threeDaysAgo]
   );
+
+  function handleUpgradePrompt() {
+    setSelectedThreadId(null);
+    navigate('/');
+    setProModalOpen(true);
+  }
 
   function refreshInsights() {
     setInsightsLoading(true);
@@ -534,6 +542,7 @@ export default function App() {
               followUps={followUps}
               onGoToTracker={() => navigate('/tracker')}
               onSelectRecord={(r) => { navigate('/tracker'); setSelectedThreadId(r.threadId); }}
+              onOpenProModal={() => setProModalOpen(true)}
             />
           ) : error && records.length === 0 ? (
             <div className="flex items-center justify-center flex-1 h-full text-red-500 text-sm">
@@ -611,8 +620,10 @@ export default function App() {
         onDelete={deleteRecord}
         onUpdateRecord={updateRecord}
         onStatusChange={updateStatus}
+        onUpgradePrompt={handleUpgradePrompt}
       />
     </div>
+    {proModalOpen && <ProModal onClose={() => setProModalOpen(false)} />}
     </UserProvider>
     </ErrorBoundary>
   );
