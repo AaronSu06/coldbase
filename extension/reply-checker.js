@@ -170,7 +170,7 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
 
   const record = {
     threadId: fullMsg.threadId,
-    gmailUrl: `https://mail.google.com/mail/u/0/#sent/${fullMsg.threadId}`,
+    gmailUrl: `https://mail.google.com/mail/u/0/#all/${fullMsg.threadId}`,
     company,
     contactName,
     contactEmail,

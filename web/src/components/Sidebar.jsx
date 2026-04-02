@@ -364,7 +364,7 @@ export default function Sidebar({
   const gmailUrl =
     record?.gmailThreadUrl ||
     record?.gmailUrl ||
-    (record?.threadId ? `https://mail.google.com/mail/u/0/#sent/${record.threadId}` : '');
+    (record?.threadId ? `https://mail.google.com/mail/u/0/#all/${record.threadId}` : '');
 
   return (
     <>
