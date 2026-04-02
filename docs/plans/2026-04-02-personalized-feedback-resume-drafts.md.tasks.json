@@ -1,12 +1,12 @@
 {
   "planPath": "docs/plans/2026-04-02-personalized-feedback-resume-drafts.md",
   "tasks": [
-    {"id": 7, "subject": "Task 1: Expose resumeText in /auth/me", "status": "pending"},
-    {"id": 8, "subject": "Task 2: Add resume context to /api/feedback prompt", "status": "pending", "blockedBy": [7]},
-    {"id": 9, "subject": "Task 3: Add resumeText param to gemini.js functions", "status": "pending", "blockedBy": [7]},
-    {"id": 10, "subject": "Task 4: Sidebar non-pro gate calls onUpgradePrompt", "status": "pending", "blockedBy": [9]},
-    {"id": 11, "subject": "Task 5: Lift ProModal to App.jsx + handleUpgradePrompt", "status": "pending", "blockedBy": [10]},
-    {"id": 12, "subject": "Task 6: Update HomePage.jsx to use onOpenProModal prop", "status": "pending", "blockedBy": [11]}
+    {"id": 7, "subject": "Task 1: Expose resumeText in /auth/me", "status": "completed", "lastUpdated": "2026-04-02T05:45:00.000Z"},
+    {"id": 8, "subject": "Task 2: Add resume context to /api/feedback prompt", "status": "completed", "blockedBy": [7], "lastUpdated": "2026-04-02T05:45:00.000Z"},
+    {"id": 9, "subject": "Task 3: Add resumeText param to gemini.js functions", "status": "completed", "blockedBy": [7], "lastUpdated": "2026-04-02T05:45:00.000Z"},
+    {"id": 10, "subject": "Task 4: Sidebar non-pro gate calls onUpgradePrompt", "status": "completed", "blockedBy": [9], "lastUpdated": "2026-04-02T05:45:00.000Z"},
+    {"id": 11, "subject": "Task 5: Lift ProModal to App.jsx + handleUpgradePrompt", "status": "completed", "blockedBy": [10], "lastUpdated": "2026-04-02T05:45:00.000Z"},
+    {"id": 12, "subject": "Task 6: Update HomePage.jsx to use onOpenProModal prop", "status": "completed", "blockedBy": [11], "lastUpdated": "2026-04-02T05:45:00.000Z"}
   ],
-  "lastUpdated": "2026-04-02T00:00:00.000Z"
+  "lastUpdated": "2026-04-02T05:45:00.000Z"
 }

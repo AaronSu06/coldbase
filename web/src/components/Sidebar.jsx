@@ -24,7 +24,7 @@ const T = {
   GRAY_400:      '#9ca3af', // ghosted state
 };
 
-const SHOW_FEEDBACK_UPSELL = true;
+const SHOW_FEEDBACK_UPSELL = false;
 
 const TIPS = {
   Sent:         ["Personalize your follow-up if no reply within 5 days. Mention something specific from their work.", "Keep the subject line identical in your follow-up so it threads correctly."],
@@ -679,9 +679,9 @@ export default function Sidebar({
                           ) : (
                             <button
                               onClick={() => onUpgradePrompt?.()}
-                              className="w-full flex items-center justify-center gap-1.5 bg-chrome-deep text-chrome-muted text-[13px] font-medium px-4 py-2 rounded-md border border-chrome-rim hover:border-accent hover:text-accent transition-colors">
+                              className="w-full flex items-center justify-center gap-1.5 bg-accent text-white text-[13px] font-medium px-4 py-2 rounded-md hover:bg-accent-hover transition-colors">
                               <GeminiIcon />
-                              ✦ Generate Feedback — Upgrade to Pro
+                              ✦ Generate Feedback
                             </button>
                           )
                         )}
