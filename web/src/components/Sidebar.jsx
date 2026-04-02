@@ -285,6 +285,7 @@ export default function Sidebar({
     try {
       const result = await generateFeedback(record);
       setFeedback(result.text || '');
+      onUpdateRecord(record.threadId, { feedbackText: result.text || '' });
     } catch (err) {
       setFeedbackError(err?.message || 'Failed to generate feedback.');
     } finally {
