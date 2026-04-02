@@ -336,9 +336,10 @@ export async function checkReplies(token) {
   for (const record of records) {
     if (!record.threadId) continue;
     try {
-      const thread = await apiFetch(
+      const thread = await apiFetchRetry(
         `${GMAIL_API}/threads/${record.threadId}?format=full`,
-        token
+        token,
+        getAuthToken
       );
       const msgCount = thread.messages?.length || 1;
       // Also re-build snippet if messageCount > 1 but snippet was never updated to
