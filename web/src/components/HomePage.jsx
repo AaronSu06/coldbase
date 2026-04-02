@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import InsightsPanel from './InsightsPanel';
-import ProModal from './ProModal';
 import { fetchProfile } from '../lib/api';
 
 // ── Action card shell ──────────────────────────────────────────────────────
@@ -137,9 +136,7 @@ function CompleteProfileCard({ hasResume, onSetupProfile }) {
 
 // ── Coldbase Pro pricing card ─────────────────────────────────────────────────
 
-function UpgradeCard() {
-  const [open, setOpen] = useState(false);
-
+function UpgradeCard({ onOpenProModal }) {
   const features = [
     'AI-drafted follow-up emails',
     'Advanced analytics & reporting',
@@ -148,39 +145,35 @@ function UpgradeCard() {
   ];
 
   return (
-    <>
-      <ActionCard className="border-accent/20 bg-accent/[0.03] flex flex-col h-full">
-        <div className="mb-3">
-          <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
-            Coldbase Pro
-          </p>
-          <p className="text-[12px] text-chrome-muted leading-relaxed">
-            AI-powered follow-ups, deep analytics, and priority support — for serious outreach.
-          </p>
-        </div>
+    <ActionCard className="border-accent/20 bg-accent/[0.03] flex flex-col h-full">
+      <div className="mb-3">
+        <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
+          Coldbase Pro
+        </p>
+        <p className="text-[12px] text-chrome-muted leading-relaxed">
+          AI-powered follow-ups, deep analytics, and priority support — for serious outreach.
+        </p>
+      </div>
 
-        <div className="border-t border-chrome-border -mx-5 mb-4" />
+      <div className="border-t border-chrome-border -mx-5 mb-4" />
 
-        <ul className="space-y-2 mb-4 flex-1">
-          {features.map(f => (
-            <li key={f} className="flex items-center gap-2 text-[12px] text-chrome-muted">
-              <span className="text-accent text-[10px]">✦</span>
-              {f}
-            </li>
-          ))}
-        </ul>
+      <ul className="space-y-2 mb-4 flex-1">
+        {features.map(f => (
+          <li key={f} className="flex items-center gap-2 text-[12px] text-chrome-muted">
+            <span className="text-accent text-[10px]">✦</span>
+            {f}
+          </li>
+        ))}
+      </ul>
 
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="w-full py-2 bg-accent text-white font-semibold text-[12px] rounded-lg hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
-        >
-          Subscribe to Coldbase Pro
-        </button>
-      </ActionCard>
-
-      {open && <ProModal onClose={() => setOpen(false)} />}
-    </>
+      <button
+        type="button"
+        onClick={onOpenProModal}
+        className="w-full py-2 bg-accent text-white font-semibold text-[12px] rounded-lg hover:bg-accent-hover transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50"
+      >
+        Subscribe to Coldbase Pro
+      </button>
+    </ActionCard>
   );
 }
 
@@ -201,7 +194,7 @@ function DeveloperNote() {
 
 // ── Home page ──────────────────────────────────────────────────────────────
 
-export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange, followUps = [], onGoToTracker, onSelectRecord }) {
+export default function HomePage({ insightsDateFrom, insightsDateTo, insightsData, insightsLoading, insightsError, onInsightsRangeChange, followUps = [], onGoToTracker, onSelectRecord, onOpenProModal }) {
   const navigate = useNavigate();
   const [resumeName, setResumeName] = useState(undefined);
 
@@ -242,7 +235,7 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
             </div>
             {/* Pro — mobile: first, desktop: center */}
             <div className="order-1 sm:order-2 sm:h-full">
-              <UpgradeCard />
+              <UpgradeCard onOpenProModal={onOpenProModal} />
             </div>
             {/* Profile + note — stacked right column */}
             <div className="order-3 sm:order-3 flex flex-col gap-4 sm:h-full">

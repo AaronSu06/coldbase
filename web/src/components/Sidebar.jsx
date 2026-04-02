@@ -189,6 +189,7 @@ export default function Sidebar({
   onDelete,
   onUpdateRecord,
   onStatusChange,
+  onUpgradePrompt,
 }) {
   const isOpen = !!record;
   const user = useUser();
@@ -276,7 +277,7 @@ export default function Sidebar({
   const handleFeedback = useCallback(async () => {
     if (!record) return;
     if (!canUseFeedback) {
-      setFeedbackError('Feedback AI is a Pro feature. Upgrade to use it.');
+      onUpgradePrompt?.();
       return;
     }
     setFeedbackLoading(true);
@@ -289,7 +290,7 @@ export default function Sidebar({
     } finally {
       setFeedbackLoading(false);
     }
-  }, [record, canUseFeedback]);
+  }, [record, canUseFeedback, onUpgradePrompt]);
 
   const handleDelete = useCallback(() => {
     if (!record) return;
@@ -676,10 +677,12 @@ export default function Sidebar({
                               ✦ Generate Feedback
                             </button>
                           ) : (
-                            <div className="w-full flex items-center justify-center gap-1.5 bg-chrome-deep text-chrome-muted text-[13px] font-medium px-4 py-2 rounded-md border border-chrome-rim cursor-not-allowed select-none">
+                            <button
+                              onClick={() => onUpgradePrompt?.()}
+                              className="w-full flex items-center justify-center gap-1.5 bg-chrome-deep text-chrome-muted text-[13px] font-medium px-4 py-2 rounded-md border border-chrome-rim hover:border-accent hover:text-accent transition-colors">
                               <GeminiIcon />
-                              ✦ Generate Feedback — Pro only
-                            </div>
+                              ✦ Generate Feedback — Upgrade to Pro
+                            </button>
                           )
                         )}
                         {feedbackLoading && <p className="text-xs text-chrome-muted italic">Generating feedback...</p>}

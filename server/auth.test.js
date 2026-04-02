@@ -133,6 +133,13 @@ describe('GET /api/auth/me', () => {
     const res = await request('GET', '/api/auth/me', null, { Authorization: 'Bearer invalid.token.here' });
     assert.equal(res.status, 401);
   });
+
+  it('includes resumeText (null when none set)', async () => {
+    const res = await request('GET', '/api/auth/me', null, { Authorization: `Bearer ${token}` });
+    assert.equal(res.status, 200);
+    assert.ok(Object.hasOwn(res.body, 'resumeText'), 'resumeText field should be present');
+    assert.equal(res.body.resumeText, null);
+  });
 });
 
 describe('Cross-user data isolation', () => {
