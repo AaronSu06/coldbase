@@ -1290,10 +1290,15 @@ window.ColdbaseWidget = (function () {
         || _state.savedTrackingDefault
         || 'force_track';
       updateTrackToggle(mode);
-      shadow.getElementById('cp-draft-empty').style.display = ctx.currentEditorEl ? 'none' : '';
-      shadow.getElementById('cp-draft-form').style.display  = ctx.currentEditorEl ? '' : 'none';
-      if (shadow.querySelector('.tab[data-tab="draft"]').classList.contains('active')) {
-        prefillDraftTab();
+      // Only update draft UI when the panel is visible — avoids stale _composePanelCurrentEditor
+      // mismatches that break the open/close toggle when the panel is hidden.
+      if (_composePanelHost && _composePanelHost.style.display !== 'none') {
+        _composePanelCurrentEditor = ctx.currentEditorEl;
+        shadow.getElementById('cp-draft-empty').style.display = ctx.currentEditorEl ? 'none' : '';
+        shadow.getElementById('cp-draft-form').style.display  = ctx.currentEditorEl ? '' : 'none';
+        if (shadow.querySelector('.tab[data-tab="draft"]').classList.contains('active')) {
+          prefillDraftTab();
+        }
       }
     }
 
