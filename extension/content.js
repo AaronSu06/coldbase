@@ -109,6 +109,7 @@
     const editor = lastActiveEditor && document.body.contains(lastActiveEditor)
       ? lastActiveEditor
       : null;
+    if (!editor) return;
     window.ColdbaseWidget.openComposePanel(editor);
   });
 })();

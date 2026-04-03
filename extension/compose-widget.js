@@ -1137,8 +1137,8 @@ window.ColdbaseWidget = (function () {
         ? domainRoot.charAt(0).toUpperCase() + domainRoot.slice(1)
         : '';
 
-      if (company)     shadow.getElementById('cp-draft-company').value = company;
-      if (contactName) shadow.getElementById('cp-draft-contact').value = contactName;
+      shadow.getElementById('cp-draft-company').value = company;
+      shadow.getElementById('cp-draft-contact').value = contactName;
 
       const note = shadow.getElementById('cp-autofill-note');
       note.textContent = subject || firstEmail
