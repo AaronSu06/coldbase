@@ -81,16 +81,17 @@ window.ColdbaseWidget = (function () {
     return (
       editorEl.closest('[role="dialog"]') ||
       editorEl.closest('.nH.if') ||
+      editorEl.closest('.M9') ||
+      editorEl.closest('.AD') ||
       editorEl.closest('form') ||
-      document
+      null
     );
   }
 
   function getComposeMetadata(editorEl) {
     const container = getComposeContainer(editorEl);
-    const subjectEl =
-      container.querySelector('input[name="subjectbox"]') ||
-      document.querySelector('input[name="subjectbox"]');
+    if (!container) return { subject: '', recipients: '' };
+    const subjectEl = container.querySelector('input[name="subjectbox"]');
     const recipients = Array.from(container.querySelectorAll('[email]'))
       .map((el) => el.getAttribute('email'))
       .filter(Boolean)
@@ -1122,9 +1123,8 @@ window.ColdbaseWidget = (function () {
       if (!ctx.currentEditorEl) return;
 
       const container = getComposeContainer(ctx.currentEditorEl);
-      const subjectEl =
-        container.querySelector('input[name="subjectbox"]') ||
-        document.querySelector('input[name="subjectbox"]');
+      if (!container) return;
+      const subjectEl = container.querySelector('input[name="subjectbox"]');
       const subject    = (subjectEl?.value || '').trim();
       const toEls      = Array.from(container.querySelectorAll('[email]'));
       const firstEmail = toEls[0]?.getAttribute('email') || '';
@@ -1157,9 +1157,8 @@ window.ColdbaseWidget = (function () {
       let subject = '', bodySnippet = '';
       if (ctx.currentEditorEl) {
         const container = getComposeContainer(ctx.currentEditorEl);
-        const subjectEl =
-          container.querySelector('input[name="subjectbox"]') ||
-          document.querySelector('input[name="subjectbox"]');
+        if (!container) return;
+        const subjectEl = container.querySelector('input[name="subjectbox"]');
         subject     = (subjectEl?.value || '').trim();
         bodySnippet = (ctx.currentEditorEl.innerText || '').trim().slice(0, 300);
       }
