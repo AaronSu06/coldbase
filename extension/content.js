@@ -106,9 +106,9 @@
 
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type !== 'OPEN_PANEL') return;
-    const editor = lastActiveEditor && document.body.contains(lastActiveEditor)
+    const editor = (lastActiveEditor && document.body.contains(lastActiveEditor))
       ? lastActiveEditor
-      : null;
+      : [...liveEditors].find(el => document.body.contains(el)) || null;
     if (!editor) return;
     window.ColdbaseWidget.openComposePanel(editor);
   });
