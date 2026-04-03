@@ -34,6 +34,7 @@
         font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         font-size: 13px;
         color: #1c1917;
+        border-radius: 12px;
         overflow: hidden;
         animation: reach-slide-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
       }

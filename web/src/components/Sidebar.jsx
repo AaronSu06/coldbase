@@ -805,7 +805,7 @@ export default function Sidebar({
                                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                               },
                               month: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-                              month_caption: { width: '100%', fontSize: '13px', fontWeight: '700', letterSpacing: '-0.01em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
+                              month_caption: { fontSize: '13px', fontWeight: '700', letterSpacing: '-0.01em', fontFamily: "'Plus Jakarta Sans', sans-serif" },
                               caption_label: { fontSize: '13px', fontWeight: '700', fontFamily: "'Plus Jakarta Sans', sans-serif" },
                               month_grid: { margin: '0 auto' },
                               day_button: { fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px' },
