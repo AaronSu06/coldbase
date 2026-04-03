@@ -216,6 +216,7 @@ window.ColdbaseWidget = (function () {
         }
         if (_state.lastActiveEditor) updateWidget(_state.lastActiveEditor);
       }
+      syncTrackMode();
       return;
     }
 
