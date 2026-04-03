@@ -784,6 +784,7 @@ export default function Sidebar({
                             mode="single"
                             navLayout="around"
                             selected={parseLocalDate(nextActionDate)}
+                            startMonth={new Date(2024, 0, 1)}
                             disabled={{ before: new Date() }}
                             onSelect={(date) => {
                               setNextActionDate(toDateString(date));

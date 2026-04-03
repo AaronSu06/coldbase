@@ -192,6 +192,7 @@ export function DateRangePicker({ dateFrom, dateTo, onRangeChange, align = 'righ
               styles={RDP_STYLES}
               fixedWeeks
               showOutsideDays
+              startMonth={new Date(2024, 0, 1)}
             />
           </div>
           {/* Step hint */}
