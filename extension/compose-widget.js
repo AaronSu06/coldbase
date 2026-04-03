@@ -1283,12 +1283,17 @@ window.ColdbaseWidget = (function () {
     function syncTrackMode() {
       const liveEditor = (_state.lastActiveEditor && document.body.contains(_state.lastActiveEditor))
         ? _state.lastActiveEditor
-        : ctx.currentEditorEl;
-      if (liveEditor) ctx.currentEditorEl = liveEditor;
+        : [..._state.liveEditors].find(el => document.body.contains(el)) || null;
+      ctx.currentEditorEl = liveEditor;
       const mode = (ctx.currentEditorEl && _state.editorManualModes.get(ctx.currentEditorEl))
         || _state.savedTrackingDefault
         || 'force_track';
       updateTrackToggle(mode);
+      shadow.getElementById('cp-draft-empty').style.display = ctx.currentEditorEl ? 'none' : '';
+      shadow.getElementById('cp-draft-form').style.display  = ctx.currentEditorEl ? '' : 'none';
+      if (shadow.querySelector('.tab[data-tab="draft"]').classList.contains('active')) {
+        prefillDraftTab();
+      }
     }
 
     loadOverviewData();
