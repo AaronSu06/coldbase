@@ -1471,8 +1471,10 @@ window.ColdbaseWidget = (function () {
         ? (_state.editorManualModes.get(editorEl) || _state.savedTrackingDefault || 'force_track')
         : (_state.savedTrackingDefault || 'force_track');
       updateTrackToggle(mode);
-      shadow.getElementById('cp-draft-empty').style.display = editorEl ? 'none' : '';
-      shadow.getElementById('cp-draft-form').style.display  = editorEl ? '' : 'none';
+      if (_isPro || _isAdmin) {
+        shadow.getElementById('cp-draft-empty').style.display = editorEl ? 'none' : '';
+        shadow.getElementById('cp-draft-form').style.display  = editorEl ? '' : 'none';
+      }
       loadOverviewData();
       if (shadow.querySelector('.tab[data-tab="draft"]').classList.contains('active')) {
         prefillDraftTab();
@@ -1493,8 +1495,10 @@ window.ColdbaseWidget = (function () {
       // mismatches that break the open/close toggle when the panel is hidden.
       if (_composePanelHost && _composePanelHost.style.display !== 'none') {
         _composePanelCurrentEditor = ctx.currentEditorEl;
-        shadow.getElementById('cp-draft-empty').style.display = ctx.currentEditorEl ? 'none' : '';
-        shadow.getElementById('cp-draft-form').style.display  = ctx.currentEditorEl ? '' : 'none';
+        if (_isPro || _isAdmin) {
+          shadow.getElementById('cp-draft-empty').style.display = ctx.currentEditorEl ? 'none' : '';
+          shadow.getElementById('cp-draft-form').style.display  = ctx.currentEditorEl ? '' : 'none';
+        }
         if (shadow.querySelector('.tab[data-tab="draft"]').classList.contains('active')) {
           prefillDraftTab();
         }
