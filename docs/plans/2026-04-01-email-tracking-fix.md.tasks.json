@@ -1,0 +1,13 @@
+{
+  "planPath": "docs/plans/2026-04-01-email-tracking-fix.md",
+  "tasks": [
+    {"id": 7, "subject": "Task 1: Fix checkReplies — handle non-ok fetchOutreach response", "status": "pending"},
+    {"id": 8, "subject": "Task 2: Fix checkReplies — use apiFetchRetry for Gmail thread fetches", "status": "pending", "blockedBy": [7]},
+    {"id": 9, "subject": "Task 3: Fix trackFromPendingScan — store null gmailUrl instead of broken #sent", "status": "pending", "blockedBy": [8]},
+    {"id": 10, "subject": "Task 4: Add JWT presence check on extension startup", "status": "pending"},
+    {"id": 11, "subject": "Task 5: Fix Sidebar gmailUrl priority logic", "status": "pending"},
+    {"id": 12, "subject": "Task 6: Add POST /api/outreach/backfill-gmail-urls endpoint", "status": "pending"},
+    {"id": 13, "subject": "Task 7: End-to-end verification", "status": "pending", "blockedBy": [7, 8, 9, 10, 11, 12]}
+  ],
+  "lastUpdated": "2026-04-01T00:00:00Z"
+}

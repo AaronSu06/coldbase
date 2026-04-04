@@ -384,8 +384,8 @@ export default function Sidebar({
         role="dialog"
         aria-modal="true"
         aria-label={record ? `${record.company} — contact details` : 'Contact details'}
-        className={`fixed top-0 right-0 h-full w-full sm:w-[560px] bg-chrome-bg z-40 flex flex-col transform transition-transform duration-200 ease-out ${
-          isOpen ? 'translate-x-0 shadow-panel' : 'translate-x-full'
+        className={`fixed top-0 right-0 h-full w-full sm:w-[560px] bg-chrome-bg z-40 flex flex-col transform transition-[transform,opacity] duration-200 ease-out shadow-panel ${
+          isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
         }`}
       >
         {record && (
