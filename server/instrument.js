@@ -12,7 +12,7 @@ export function beforeSend(event) {
   if (event.request) {
     event.request.data = '[Filtered]';
     if (event.request.headers) {
-      delete event.request.headers['x-reach-secret'];
+      delete event.request.headers['x-coldbase-secret'];
     }
   }
   return event;
