@@ -27,7 +27,7 @@ after(async () => {
   await new Promise(resolve => server.close(resolve));
 });
 
-// HTTP request helper — does NOT send x-reach-secret by default
+// HTTP request helper — does NOT send x-coldbase-secret by default
 // (unlike outreach.test.js which always sends it)
 function request(method, path, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
@@ -100,7 +100,7 @@ describe('OBS-01: requestLogger middleware', () => {
     assert.equal(log.path, '/health');
   });
 
-  it('x-reach-secret header value is NOT present in the log output', async () => {
+  it('x-coldbase-secret header value is NOT present in the log output', async () => {
     const secretValue = 'test-secret';
     let captured = null;
     const orig = console.log;
@@ -108,7 +108,7 @@ describe('OBS-01: requestLogger middleware', () => {
       captured = line;
     };
     try {
-      await request('GET', '/health', { 'x-reach-secret': secretValue });
+      await request('GET', '/health', { 'x-coldbase-secret': secretValue });
     } finally {
       console.log = orig;
     }
@@ -125,7 +125,7 @@ describe('OBS-01: requestLogger middleware', () => {
 
 describe('OBS-02: GET /health', () => {
   it('returns HTTP 200 with no auth header', async () => {
-    // No x-reach-secret header — must succeed (public endpoint)
+    // No x-coldbase-secret header — must succeed (public endpoint)
     const { status } = await request('GET', '/health');
     assert.equal(status, 200);
   });

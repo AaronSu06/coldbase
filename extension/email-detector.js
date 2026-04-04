@@ -65,10 +65,10 @@ window.ColdbaseDetector = (function () {
 
   function checkForSendToast(node) {
     if (node.nodeType !== Node.ELEMENT_NODE) return;
-    if (node.dataset.reachSeen) return;
+    if (node.dataset.coldbaseSeen) return;
     const text = node.textContent || '';
     if (text.includes('Message sent')) {
-      node.dataset.reachSeen = '1';
+      node.dataset.coldbaseSeen = '1';
       window.ColdbaseTracking.fireSendToast();
     }
   }
@@ -78,9 +78,9 @@ window.ColdbaseDetector = (function () {
       '[aria-live], [role="status"], [role="alert"], .bAq, .vh'
     );
     for (const el of candidates) {
-      if (el.dataset.reachSeen) continue;
+      if (el.dataset.coldbaseSeen) continue;
       if (el.textContent?.includes('Message sent')) {
-        el.dataset.reachSeen = '1';
+        el.dataset.coldbaseSeen = '1';
         window.ColdbaseTracking.fireSendToast();
         return;
       }

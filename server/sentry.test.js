@@ -9,17 +9,17 @@ describe('beforeSend PII filter', () => {
     assert.equal(result.request.data, '[Filtered]');
   });
 
-  it('removes x-reach-secret header and preserves other headers', () => {
+  it('removes x-coldbase-secret header and preserves other headers', () => {
     const event = {
       request: {
         headers: {
-          'x-reach-secret': 'mysecret',
+          'x-coldbase-secret': 'mysecret',
           'content-type': 'application/json',
         },
       },
     };
     const result = beforeSend(event);
-    assert.equal(result.request.headers['x-reach-secret'], undefined);
+    assert.equal(result.request.headers['x-coldbase-secret'], undefined);
     assert.equal(result.request.headers['content-type'], 'application/json');
   });
 

@@ -10,7 +10,7 @@ export default function requestLogger(req, res, next) {
       durationMs: Date.now() - start,
       query: req.query,
     }));
-    // x-reach-secret intentionally omitted — never log auth credentials
+    // x-coldbase-secret intentionally omitted — never log auth credentials
   });
   next();
 }

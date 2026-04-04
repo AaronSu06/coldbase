@@ -1,11 +1,11 @@
 // panel.js — injected into any tab on extension icon click
 
 (function () {
-  if (window.__reachPanelInjected) {
-    window.__reachPanelToggle?.();
+  if (window.__coldbasePanelInjected) {
+    window.__coldbasePanelToggle?.();
     return;
   }
-  window.__reachPanelInjected = true;
+  window.__coldbasePanelInjected = true;
 
   const DEFAULT_CONFIG = {
     serverApiBase: 'http://localhost:3001/api',
@@ -36,10 +36,10 @@
         color: #1c1917;
         border-radius: 12px;
         overflow: hidden;
-        animation: reach-slide-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+        animation: coldbase-slide-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      @keyframes reach-slide-in {
+      @keyframes coldbase-slide-in {
         from { opacity: 0; transform: translateY(-10px) scale(0.95); }
         to   { opacity: 1; transform: translateY(0) scale(1); }
       }
@@ -259,14 +259,14 @@
 
   function buildPanel() {
     host = document.createElement('div');
-    host.id = 'reach-panel-host';
+    host.id = 'coldbase-panel-host';
 
     const shadow = host.attachShadow({ mode: 'closed' });
 
     // Load brand fonts into the host document (font faces are not shadow-scoped)
-    if (!document.getElementById('reach-panel-fonts')) {
+    if (!document.getElementById('coldbase-panel-fonts')) {
       const fontLink = document.createElement('link');
-      fontLink.id = 'reach-panel-fonts';
+      fontLink.id = 'coldbase-panel-fonts';
       fontLink.rel = 'stylesheet';
       fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@0,400;0,500&display=swap';
       document.head.appendChild(fontLink);
@@ -329,13 +329,13 @@
 
   function buildAuthPanel() {
     host = document.createElement('div');
-    host.id = 'reach-panel-host';
+    host.id = 'coldbase-panel-host';
 
     const shadow = host.attachShadow({ mode: 'closed' });
 
-    if (!document.getElementById('reach-panel-fonts')) {
+    if (!document.getElementById('coldbase-panel-fonts')) {
       const fontLink = document.createElement('link');
-      fontLink.id = 'reach-panel-fonts';
+      fontLink.id = 'coldbase-panel-fonts';
       fontLink.rel = 'stylesheet';
       fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@0,400;0,500&display=swap';
       document.head.appendChild(fontLink);
@@ -445,7 +445,7 @@
     }
   }
 
-  window.__reachPanelToggle = toggle;
+  window.__coldbasePanelToggle = toggle;
 
   // Show immediately on first injection
   showPanel();
