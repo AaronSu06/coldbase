@@ -4,12 +4,12 @@
 
 export const PLAN_LIMITS = {
   free: {
-    emailLookupsPerMonth: 10,
+    emailLookupsPerMonth: 5,
     draftEmail: false,
     aiFeedback: false,
   },
   pro: {
-    emailLookupsPerMonth: 100,
+    emailLookupsPerMonth: 50,
     draftEmail: true,
     aiFeedback: true,
   },

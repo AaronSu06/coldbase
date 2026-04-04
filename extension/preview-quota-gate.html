@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quota Gate Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #e8e5e0;
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    padding: 40px 24px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 13px;
+    color: #1c1917;
+    min-height: 100vh;
+    align-items: flex-start;
+  }
+
+  /* ── Panel shell ── */
+  .panel {
+    width: 320px;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.14);
+  }
+  .header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px;
+    background: #f6f5f1;
+    border-bottom: 1px solid #e6e3db;
+  }
+  .header-logo {
+    width: 18px; height: 18px; background: #b85212;
+    border-radius: 4px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo svg { color: #fff; }
+  .header-text { display: flex; align-items: baseline; gap: 6px; flex: 1; }
+  .header h1 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #1c1917; letter-spacing: -0.02em; }
+  .tier-badge {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #78716c;
+    border: 1px solid #e6e3db; border-radius: 4px; padding: 1px 5px;
+  }
+  .header-actions { display: flex; gap: 2px; }
+  .icon-btn {
+    background: none; border: none; cursor: pointer; color: #78716c;
+    display: flex; align-items: center; justify-content: center;
+    padding: 3px; border-radius: 4px;
+  }
+  .tabs {
+    display: flex; border-bottom: 1px solid #e6e3db;
+    background: #f6f5f1;
+  }
+  .tab {
+    flex: 1; padding: 8px 4px; background: none;
+    border: none; border-bottom: 2px solid transparent;
+    font-size: 11px; font-weight: 600; color: #78716c;
+    letter-spacing: 0.01em; text-align: center;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  .tab.active { color: #b85212; border-bottom-color: #b85212; }
+  .tab-panel { padding: 14px; }
+
+  /* ── Find tab chrome ── */
+  .cp-search-box {
+    display: flex; align-items: center;
+    border: 1.5px solid #e6e3db; border-radius: 8px;
+    background: #fff; margin-bottom: 10px;
+  }
+  .cp-search-favicon {
+    width: 18px; height: 18px; flex-shrink: 0; margin-left: 8px;
+    border-radius: 3px; background: #e6e3db;
+  }
+  .cp-search-input {
+    flex: 1; border: none; background: transparent;
+    padding: 7px 8px; font-size: 12px; color: #78716c;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-style: italic;
+  }
+  .form-row { display: flex; gap: 6px; margin-bottom: 10px; }
+  .form-input {
+    flex: 1; border: 1px solid #e6e3db; border-radius: 6px;
+    padding: 5px 8px; font-size: 12px; color: #78716c;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-style: italic; background: #fff;
+  }
+  .find-btn {
+    width: 100%; background: #b85212; color: #fff; border: none;
+    border-radius: 8px; padding: 9px 14px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    margin-bottom: 12px;
+  }
+
+  /* ── Shared plan gate ── */
+  .cp-plan-gate {
+    display: flex; flex-direction: column;
+    padding: 6px 0 2px; gap: 16px;
+  }
+  .cp-plan-gate-body {
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .cp-plan-gate-heading {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 11px; font-weight: 600; color: #44403c;
+    text-transform: uppercase; letter-spacing: 0.06em; margin: 0;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .cp-plan-gate-heading svg { color: #78716c; flex-shrink: 0; }
+  .cp-plan-gate-sub {
+    font-size: 11px; color: #78716c; line-height: 1.5; margin: 0;
+  }
+  .action-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; background: #b85212; color: #fff; border: none;
+    border-radius: 8px; padding: 9px 14px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── Labels ── */
+  .preview-label {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 11px; font-weight: 600; color: #78716c;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 10px; text-align: center;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Draft AI gate -->
+  <div>
+    <p class="preview-label">Draft AI tab — free user</p>
+    <div class="panel">
+      <div class="header">
+        <div class="header-logo">
+          <svg viewBox="0 0 18 18" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="14" height="14" rx="2"/><path d="M6 9h6M9 6v6"/></svg>
+        </div>
+        <div class="header-text">
+          <h1>Coldbase</h1>
+          <span class="tier-badge">Free</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button class="icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab">Overview</button>
+        <button class="tab">Find Contacts</button>
+        <button class="tab active">Draft AI</button>
+      </div>
+      <div class="tab-panel">
+        <div class="cp-plan-gate">
+          <div class="cp-plan-gate-body">
+            <p class="cp-plan-gate-heading">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Draft AI is a Pro feature
+            </p>
+            <p class="cp-plan-gate-sub">Pro generates your first cold email draft. Edit, personalize, and send.</p>
+          </div>
+          <button class="action-btn">Upgrade to Pro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Find Contacts quota gate -->
+  <div>
+    <p class="preview-label">Find Contacts tab — limit hit</p>
+    <div class="panel">
+      <div class="header">
+        <div class="header-logo">
+          <svg viewBox="0 0 18 18" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="14" height="14" rx="2"/><path d="M6 9h6M9 6v6"/></svg>
+        </div>
+        <div class="header-text">
+          <h1>Coldbase</h1>
+          <span class="tier-badge">Free</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button class="icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab">Overview</button>
+        <button class="tab active">Find Contacts</button>
+        <button class="tab">Draft AI</button>
+      </div>
+      <div class="tab-panel">
+        <!-- Search form (greyed out / already filled) -->
+        <div class="cp-search-box">
+          <div class="cp-search-favicon"></div>
+          <input class="cp-search-input" placeholder="google.com" disabled>
+        </div>
+        <div class="form-row">
+          <input class="form-input" placeholder="First name" disabled>
+          <input class="form-input" placeholder="Last name" disabled>
+        </div>
+        <button class="find-btn" disabled style="opacity:0.45; cursor:not-allowed;">Find Emails</button>
+
+        <!-- Quota gate (replaces results area) -->
+        <div class="cp-plan-gate">
+          <div class="cp-plan-gate-body">
+            <p class="cp-plan-gate-heading">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Lookup limit reached
+            </p>
+            <p class="cp-plan-gate-sub">You've used all 5 of your monthly lookups. Pro gives you 50 per month.</p>
+          </div>
+          <button class="action-btn">Upgrade to Pro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
