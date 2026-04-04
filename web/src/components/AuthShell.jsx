@@ -11,12 +11,13 @@ function GoogleIcon() {
   );
 }
 
-function FeatureCard({ label }) {
+function FeatureCard({ label, src }) {
   return (
     <div className="feature-card rounded-lg border border-chrome-rim shadow-card bg-chrome-surface aspect-video overflow-hidden flex items-center justify-center cursor-default select-none">
-      <span className="font-mono text-[11px] text-chrome-subtle uppercase tracking-widest">
-        {label}
-      </span>
+      {src
+        ? <img src={src} alt={label} className="w-full h-full object-fill" />
+        : <span className="font-mono text-[11px] text-chrome-subtle uppercase tracking-widest">{label}</span>
+      }
     </div>
   );
 }
@@ -46,9 +47,8 @@ export default function AuthShell({ children }) {
           </p>
 
           <div className="mt-10 flex flex-col gap-5 w-full">
-            <FeatureCard label="Feature screenshot" />
-            <FeatureCard label="Feature screenshot" />
-            <FeatureCard label="Feature screenshot" />
+            <FeatureCard label="Track outreach" src="/auth-feature-1.png" />
+            <FeatureCard label="See reply rates" src="/auth-feature-2.png" />
           </div>
         </div>
       </div>
