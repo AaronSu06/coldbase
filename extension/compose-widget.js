@@ -581,18 +581,19 @@ window.ColdbaseWidget = (function () {
 
   /* ── Plan gate (Draft AI pro upgrade) ─────────── */
   .cp-plan-gate {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 28px 20px; gap: 10px;
-    text-align: center;
+    display: flex; flex-direction: column;
+    padding: 6px 0 2px; gap: 16px;
   }
-  .cp-plan-gate-icon {
-    font-size: 24px; line-height: 1;
+  .cp-plan-gate-body {
+    display: flex; flex-direction: column; gap: 5px;
   }
   .cp-plan-gate-heading {
-    font-family: 'Syne', sans-serif;
-    font-size: 14px; font-weight: 700; color: #1c1917;
-    letter-spacing: -0.02em; margin: 0;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 11px; font-weight: 600; color: #44403c;
+    text-transform: uppercase; letter-spacing: 0.06em; margin: 0;
+    display: flex; align-items: center; gap: 6px;
   }
+  .cp-plan-gate-heading svg { color: #78716c; flex-shrink: 0; }
   .cp-plan-gate-sub {
     font-size: 11px; color: #78716c; line-height: 1.5; margin: 0;
   }
@@ -615,6 +616,88 @@ window.ColdbaseWidget = (function () {
     text-decoration: underline; flex-shrink: 0;
   }
   .cp-resume-link:hover { color: #9a4310; }
+
+  /* ── Upgrade modal ───────────────────────────── */
+  .cp-upgrade-modal {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+    background: rgba(28, 25, 23, 0.5);
+  }
+  .cp-upgrade-panel {
+    position: relative; background: #f8f7f5; border-radius: 14px;
+    width: 100%; max-width: 304px; padding: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .cp-upgrade-close {
+    position: absolute; top: 12px; right: 12px;
+    background: none; border: none; cursor: pointer; color: #78716c;
+    padding: 4px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 120ms ease, background 120ms ease;
+  }
+  .cp-upgrade-close:hover { color: #1c1917; background: #ede9e3; }
+  .cp-upgrade-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700; color: #1c1917;
+    letter-spacing: -0.02em; margin: 0; padding-right: 20px;
+  }
+  .cp-upgrade-sub {
+    font-size: 11px; color: #78716c; line-height: 1.5; margin: 4px 0 0;
+  }
+  .cp-upgrade-features {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 7px;
+  }
+  .cp-upgrade-features li {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: #44403c;
+  }
+  .cp-upgrade-check {
+    width: 15px; height: 15px; flex-shrink: 0; border-radius: 50%;
+    background: #b85212; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700; line-height: 1;
+  }
+  .cp-upgrade-plans {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .cp-upgrade-plan {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    padding: 10px 12px; border: 1.5px solid #e6e3db; border-radius: 8px;
+    background: #f6f5f1; color: #1c1917; cursor: pointer; text-align: left; position: relative;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    transition: border-color 120ms ease, background 120ms ease;
+  }
+  .cp-upgrade-plan:hover { border-color: #b85212; background: #fff; }
+  .cp-upgrade-plan.cp-plan-selected {
+    border-color: #b85212; background: rgba(184,82,18,0.03);
+  }
+  .cp-plan-badge {
+    position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+    font-size: 8px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; background: #b85212; color: #fff;
+    padding: 1px 6px; border-radius: 100px; white-space: nowrap;
+  }
+  .cp-plan-period {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #78716c;
+  }
+  .cp-upgrade-plan.cp-plan-selected .cp-plan-period { color: #b85212; }
+  .cp-plan-price {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; font-weight: 700; color: #1c1917;
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .cp-plan-unit {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 11px; font-weight: 400; color: #78716c;
+  }
+  .cp-plan-note { font-size: 9px; color: #78716c; }
+  .cp-upgrade-error {
+    font-size: 11px; color: #dc2626; text-align: center; display: none;
+  }
   `;
 
 
@@ -708,13 +791,17 @@ window.ColdbaseWidget = (function () {
         <div class="tab-panel" id="cp-panel-draft">
           <!-- Plan gate — shown for free users, hidden for pro -->
           <div id="cp-plan-gate" class="cp-plan-gate" style="display:none">
-            <div class="cp-plan-gate-icon">✦</div>
-            <p class="cp-plan-gate-heading">Draft AI is a Pro feature</p>
-            <p class="cp-plan-gate-sub">Upgrade to Pro to generate<br>personalized outreach emails.</p>
+            <div class="cp-plan-gate-body">
+              <p class="cp-plan-gate-heading">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Draft AI is a Pro feature
+              </p>
+              <p class="cp-plan-gate-sub">Pro generates your first cold email draft. Edit, personalize, and send.</p>
+            </div>
             <button class="action-btn" id="cp-upgrade-btn">Upgrade to Pro</button>
           </div>
-          <div id="cp-draft-empty" class="status-msg" style="padding:24px 0">
-            Open a compose window to use Draft AI.
+          <div id="cp-draft-empty" class="status-msg" style="display:none; padding:24px 0">
+            Open a compose window in Gmail to get started.
           </div>
           <div id="cp-draft-form" style="display:none">
             <!-- Resume banner — shown for pro users -->
@@ -723,7 +810,7 @@ window.ColdbaseWidget = (function () {
               <button class="cp-resume-link" id="cp-resume-change">Change</button>
             </div>
             <div id="cp-resume-nudge" class="cp-resume-banner" style="display:none;background:#f6f5f1;border-color:#e6e3db;">
-              <span class="cp-resume-name" style="color:#78716c">No resume — drafts use a generic prompt</span>
+              <span class="cp-resume-name" style="color:#78716c">No resume. Drafts will be less personalized.</span>
               <button class="cp-resume-link" id="cp-resume-add">Add resume</button>
             </div>
             <div class="form-group">
@@ -753,6 +840,42 @@ window.ColdbaseWidget = (function () {
               <button class="action-btn secondary" id="cp-copy-draft">Copy</button>
               <button class="action-btn" id="cp-insert-draft">Insert \u2193</button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upgrade modal -->
+      <div id="cp-upgrade-modal" class="cp-upgrade-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="cp-upgrade-title">
+        <div class="cp-upgrade-panel" role="document">
+          <button class="cp-upgrade-close" id="cp-upgrade-close" aria-label="Close">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <div>
+            <p class="cp-upgrade-title" id="cp-upgrade-title">Upgrade to Coldbase Pro</p>
+            <p class="cp-upgrade-sub">Get more replies. Write better emails, faster.</p>
+          </div>
+          <ul class="cp-upgrade-features">
+            <li><span class="cp-upgrade-check" aria-hidden="true">&#10003;</span>AI-generated cold email drafts</li>
+            <li><span class="cp-upgrade-check" aria-hidden="true">&#10003;</span>50 email lookups per month</li>
+            <li><span class="cp-upgrade-check" aria-hidden="true">&#10003;</span>Send-time analytics</li>
+            <li><span class="cp-upgrade-check" aria-hidden="true">&#10003;</span>Priority support</li>
+          </ul>
+          <div class="cp-upgrade-plans">
+            <button class="cp-upgrade-plan" id="cp-plan-monthly" data-plan="monthly" type="button">
+              <span class="cp-plan-period">Monthly</span>
+              <span class="cp-plan-price">$19<span class="cp-plan-unit">/mo</span></span>
+              <span class="cp-plan-note">billed monthly</span>
+            </button>
+            <button class="cp-upgrade-plan cp-plan-selected" id="cp-plan-annual" data-plan="annual" type="button">
+              <span class="cp-plan-badge">Save 21%</span>
+              <span class="cp-plan-period">Annual</span>
+              <span class="cp-plan-price">$15<span class="cp-plan-unit">/mo</span></span>
+              <span class="cp-plan-note">billed $180/yr</span>
+            </button>
+          </div>
+          <div>
+            <button class="action-btn" id="cp-checkout-btn" type="button">Get Started</button>
+            <p class="cp-upgrade-error" id="cp-checkout-error">Something went wrong. Please try again.</p>
           </div>
         </div>
       </div>
@@ -1030,8 +1153,24 @@ window.ColdbaseWidget = (function () {
             coldbase_find_results: { results: res.results },
           });
         } else if (res && res.error === 'quota_exceeded') {
-          resultsEl.innerHTML = '<div class="status-msg">Monthly lookup limit reached ('
-            + res.used + '/' + res.limit + '). Upgrade to find more contacts.</div>';
+          resultsEl.innerHTML = `
+            <div class="cp-plan-gate" style="padding: 6px 0 2px;">
+              <div class="cp-plan-gate-body">
+                <p class="cp-plan-gate-heading">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Lookup limit reached
+                </p>
+                <p class="cp-plan-gate-sub">You've used all ${res.limit} of your monthly lookups. Pro gives you 50 per month.</p>
+              </div>
+              <button class="action-btn" id="cp-quota-upgrade-btn">Upgrade to Pro</button>
+            </div>`;
+          var quotaBtn = shadow.getElementById('cp-quota-upgrade-btn');
+          if (quotaBtn) quotaBtn.addEventListener('click', function() {
+            var modal = shadow.getElementById('cp-upgrade-modal');
+            var errEl = shadow.getElementById('cp-checkout-error');
+            if (errEl) errEl.style.display = 'none';
+            if (modal) modal.style.display = '';
+          });
         } else if (!res || !res.ok) {
           var msgs = {
             no_domain:     'Could not resolve a domain for this company.',
@@ -1078,7 +1217,11 @@ window.ColdbaseWidget = (function () {
       _dashUrlForResume = cfgRes?.config?.dashboardUrl ?? 'http://localhost:5173';
     });
     chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, (res) => {
-      if (chrome.runtime.lastError || !res?.ok) return;
+      if (chrome.runtime.lastError || !res?.ok) {
+        // Can't determine plan — show gate as safe fallback rather than blank screen
+        shadow.getElementById('cp-plan-gate').style.display = '';
+        return;
+      }
       _isPro = res.plan === 'pro';
       _isAdmin = res.isAdmin ?? false;
       const hasAccess = _isPro || _isAdmin;
@@ -1107,15 +1250,70 @@ window.ColdbaseWidget = (function () {
       }
     });
 
-    // Wire upgrade + resume link buttons (need dashUrl — may load async)
-    shadow.getElementById('cp-upgrade-btn').addEventListener('click', () => {
-      window.open(_dashUrlForResume + '/upgrade', '_blank');
-    });
+    // Wire resume link buttons
     shadow.getElementById('cp-resume-change').addEventListener('click', () => {
       window.open(_dashUrlForResume + '/settings', '_blank');
     });
     shadow.getElementById('cp-resume-add').addEventListener('click', () => {
       window.open(_dashUrlForResume + '/settings', '_blank');
+    });
+
+    // ── Upgrade modal ──────────────────────────────────────────────────────────
+    const upgradeModal  = shadow.getElementById('cp-upgrade-modal');
+    const upgradePanel  = upgradeModal.querySelector('.cp-upgrade-panel');
+    const checkoutError = shadow.getElementById('cp-checkout-error');
+    let _selectedPlan   = 'annual';
+
+    function openUpgradeModal() {
+      checkoutError.style.display = 'none';
+      upgradeModal.style.display = '';
+      shadow.getElementById('cp-upgrade-close').focus();
+    }
+    function closeUpgradeModal() {
+      upgradeModal.style.display = 'none';
+    }
+
+    shadow.getElementById('cp-upgrade-btn').addEventListener('click', openUpgradeModal);
+    shadow.getElementById('cp-upgrade-close').addEventListener('click', closeUpgradeModal);
+
+    // Click on backdrop (but not the panel) closes modal
+    upgradeModal.addEventListener('click', (e) => {
+      if (!upgradePanel.contains(e.target)) closeUpgradeModal();
+    });
+
+    // Escape key closes modal
+    upgradeModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeUpgradeModal();
+    });
+
+    // Plan selection
+    shadow.getElementById('cp-plan-monthly').addEventListener('click', () => {
+      _selectedPlan = 'monthly';
+      shadow.getElementById('cp-plan-monthly').classList.add('cp-plan-selected');
+      shadow.getElementById('cp-plan-annual').classList.remove('cp-plan-selected');
+    });
+    shadow.getElementById('cp-plan-annual').addEventListener('click', () => {
+      _selectedPlan = 'annual';
+      shadow.getElementById('cp-plan-annual').classList.add('cp-plan-selected');
+      shadow.getElementById('cp-plan-monthly').classList.remove('cp-plan-selected');
+    });
+
+    // Checkout
+    shadow.getElementById('cp-checkout-btn').addEventListener('click', () => {
+      const btn = shadow.getElementById('cp-checkout-btn');
+      checkoutError.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Redirecting\u2026';
+      chrome.runtime.sendMessage({ type: 'CREATE_CHECKOUT_SESSION', plan: _selectedPlan }, (res) => {
+        btn.disabled = false;
+        btn.textContent = 'Get Started';
+        if (chrome.runtime.lastError || !res?.ok) {
+          checkoutError.style.display = '';
+          return;
+        }
+        window.open(res.url, '_blank');
+        closeUpgradeModal();
+      });
     });
 
     function prefillDraftTab() {

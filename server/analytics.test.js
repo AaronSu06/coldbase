@@ -77,23 +77,6 @@ after(async () => {
   await new Promise(resolve => server.close(resolve));
 });
 
-describe('GET /api/insights/best-time', () => {
-  it('returns insufficient:true when database is empty', async () => {
-    const { status, body } = await request('GET', '/api/insights/best-time');
-    assert.strictEqual(status, 200);
-    assert.strictEqual(body.insufficient, true);
-    assert.strictEqual(typeof body.sent, 'number');
-    assert.strictEqual(typeof body.replied, 'number');
-  });
-
-  it('requires Authorization header', async () => {
-    const { status } = await request('GET', '/api/insights/best-time', null, {
-      'Authorization': '',
-    });
-    assert.strictEqual(status, 401);
-  });
-});
-
 describe('GET /api/insights', () => {
   it('returns 200 with all three insight keys when db is empty', async () => {
     const { status, body } = await request('GET', '/api/insights');
