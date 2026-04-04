@@ -243,27 +243,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  if (message.type === 'CREATE_CHECKOUT_SESSION') {
-    (async () => {
-      try {
-        const res = await serverFetch('/billing/checkout', {
-          method: 'POST',
-          body: JSON.stringify({ plan: message.plan }),
-        });
-        const body = await res.json();
-        if (!res.ok) {
-          sendResponse({ ok: false, error: body.message || 'Checkout failed' });
-          return;
-        }
-        sendResponse({ ok: true, url: body.url });
-      } catch (e) {
-        log.error('CREATE_CHECKOUT_SESSION failed:', e.message);
-        sendResponse({ ok: false, error: e.message });
-      }
-    })();
-    return true;
-  }
-
 });
 
 // ─── Dashboard token sync ──────────────────────────────────────────────────────

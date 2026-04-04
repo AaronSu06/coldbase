@@ -617,87 +617,6 @@ window.ColdbaseWidget = (function () {
   }
   .cp-resume-link:hover { color: #9a4310; }
 
-  /* ── Upgrade modal ───────────────────────────── */
-  .cp-upgrade-modal {
-    position: fixed; inset: 0; z-index: 10;
-    display: flex; align-items: center; justify-content: center;
-    padding: 16px;
-    background: rgba(28, 25, 23, 0.5);
-  }
-  .cp-upgrade-panel {
-    position: relative; background: #f8f7f5; border-radius: 14px;
-    width: 100%; max-width: 304px; padding: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    display: flex; flex-direction: column; gap: 16px;
-  }
-  .cp-upgrade-close {
-    position: absolute; top: 12px; right: 12px;
-    background: none; border: none; cursor: pointer; color: #78716c;
-    padding: 4px; border-radius: 4px;
-    display: flex; align-items: center; justify-content: center;
-    transition: color 120ms ease, background 120ms ease;
-  }
-  .cp-upgrade-close:hover { color: #1c1917; background: #ede9e3; }
-  .cp-upgrade-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 15px; font-weight: 700; color: #1c1917;
-    letter-spacing: -0.02em; margin: 0; padding-right: 20px;
-  }
-  .cp-upgrade-sub {
-    font-size: 11px; color: #78716c; line-height: 1.5; margin: 4px 0 0;
-  }
-  .cp-upgrade-features {
-    list-style: none; padding: 0; margin: 0;
-    display: flex; flex-direction: column; gap: 7px;
-  }
-  .cp-upgrade-features li {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 12px; color: #44403c;
-  }
-  .cp-upgrade-check {
-    width: 15px; height: 15px; flex-shrink: 0; border-radius: 50%;
-    background: #b85212; color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 8px; font-weight: 700; line-height: 1;
-  }
-  .cp-upgrade-plans {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  }
-  .cp-upgrade-plan {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-    padding: 10px 12px; border: 1.5px solid #e6e3db; border-radius: 8px;
-    background: #f6f5f1; color: #1c1917; cursor: pointer; text-align: left; position: relative;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    transition: border-color 120ms ease, background 120ms ease;
-  }
-  .cp-upgrade-plan:hover { border-color: #b85212; background: #fff; }
-  .cp-upgrade-plan.cp-plan-selected {
-    border-color: #b85212; background: rgba(184,82,18,0.03);
-  }
-  .cp-plan-badge {
-    position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
-    font-size: 8px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.08em; background: #b85212; color: #fff;
-    padding: 1px 6px; border-radius: 100px; white-space: nowrap;
-  }
-  .cp-plan-period {
-    font-size: 9px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.08em; color: #78716c;
-  }
-  .cp-upgrade-plan.cp-plan-selected .cp-plan-period { color: #b85212; }
-  .cp-plan-price {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px; font-weight: 700; color: #1c1917;
-    letter-spacing: -0.02em; line-height: 1;
-  }
-  .cp-plan-unit {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    font-size: 11px; font-weight: 400; color: #78716c;
-  }
-  .cp-plan-note { font-size: 9px; color: #78716c; }
-  .cp-upgrade-error {
-    font-size: 11px; color: #dc2626; text-align: center; display: none;
-  }
   `;
 
 
@@ -844,41 +763,6 @@ window.ColdbaseWidget = (function () {
         </div>
       </div>
 
-      <!-- Upgrade modal -->
-      <div id="cp-upgrade-modal" class="cp-upgrade-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="cp-upgrade-title">
-        <div class="cp-upgrade-panel" role="document">
-          <button class="cp-upgrade-close" id="cp-upgrade-close" aria-label="Close">
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-          <div>
-            <p class="cp-upgrade-title" id="cp-upgrade-title">Upgrade to Coldbase Pro</p>
-            <p class="cp-upgrade-sub">Get more replies. Write better emails, faster.</p>
-          </div>
-          <ul class="cp-upgrade-features">
-            <li><span class="cp-upgrade-check" aria-hidden="true">&#10003;</span>AI-generated cold email drafts</li>
-            <li><span class="cp-upgrade-check" aria-hidden="true">&#10003;</span>50 email lookups per month</li>
-            <li><span class="cp-upgrade-check" aria-hidden="true">&#10003;</span>Send-time analytics</li>
-            <li><span class="cp-upgrade-check" aria-hidden="true">&#10003;</span>Priority support</li>
-          </ul>
-          <div class="cp-upgrade-plans">
-            <button class="cp-upgrade-plan" id="cp-plan-monthly" data-plan="monthly" type="button">
-              <span class="cp-plan-period">Monthly</span>
-              <span class="cp-plan-price">$19<span class="cp-plan-unit">/mo</span></span>
-              <span class="cp-plan-note">billed monthly</span>
-            </button>
-            <button class="cp-upgrade-plan cp-plan-selected" id="cp-plan-annual" data-plan="annual" type="button">
-              <span class="cp-plan-badge">Save 21%</span>
-              <span class="cp-plan-period">Annual</span>
-              <span class="cp-plan-price">$15<span class="cp-plan-unit">/mo</span></span>
-              <span class="cp-plan-note">billed $180/yr</span>
-            </button>
-          </div>
-          <div>
-            <button class="action-btn" id="cp-checkout-btn" type="button">Get Started</button>
-            <p class="cp-upgrade-error" id="cp-checkout-error">Something went wrong. Please try again.</p>
-          </div>
-        </div>
-      </div>
     `;
   }
 
@@ -1166,10 +1050,7 @@ window.ColdbaseWidget = (function () {
             </div>`;
           var quotaBtn = shadow.getElementById('cp-quota-upgrade-btn');
           if (quotaBtn) quotaBtn.addEventListener('click', function() {
-            var modal = shadow.getElementById('cp-upgrade-modal');
-            var errEl = shadow.getElementById('cp-checkout-error');
-            if (errEl) errEl.style.display = 'none';
-            if (modal) modal.style.display = '';
+            window.open(_dashUrlForResume + '?upgrade=true', '_blank');
           });
         } else if (!res || !res.ok) {
           var msgs = {
@@ -1258,62 +1139,8 @@ window.ColdbaseWidget = (function () {
       window.open(_dashUrlForResume + '/settings', '_blank');
     });
 
-    // ── Upgrade modal ──────────────────────────────────────────────────────────
-    const upgradeModal  = shadow.getElementById('cp-upgrade-modal');
-    const upgradePanel  = upgradeModal.querySelector('.cp-upgrade-panel');
-    const checkoutError = shadow.getElementById('cp-checkout-error');
-    let _selectedPlan   = 'annual';
-
-    function openUpgradeModal() {
-      checkoutError.style.display = 'none';
-      upgradeModal.style.display = '';
-      shadow.getElementById('cp-upgrade-close').focus();
-    }
-    function closeUpgradeModal() {
-      upgradeModal.style.display = 'none';
-    }
-
-    shadow.getElementById('cp-upgrade-btn').addEventListener('click', openUpgradeModal);
-    shadow.getElementById('cp-upgrade-close').addEventListener('click', closeUpgradeModal);
-
-    // Click on backdrop (but not the panel) closes modal
-    upgradeModal.addEventListener('click', (e) => {
-      if (!upgradePanel.contains(e.target)) closeUpgradeModal();
-    });
-
-    // Escape key closes modal
-    upgradeModal.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeUpgradeModal();
-    });
-
-    // Plan selection
-    shadow.getElementById('cp-plan-monthly').addEventListener('click', () => {
-      _selectedPlan = 'monthly';
-      shadow.getElementById('cp-plan-monthly').classList.add('cp-plan-selected');
-      shadow.getElementById('cp-plan-annual').classList.remove('cp-plan-selected');
-    });
-    shadow.getElementById('cp-plan-annual').addEventListener('click', () => {
-      _selectedPlan = 'annual';
-      shadow.getElementById('cp-plan-annual').classList.add('cp-plan-selected');
-      shadow.getElementById('cp-plan-monthly').classList.remove('cp-plan-selected');
-    });
-
-    // Checkout
-    shadow.getElementById('cp-checkout-btn').addEventListener('click', () => {
-      const btn = shadow.getElementById('cp-checkout-btn');
-      checkoutError.style.display = 'none';
-      btn.disabled = true;
-      btn.textContent = 'Redirecting\u2026';
-      chrome.runtime.sendMessage({ type: 'CREATE_CHECKOUT_SESSION', plan: _selectedPlan }, (res) => {
-        btn.disabled = false;
-        btn.textContent = 'Get Started';
-        if (chrome.runtime.lastError || !res?.ok) {
-          checkoutError.style.display = '';
-          return;
-        }
-        window.open(res.url, '_blank');
-        closeUpgradeModal();
-      });
+    shadow.getElementById('cp-upgrade-btn').addEventListener('click', () => {
+      window.open(_dashUrlForResume + '?upgrade=true', '_blank');
     });
 
     function prefillDraftTab() {
