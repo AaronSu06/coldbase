@@ -43,7 +43,7 @@ export default function AuthShell({ children }) {
             Track every outreach. Land more replies.
           </p>
           <p className="mt-5 font-sans text-[15px] text-chrome-muted leading-relaxed">
-            Job searching is a numbers game. Reach makes sure none of those numbers slip through the cracks.
+            Find recruiters, draft outreach, and track every reply without living in a spreadsheet.
           </p>
 
           <div className="mt-10 flex flex-col gap-5 w-full">
