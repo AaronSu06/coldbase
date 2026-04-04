@@ -15,6 +15,7 @@ const REPLY_TREND_MIN_DAYS = 30;
 // Query params: from=YYYY-MM-DD, to=YYYY-MM-DD (both optional, default = all-time)
 router.get('/', async (req, res, next) => {
   try {
+    const { userId } = req.user;
     const { from, to } = req.query;
     const fromDate = from ? new Date(from) : null;
     const toDate = to ? new Date(to + 'T23:59:59.999Z') : null;
@@ -29,6 +30,7 @@ router.get('/', async (req, res, next) => {
 
     // ── Totals (always reflect the date window) ───────────────────────────
     const whereDate = {
+      userId,
       archived: false,
       ...(fromDate && { sentDate: { gte: fromDate } }),
       ...(toDate && { sentDate: { lte: toDate } }),
@@ -49,7 +51,7 @@ router.get('/', async (req, res, next) => {
           COUNT(*) AS sent_count,
           SUM(CASE WHEN "repliedAt" IS NOT NULL THEN 1 ELSE 0 END)::INTEGER AS replied_count
         FROM "Outreach"
-        WHERE archived = false ${fromClause} ${toClause}
+        WHERE archived = false AND "userId" = ${userId} ${fromClause} ${toClause}
         GROUP BY hour
         ORDER BY hour
       `;
@@ -75,7 +77,7 @@ router.get('/', async (req, res, next) => {
           AVG(EXTRACT(EPOCH FROM ("repliedAt" - "sentDate")) / 3600.0) AS avg_hours,
           COUNT(*) AS sample_size
         FROM "Outreach"
-        WHERE "repliedAt" IS NOT NULL AND archived = false ${fromClause} ${toClause}
+        WHERE "repliedAt" IS NOT NULL AND archived = false AND "userId" = ${userId} ${fromClause} ${toClause}
         GROUP BY week
         ORDER BY week
       `;
@@ -97,7 +99,7 @@ router.get('/', async (req, res, next) => {
     let replyTrend;
     // Determine effective date range for the 30-day minimum check
     const effectiveFrom = fromDate ?? (await prisma.outreach.findFirst({
-      where: { archived: false },
+      where: { archived: false, userId },
       orderBy: { sentDate: 'asc' },
       select: { sentDate: true },
     }))?.sentDate;
@@ -115,7 +117,7 @@ router.get('/', async (req, res, next) => {
           COUNT(*) AS sent,
           SUM(CASE WHEN "repliedAt" IS NOT NULL THEN 1 ELSE 0 END)::INTEGER AS replied
         FROM "Outreach"
-        WHERE archived = false ${fromClause} ${toClause}
+        WHERE archived = false AND "userId" = ${userId} ${fromClause} ${toClause}
         GROUP BY week
         ORDER BY week
       `;
