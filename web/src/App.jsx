@@ -135,7 +135,7 @@ function sectionFromPath(pathname) {
 
 export default function App() {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const activeSection = sectionFromPath(pathname);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem(TOKEN_KEY));
   const { records, error, refresh, updateStatus, toggleFavorite, toggleArchived, archiveAll, updateRecord, deleteRecord } = useOutreach();
@@ -156,6 +156,15 @@ export default function App() {
   const [insightsDateFrom, setInsightsDateFrom] = useState('');
   const [insightsDateTo, setInsightsDateTo] = useState('');
   const [proModalOpen, setProModalOpen] = useState(false);
+
+  // Open pro modal when redirected from extension with ?upgrade=true
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    if (params.get('upgrade') === 'true') {
+      setProModalOpen(true);
+      navigate(pathname, { replace: true });
+    }
+  }, []);
   const [insightsData, setInsightsData] = useState(null);
   const [insightsLoading, setInsightsLoading] = useState(true);
   const [insightsError, setInsightsError] = useState(null);
