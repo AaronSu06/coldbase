@@ -36,9 +36,9 @@ window.ColdbaseWidget = (function () {
     if (stylesInjected || document.getElementById('oiq-w-style')) return;
     stylesInjected = true;
     // Load brand fonts into the host document (font faces are not shadow-scoped)
-    if (!document.getElementById('reach-widget-fonts')) {
+    if (!document.getElementById('coldbase-widget-fonts')) {
       const fontLink = document.createElement('link');
-      fontLink.id = 'reach-widget-fonts';
+      fontLink.id = 'coldbase-widget-fonts';
       fontLink.rel = 'stylesheet';
       fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@0,400;0,500&display=swap';
       document.head.appendChild(fontLink);
@@ -120,7 +120,7 @@ window.ColdbaseWidget = (function () {
     for (const testY of probeYs) {
       const el = document.elementFromPoint(probeX, testY);
       if (!el || el === document.body || editorEl.contains(el) || el.contains(editorEl)) continue;
-      if (el.classList.contains('oiq-w')) continue; // skip other Reach widgets
+      if (el.classList.contains('oiq-w')) continue; // skip other Coldbase widgets
       neighborRect = el.getBoundingClientRect();
       break;
     }
@@ -164,8 +164,8 @@ window.ColdbaseWidget = (function () {
   // on top of any extension (e.g. Mailtrack) that wraps the compose dialog with
   // overflow:hidden or otherwise acts as a clipping containing block.
   function getOrCreateWidget(editorEl) {
-    // Guard: _state is null if ReachWidget.init() hasn't run yet (can happen if
-    // ReachDetector.init() calls scanForEditors synchronously before ReachWidget.init()).
+    // Guard: _state is null if ColdbaseWidget.init() hasn't run yet (can happen if
+    // ColdbaseDetector.init() calls scanForEditors synchronously before ColdbaseWidget.init()).
     if (!_state) {
       return null;
     }
@@ -970,7 +970,7 @@ window.ColdbaseWidget = (function () {
       _cpResetSelection();
       _cpHideDropdown();
       searchInput.focus();
-      chrome.storage.session.remove(['reach_find_state', 'reach_find_results']);
+      chrome.storage.session.remove(['coldbase_find_state', 'coldbase_find_results']);
     });
 
     searchInput.addEventListener('keydown', function(e) {
@@ -1026,8 +1026,8 @@ window.ColdbaseWidget = (function () {
           _cpRenderResults(shadow, res.results);
           // Persist results and inputs for session restore
           chrome.storage.session.set({
-            reach_find_state:   { domain: company, firstName: firstName, lastName: lastName },
-            reach_find_results: { results: res.results },
+            coldbase_find_state:   { domain: company, firstName: firstName, lastName: lastName },
+            coldbase_find_results: { results: res.results },
           });
         } else if (res && res.error === 'quota_exceeded') {
           resultsEl.innerHTML = '<div class="status-msg">Monthly lookup limit reached ('
@@ -1048,9 +1048,9 @@ window.ColdbaseWidget = (function () {
     });
 
     // Restore last session state
-    chrome.storage.session.get(['reach_find_state', 'reach_find_results'], function(data) {
-      if (data.reach_find_state) {
-        var s = data.reach_find_state;
+    chrome.storage.session.get(['coldbase_find_state', 'coldbase_find_results'], function(data) {
+      if (data.coldbase_find_state) {
+        var s = data.coldbase_find_state;
         if (s.domain) {
           searchInput.value = s.domain;
           _cpSelectedDomain = s.domain;
@@ -1060,8 +1060,8 @@ window.ColdbaseWidget = (function () {
         if (s.firstName) shadow.getElementById('cp-first-name').value = s.firstName;
         if (s.lastName)  shadow.getElementById('cp-last-name').value  = s.lastName;
       }
-      if (data.reach_find_results && data.reach_find_results.results) {
-        _cpRenderResults(shadow, data.reach_find_results.results);
+      if (data.coldbase_find_results && data.coldbase_find_results.results) {
+        _cpRenderResults(shadow, data.coldbase_find_results.results);
       }
     });
   }
@@ -1175,11 +1175,11 @@ window.ColdbaseWidget = (function () {
           genBtn.textContent = 'Generate Draft \u2728';
           const textarea = shadow.getElementById('cp-draft-output');
           if (chrome.runtime.lastError || !res?.ok) {
-            textarea.value = res?.error || 'Error \u2014 check that the Reach server is running.';
+            textarea.value = res?.error || 'Error \u2014 check that the Coldbase server is running.';
             return;
           }
           textarea.value = res.text;
-          chrome.storage.session.set({ reach_draft_state: { text: res.text } });
+          chrome.storage.session.set({ coldbase_draft_state: { text: res.text } });
         }
       );
     });
@@ -1206,9 +1206,9 @@ window.ColdbaseWidget = (function () {
     });
 
     // Restore draft from session if present
-    chrome.storage.session.get('reach_draft_state', function(data) {
-      if (data.reach_draft_state?.text) {
-        shadow.getElementById('cp-draft-output').value = data.reach_draft_state.text;
+    chrome.storage.session.get('coldbase_draft_state', function(data) {
+      if (data.coldbase_draft_state?.text) {
+        shadow.getElementById('cp-draft-output').value = data.coldbase_draft_state.text;
       }
     });
 
@@ -1220,7 +1220,7 @@ window.ColdbaseWidget = (function () {
   function buildComposePanel() {
     const ICON_URL = chrome.runtime.getURL('logo.png');
     const host = document.createElement('div');
-    host.id = 'reach-compose-panel-host';
+    host.id = 'coldbase-compose-panel-host';
     host.style.display = 'none';
     const shadow = host.attachShadow({ mode: 'closed' });
 
@@ -1326,7 +1326,7 @@ window.ColdbaseWidget = (function () {
     if (!_composeAuthGateHost) {
       const ICON_URL = chrome.runtime.getURL('logo.png');
       const host = document.createElement('div');
-      host.id = 'reach-compose-auth-gate-host';
+      host.id = 'coldbase-compose-auth-gate-host';
       host.style.display = 'none';
 
       ['keydown', 'keyup', 'keypress'].forEach(type =>
@@ -1464,7 +1464,7 @@ window.ColdbaseWidget = (function () {
   function init(state) {
     _state = state;
     injectStyles();
-    log.debug('ReachWidget initialized.');
+    log.debug('ColdbaseWidget initialized.');
   }
 
   // attach: called externally, mirrors getOrCreateWidget
