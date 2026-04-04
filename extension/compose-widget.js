@@ -1237,7 +1237,7 @@ window.ColdbaseWidget = (function () {
       }
     });
 
-    return prefillDraftTab;
+    return { prefillDraftTab, isPro: () => _isPro, isAdmin: () => _isAdmin };
   }
 
   // ─── Build compose panel ─────────────────────────────────────────────────────
@@ -1272,7 +1272,7 @@ window.ColdbaseWidget = (function () {
     const tabs         = shadow.querySelectorAll('.tab');
     const panels       = shadow.querySelectorAll('.tab-panel');
     const loadOverviewData = setupOverviewTab(shadow, ctx, updateTrackToggle);
-    const prefillDraftTab  = setupDraftTab(shadow, ctx);
+    const { prefillDraftTab, isPro: _getDraftPro, isAdmin: _getDraftAdmin } = setupDraftTab(shadow, ctx);
     setupFindTab(shadow);
 
     tabs.forEach(tab => {
@@ -1298,7 +1298,7 @@ window.ColdbaseWidget = (function () {
         ? (_state.editorManualModes.get(editorEl) || _state.savedTrackingDefault || 'force_track')
         : (_state.savedTrackingDefault || 'force_track');
       updateTrackToggle(mode);
-      if (_isPro || _isAdmin) {
+      if (_getDraftPro() || _getDraftAdmin()) {
         shadow.getElementById('cp-draft-empty').style.display = editorEl ? 'none' : '';
         shadow.getElementById('cp-draft-form').style.display  = editorEl ? '' : 'none';
       }
@@ -1322,7 +1322,7 @@ window.ColdbaseWidget = (function () {
       // mismatches that break the open/close toggle when the panel is hidden.
       if (_composePanelHost && _composePanelHost.style.display !== 'none') {
         _composePanelCurrentEditor = ctx.currentEditorEl;
-        if (_isPro || _isAdmin) {
+        if (_getDraftPro() || _getDraftAdmin()) {
           shadow.getElementById('cp-draft-empty').style.display = ctx.currentEditorEl ? 'none' : '';
           shadow.getElementById('cp-draft-form').style.display  = ctx.currentEditorEl ? '' : 'none';
         }
