@@ -544,8 +544,7 @@ window.ColdbaseWidget = (function () {
     justify-content: center;
     padding: 24px 20px;
     gap: 10px;
-    background: rgba(255,255,255,0.6);
-    backdrop-filter: blur(2px);
+    background: rgba(255,255,255,0.96);
   }
   .cp-auth-logo {
     width: 28px; height: 28px; border-radius: 7px; margin-bottom: 2px;

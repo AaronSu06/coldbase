@@ -170,8 +170,7 @@
         justify-content: center;
         padding: 24px 20px;
         gap: 10px;
-        background: rgba(255,255,255,0.6);
-        backdrop-filter: blur(2px);
+        background: rgba(255,255,255,0.96);
       }
       .auth-logo {
         width: 32px;
