@@ -38,11 +38,11 @@ window.ColdbaseTracking = (function () {
     container.addEventListener('click', function(e) {
       const btn = e.target.closest('[data-tooltip*="Send"], [aria-label*="Send"]');
       if (!btn) return;
-      if (editorEl.dataset.reachTracking) return;
+      if (editorEl.dataset.coldbaseTracking) return;
       const manualMode = _state.editorManualModes.get(editorEl) || 'force_track';
       if (manualMode === 'force_skip') return;
       const trackingId = generateTrackingId();
-      editorEl.dataset.reachTracking = trackingId;
+      editorEl.dataset.coldbaseTracking = trackingId;
       injectTrackingPixel(editorEl, trackingId);
       _state.pendingTrackingId = trackingId;
 
@@ -68,9 +68,9 @@ window.ColdbaseTracking = (function () {
   // ─── Reload banner ───────────────────────────────────────────────────────────
 
   function showReloadBanner() {
-    if (document.getElementById('reach-reload-banner')) return;
+    if (document.getElementById('coldbase-reload-banner')) return;
     const banner = document.createElement('div');
-    banner.id = 'reach-reload-banner';
+    banner.id = 'coldbase-reload-banner';
     Object.assign(banner.style, {
       position: 'fixed',
       bottom: '24px',
@@ -93,7 +93,7 @@ window.ColdbaseTracking = (function () {
       <span style="font-size:18px">&#x26A0;&#xFE0F;</span>
       <span><strong>Coldbase</strong>: extension was reloaded \u2014 this email was <em>not</em> tracked.<br>
       Reload Gmail to restore tracking.</span>
-      <button id="reach-reload-btn" style="
+      <button id="coldbase-reload-btn" style="
         flex-shrink:0; background:#6366f1; color:#fff; border:none;
         border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600;
         cursor:pointer; white-space:nowrap;">
@@ -101,7 +101,7 @@ window.ColdbaseTracking = (function () {
       </button>
     `;
     document.body.appendChild(banner);
-    document.getElementById('reach-reload-btn').addEventListener('click', () => location.reload());
+    document.getElementById('coldbase-reload-btn').addEventListener('click', () => location.reload());
     setTimeout(() => banner.remove(), 30_000);
   }
 

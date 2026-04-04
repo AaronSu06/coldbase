@@ -8,7 +8,7 @@
 // (intervals are cleared before re-creating, observer is disconnected then re-observed).
 (function () {
   // Allow re-initialisation on every injection — module IIFEs have already reset _state.
-  window.__reachLoaded = true;
+  window.__coldbaseLoaded = true;
 
   const log = window.ColdbaseLogger('content');
   log.info('Content script loaded.');
