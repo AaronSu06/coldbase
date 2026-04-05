@@ -144,7 +144,7 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
     if (gmailEmail && gmailEmail !== reachEmail) {
       log.warn(`Account mismatch: OAuth is ${gmailEmail}, Reach account is ${reachEmail} — skipping track.`);
       // Notify the active Gmail tab so the user sees a toast.
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.query({ url: 'https://mail.google.com/*' }, (tabs) => {
         const tab = tabs[0];
         if (tab?.id) {
           chrome.tabs.sendMessage(tab.id, {
