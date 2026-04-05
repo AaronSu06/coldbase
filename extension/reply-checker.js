@@ -357,6 +357,21 @@ export async function trackFromPendingScan(pendingScan) {
 // ─── Check threads for replies ─────────────────────────────────────────────────
 
 export async function checkReplies(token) {
+  // Account-match guard: skip background reply check if OAuth account ≠ Reach account.
+  const reachEmail = await getColdbaseEmail();
+  if (reachEmail) {
+    let gmailEmail = null;
+    try {
+      gmailEmail = await getGmailAccountEmail(token);
+    } catch (e) {
+      log.warn('checkReplies: could not verify Gmail account identity — proceeding:', e.message);
+    }
+    if (gmailEmail && gmailEmail !== reachEmail) {
+      log.warn(`checkReplies: OAuth is ${gmailEmail}, Reach account is ${reachEmail} — skipping.`);
+      return;
+    }
+  }
+
   let records;
   try {
     const res = await fetchOutreach();
