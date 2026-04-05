@@ -104,11 +104,50 @@
 
   // ─── Message listener ──────────────────────────────────────────────────────────
 
+  function showAccountMismatchToast(reachEmail) {
+    const TOAST_ID = 'coldbase-account-mismatch-toast';
+    if (document.getElementById(TOAST_ID)) return;
+
+    const toast = document.createElement('div');
+    toast.id = TOAST_ID;
+    Object.assign(toast.style, {
+      position: 'fixed',
+      bottom: '24px',
+      right: '24px',
+      zIndex: '2147483647',
+      background: '#1e1e2e',
+      color: '#fff',
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '13px',
+      lineHeight: '1.4',
+      padding: '12px 16px',
+      borderRadius: '10px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      maxWidth: '380px',
+    });
+    toast.innerHTML = `
+      <span style="font-size:18px">&#x26A0;&#xFE0F;</span>
+      <span><strong>Reach</strong>: email not tracked &mdash; sign into Gmail as <strong>${reachEmail}</strong> to enable tracking.</span>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 8000);
+  }
+
   chrome.runtime.onMessage.addListener((msg) => {
-    if (msg.type !== 'OPEN_PANEL') return;
-    const editor = (lastActiveEditor && document.body.contains(lastActiveEditor))
-      ? lastActiveEditor
-      : [...liveEditors].find(el => document.body.contains(el)) || null;
-    window.ColdbaseWidget.openComposePanel(editor);
+    if (msg.type === 'OPEN_PANEL') {
+      const editor = (lastActiveEditor && document.body.contains(lastActiveEditor))
+        ? lastActiveEditor
+        : [...liveEditors].find(el => document.body.contains(el)) || null;
+      window.ColdbaseWidget.openComposePanel(editor);
+      return;
+    }
+
+    if (msg.type === 'ACCOUNT_MISMATCH') {
+      showAccountMismatchToast(msg.reachEmail);
+      return;
+    }
   });
 })();
