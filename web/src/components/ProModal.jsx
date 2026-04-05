@@ -15,7 +15,6 @@ const proFeatures = [
   { title: 'AI-drafted follow-up emails', desc: 'Generate personalised follow-ups in one click based on your prior conversation.' },
   { title: 'Advanced send-time analytics', desc: 'Full hourly breakdown once you hit the data threshold.' },
   { title: 'Advanced reporting', desc: 'Track reply rates and pipeline health over time.' },
-  { title: 'Priority support', desc: null },
 ];
 
 export default function ProModal({ onClose }) {
