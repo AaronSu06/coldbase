@@ -131,6 +131,34 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
     return false;
   }
 
+  // ─── Account-match guard ──────────────────────────────────────────────────
+  // Only track emails sent from the account that matches the logged-in Reach user.
+  const reachEmail = await getColdbaseEmail();
+  if (reachEmail) {
+    let gmailEmail = null;
+    try {
+      gmailEmail = await getGmailAccountEmail(token);
+    } catch (e) {
+      log.warn('Could not verify Gmail account identity — proceeding anyway:', e.message);
+    }
+    if (gmailEmail && gmailEmail !== reachEmail) {
+      log.warn(`Account mismatch: OAuth is ${gmailEmail}, Reach account is ${reachEmail} — skipping track.`);
+      // Notify the active Gmail tab so the user sees a toast.
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
+        if (tab?.id) {
+          chrome.tabs.sendMessage(tab.id, {
+            type: 'ACCOUNT_MISMATCH',
+            gmailEmail,
+            reachEmail,
+          }, () => void chrome.runtime.lastError);
+        }
+      });
+      return false;
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   let messageList;
   try {
     const data = await apiFetchRetry(
