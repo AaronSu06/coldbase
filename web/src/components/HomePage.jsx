@@ -138,9 +138,9 @@ function CompleteProfileCard({ hasResume, onSetupProfile }) {
 
 function UpgradeCard({ onOpenProModal }) {
   const features = [
+    '10x more email finding',
     'AI-drafted follow-up emails',
-    'Advanced send-time analytics',
-    'Advanced reporting',
+    'Personalised AI feedback',
   ];
 
   return (
@@ -150,7 +150,7 @@ function UpgradeCard({ onOpenProModal }) {
           Coldbase Pro
         </p>
         <p className="text-[12px] text-chrome-muted leading-relaxed">
-          AI-powered follow-ups and deep analytics for serious outreach.
+          More email finding, AI drafting, and personalised feedback.
         </p>
       </div>
 
