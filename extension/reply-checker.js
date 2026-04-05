@@ -6,8 +6,22 @@ import { getAuthToken } from './auth.js';
 import { extractEmailAddress } from './text-utils.js';
 import { apiFetch, apiFetchRetry, serverFetch, postOutreach, postTrackingPixel, fetchOutreach } from './api-client.js';
 import { fetchClearbitCompany, extractFirstName, isGenericDomain } from './classifier.js';
+import { getColdbaseEmail } from './coldbase-auth.js';
 
 const log = logger('reply-checker');
+
+/**
+ * Fetch the email address for the given Gmail OAuth token via Google's userinfo endpoint.
+ * Returns lowercase email string, or throws on network/auth failure.
+ */
+async function getGmailAccountEmail(token) {
+  const res = await fetch('https://www.googleapis.com/oauth2/v1/userinfo', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`userinfo fetch failed: ${res.status}`);
+  const data = await res.json();
+  return (data.email || '').toLowerCase();
+}
 
 const GMAIL_API = 'https://www.googleapis.com/gmail/v1/users/me';
 
