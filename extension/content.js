@@ -128,10 +128,19 @@
       gap: '10px',
       maxWidth: '380px',
     });
-    toast.innerHTML = `
-      <span style="font-size:18px">&#x26A0;&#xFE0F;</span>
-      <span><strong>Reach</strong>: email not tracked &mdash; sign into Gmail as <strong>${reachEmail}</strong> to enable tracking.</span>
-    `;
+    const icon = document.createElement('span');
+    icon.style.fontSize = '18px';
+    icon.textContent = '⚠️';
+
+    const text = document.createElement('span');
+    text.innerHTML = '<strong>Reach</strong>: email not tracked \u2014 sign into Gmail as ';
+    const emailStrong = document.createElement('strong');
+    emailStrong.textContent = reachEmail;
+    text.appendChild(emailStrong);
+    text.appendChild(document.createTextNode(' to enable tracking.'));
+
+    toast.appendChild(icon);
+    toast.appendChild(text);
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 8000);
   }
