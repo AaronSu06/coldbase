@@ -26,6 +26,10 @@ export default function PrivacyPage() {
         <p>If you subscribe to Coldbase Pro, payment is processed by Stripe. We do not store your card number — Stripe handles all payment data.</p>
       </Section>
 
+      <Section title="Cookies and local storage">
+        <p>Coldbase stores your login token in your browser's local storage to keep you signed in. This token expires when you log out. We do not use third-party tracking cookies.</p>
+      </Section>
+
       <Section title="How we use your data">
         <p>Your outreach records are used to power the Coldbase tracker and dashboard — nothing else.</p>
         <p>If you use AI drafting or feedback features, your email content is sent to Google Gemini to generate a response. It is not stored by us after the response is returned.</p>
