@@ -1,6 +1,15 @@
 // web/src/components/LegalShell.jsx
 import { Link } from 'react-router-dom';
 
+export function Section({ title, children }) {
+  return (
+    <section>
+      <h2 className="font-display font-bold text-[18px] text-chrome-text mb-3">{title}</h2>
+      <div className="text-chrome-muted space-y-3">{children}</div>
+    </section>
+  );
+}
+
 export default function LegalShell({ title, children, lastUpdated = 'April 6, 2026' }) {
   return (
     <div className="min-h-screen bg-chrome-bg px-6 py-12">

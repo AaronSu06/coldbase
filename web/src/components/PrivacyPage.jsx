@@ -1,14 +1,5 @@
 // web/src/components/PrivacyPage.jsx
-import LegalShell from './LegalShell';
-
-function Section({ title, children }) {
-  return (
-    <section>
-      <h2 className="font-display font-bold text-[18px] text-chrome-text mb-3">{title}</h2>
-      <div className="text-chrome-muted space-y-3">{children}</div>
-    </section>
-  );
-}
+import LegalShell, { Section } from './LegalShell';
 
 export default function PrivacyPage() {
   return (
