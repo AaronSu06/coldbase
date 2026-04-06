@@ -7,6 +7,8 @@ import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
 import ProfilePage from './components/ProfilePage';
 import ErrorBoundary from './components/ErrorBoundary';
+import PrivacyPage from './components/PrivacyPage';
+import TermsPage from './components/TermsPage';
 import './index.css';
 import { TOKEN_KEY } from './hooks/useAuth.js';
 
@@ -29,6 +31,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/settings" element={<PrivateRoute><App /></PrivateRoute>} />
         <Route path="/tracker" element={<PrivateRoute><App /></PrivateRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><App /></PrivateRoute>} />
+        <Route path="/legal/privacy" element={<PrivacyPage />} />
+        <Route path="/legal/terms" element={<TermsPage />} />
         <Route path="/*" element={<PrivateRoute><App /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
