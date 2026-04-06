@@ -156,6 +156,18 @@ export default function SignupPage() {
         </button>
       </form>
 
+      {/* Legal consent */}
+      <p className="mt-3 text-[11px] font-sans text-chrome-subtle text-center leading-relaxed">
+        By creating an account, you agree to our{' '}
+        <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline">
+          Terms of Service
+        </a>
+        {' '}and{' '}
+        <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline">
+          Privacy Policy
+        </a>.
+      </p>
+
       {/* Switch to login */}
       <p className="mt-5 text-[13px] font-sans text-chrome-muted">
         Already have an account?{' '}
