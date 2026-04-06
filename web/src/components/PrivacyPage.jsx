@@ -23,18 +23,15 @@ export default function PrivacyPage() {
 
       <Section title="How we use your data">
         <p>Your outreach records are used to power the Coldbase tracker and dashboard — nothing else.</p>
-        <p>If you use AI drafting or feedback features, your email content is sent to Google Gemini to generate a response. It is not stored by us after the response is returned.</p>
-        <p>If you use the email finder feature, your search query is sent to Hunter.io to look up contact information. Hunter.io's own privacy policy applies to that request.</p>
+        <p>If you use AI drafting or feedback features, your email content is sent to a third-party AI service to generate a response. It is not stored by us after the response is returned.</p>
+        <p>If you use the email finder feature, your search query is sent to a third-party contact lookup service. That service's own privacy policy applies to that request.</p>
       </Section>
 
       <Section title="Third-party services">
         <p>Coldbase uses the following third-party services:</p>
         <ul className="list-disc list-inside space-y-1.5 pl-2">
           <li><strong>Google OAuth &amp; Gmail API</strong> — to authenticate your account and read Gmail threads (readonly access only)</li>
-          <li><strong>Google Gemini</strong> — to power AI email drafting and feedback</li>
-          <li><strong>Hunter.io</strong> — to find contact email addresses</li>
           <li><strong>Stripe</strong> — to process Pro subscription payments</li>
-          <li><strong>Neon</strong> — our database provider, hosted on AWS in the US</li>
         </ul>
       </Section>
 

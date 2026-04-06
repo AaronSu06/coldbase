@@ -157,7 +157,7 @@ export default function SignupPage() {
       </form>
 
       {/* Legal consent */}
-      <p className="mt-3 text-[11px] font-sans text-chrome-subtle text-center leading-relaxed">
+      <p className="mt-3 text-[11px] font-sans text-chrome-subtle text-left leading-relaxed">
         By creating an account, you agree to our{' '}
         <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline">
           Terms of Service
