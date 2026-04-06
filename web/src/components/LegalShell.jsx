@@ -36,10 +36,10 @@ export default function LegalShell({ title, children, lastUpdated = 'April 6, 20
           {/* Footer */}
           <div className="mt-12 pt-6 border-t border-chrome-border">
             <Link
-              to="/"
+              to="/auth/login"
               className="text-[13px] text-accent hover:text-accent-hover transition-colors"
             >
-              ← Back to Coldbase
+              ← Back to sign in
             </Link>
           </div>
         </main>
