@@ -12,9 +12,9 @@ const freeFeatures = [
 
 const proFeatures = [
   { title: 'Everything in Free', desc: null },
+  { title: '10x more email finding', desc: '50 contact lookups per month, vs 5 on the free plan.' },
   { title: 'AI-drafted follow-up emails', desc: 'Generate personalised follow-ups in one click based on your prior conversation.' },
-  { title: 'Advanced send-time analytics', desc: 'Full hourly breakdown once you hit the data threshold.' },
-  { title: 'Advanced reporting', desc: 'Track reply rates and pipeline health over time.' },
+  { title: 'Personalised AI feedback', desc: 'Get actionable feedback on your emails before you send them.' },
 ];
 
 export default function ProModal({ onClose }) {
@@ -122,7 +122,7 @@ export default function ProModal({ onClose }) {
           >
             <p className="text-[10px] sm:text-[11px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted mb-1">Monthly</p>
             <p className="font-display text-[22px] sm:text-[26px] font-bold text-chrome-text leading-none mb-0.5">
-              $19<span className="text-[12px] sm:text-[13px] font-sans font-normal text-chrome-muted"> / mo</span>
+              $7<span className="text-[12px] sm:text-[13px] font-sans font-normal text-chrome-muted"> / mo</span>
             </p>
             <p className="text-[10px] text-chrome-muted">billed monthly</p>
           </button>
@@ -138,13 +138,13 @@ export default function ProModal({ onClose }) {
             }`}
           >
             <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold font-sans uppercase tracking-[0.08em] bg-accent text-white px-2.5 py-0.5 rounded-full whitespace-nowrap">
-              Save 21%
+              Save 29%
             </span>
             <p className="text-[10px] sm:text-[11px] font-semibold font-sans uppercase tracking-[0.1em] text-accent mb-1">Annual</p>
             <p className="font-display text-[22px] sm:text-[26px] font-bold text-chrome-text leading-none mb-0.5">
-              $15<span className="text-[12px] sm:text-[13px] font-sans font-normal text-chrome-muted"> / mo</span>
+              $5<span className="text-[12px] sm:text-[13px] font-sans font-normal text-chrome-muted"> / mo</span>
             </p>
-            <p className="text-[10px] text-chrome-muted">billed $180 / yr</p>
+            <p className="text-[10px] text-chrome-muted">billed $60 / yr</p>
           </button>
         </div>
 
