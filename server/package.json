@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "build": "prisma generate && prisma migrate deploy",
     "dev": "node --watch index.js",
     "start": "node index.js",
     "test": "node --env-file=.env.test --test *.test.js",

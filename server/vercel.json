@@ -15,5 +15,5 @@
       "dest": "api/index.js"
     }
   ],
-  "buildCommand": "prisma generate && prisma migrate deploy"
+  "buildCommand": "npm run build"
 }
