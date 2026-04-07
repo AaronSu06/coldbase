@@ -136,18 +136,6 @@ export default function LoginPage({ onLogin }) {
         </button>
       </form>
 
-      {/* Legal consent */}
-      <p className="mt-3 text-[11px] font-sans text-chrome-subtle text-left leading-relaxed">
-        By signing in, you agree to our{' '}
-        <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline">
-          Terms of Service
-        </a>
-        {' '}and{' '}
-        <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline">
-          Privacy Policy
-        </a>.
-      </p>
-
       {/* Switch to signup */}
       <p className="mt-5 text-[13px] font-sans text-chrome-muted">
         Don't have an account?{' '}

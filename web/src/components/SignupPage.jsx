@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import AuthShell, { GoogleIcon } from './AuthShell';
 import EyeIcon from './icons/EyeIcon';
 import EyeSlashIcon from './icons/EyeSlashIcon';
+import LegalModal from './LegalModal';
 
 export default function SignupPage() {
   const [email, setEmail]         = useState('');
@@ -13,6 +14,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError]         = useState('');
   const [loading, setLoading]     = useState(false);
+  const [legalModal, setLegalModal] = useState(null);
   const { login } = useAuth();
   const navigate = useNavigate();
   const emailRef = useRef(null);
@@ -159,13 +161,13 @@ export default function SignupPage() {
       {/* Legal consent */}
       <p className="mt-3 text-[11px] font-sans text-chrome-subtle text-left leading-relaxed">
         By creating an account, you agree to our{' '}
-        <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline">
+        <button type="button" onClick={() => setLegalModal('terms')} className="text-accent hover:text-accent-hover underline bg-transparent p-0 cursor-pointer">
           Terms of Service
-        </a>
+        </button>
         {' '}and{' '}
-        <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline">
+        <button type="button" onClick={() => setLegalModal('privacy')} className="text-accent hover:text-accent-hover underline bg-transparent p-0 cursor-pointer">
           Privacy Policy
-        </a>.
+        </button>.
       </p>
 
       {/* Switch to login */}
@@ -179,5 +181,7 @@ export default function SignupPage() {
         </Link>
       </p>
     </AuthShell>
+
+    {legalModal && <LegalModal doc={legalModal} onClose={() => setLegalModal(null)} />}
   );
 }
