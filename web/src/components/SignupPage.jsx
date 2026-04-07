@@ -49,6 +49,7 @@ export default function SignupPage() {
   }
 
   return (
+    <>
     <AuthShell>
       {/* Wordmark — mobile only; desktop left panel provides brand anchor */}
       <span className="block md:hidden font-display text-2xl font-bold text-chrome-text leading-none tracking-tight mb-5">
@@ -183,5 +184,6 @@ export default function SignupPage() {
     </AuthShell>
 
     {legalModal && <LegalModal doc={legalModal} onClose={() => setLegalModal(null)} />}
+    </>
   );
 }
