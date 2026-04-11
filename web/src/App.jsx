@@ -15,7 +15,7 @@ import ProModal from './components/ProModal';
 import LoginPage from './components/LoginPage';
 import SettingsPage from './components/SettingsPage';
 import { DateRangePicker } from './components/DateRangePicker';
-import { COLUMNS } from '@shared/constants';
+import { COLUMNS } from './lib/constants.js';
 import { STATUS_COLORS, formatShortDate } from './lib/utils';
 import { fetchInsights } from './lib/api';
 

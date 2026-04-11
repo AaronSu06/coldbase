@@ -5,7 +5,7 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { arrayMove } from '@dnd-kit/sortable';
-import { COLUMNS } from '@shared/constants';
+import { COLUMNS } from '../lib/constants.js';
 import KanbanColumn from './KanbanColumn';
 import OutreachCard from './OutreachCard';
 

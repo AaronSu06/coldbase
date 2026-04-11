@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchOutreach, patchOutreach, deleteOutreach } from '../lib/api';
-import { COLUMNS } from '@shared/constants';
+import { COLUMNS } from '../lib/constants.js';
 
 function normalizeStatus(status) {
   if (status === 'Applied') return 'Sent';
