@@ -1,6 +1,6 @@
 // server/routes/profile.js
 import { Router } from 'express';
-import { PDFParse } from 'pdf-parse';
+import pdfParse from 'pdf-parse';
 import multer from 'multer';
 import mammoth from 'mammoth';
 import { prisma } from '../lib/prisma.js';
@@ -29,8 +29,7 @@ const upload = multer({
 async function extractText(file) {
   const { mimetype, buffer } = file;
   if (mimetype === 'application/pdf') {
-    const parser = new PDFParse({ data: buffer });
-    const result = await parser.getText();
+    const result = await pdfParse(buffer);
     return result.text.trim();
   }
   if (
