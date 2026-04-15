@@ -19,7 +19,8 @@ model User {
   resumeName           String?
   stripeCustomerId     String?
   stripeSubscriptionId String?
-  subscriptionStatus   String?
+  subscriptionStatus           String?
+  subscriptionCurrentPeriodEnd DateTime?
   lookupsUsedThisMonth Int             @default(0)
   lookupsResetAt       DateTime?
   createdAt      DateTime        @default(now())
