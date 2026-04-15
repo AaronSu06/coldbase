@@ -118,6 +118,13 @@ router.post('/webhook', async (req, res) => {
         const userId = session.metadata?.userId ? Number(session.metadata.userId) : null;
         if (!userId) break;
 
+        // Retrieve subscription to get current_period_end
+        let periodEnd = null;
+        if (session.subscription) {
+          const sub = await stripe.subscriptions.retrieve(session.subscription);
+          periodEnd = new Date(sub.current_period_end * 1000);
+        }
+
         await prisma.user.update({
           where: { id: userId },
           data: {
@@ -125,6 +132,7 @@ router.post('/webhook', async (req, res) => {
             stripeCustomerId: session.customer,
             stripeSubscriptionId: session.subscription,
             subscriptionStatus: 'active',
+            subscriptionCurrentPeriodEnd: periodEnd,
           },
         });
         break;
@@ -134,7 +142,10 @@ router.post('/webhook', async (req, res) => {
         const subscription = event.data.object;
         await prisma.user.updateMany({
           where: { stripeSubscriptionId: subscription.id },
-          data: { subscriptionStatus: subscription.status },
+          data: {
+            subscriptionStatus: subscription.status,
+            subscriptionCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          },
         });
         break;
       }
@@ -147,6 +158,7 @@ router.post('/webhook', async (req, res) => {
             plan: 'free',
             subscriptionStatus: 'canceled',
             stripeSubscriptionId: null,
+            subscriptionCurrentPeriodEnd: null,
           },
         });
         break;
@@ -160,6 +172,34 @@ router.post('/webhook', async (req, res) => {
   } catch (err) {
     console.error('[Billing] Webhook handler error:', err.message);
     res.status(500).json({ error: 'Webhook handler failed' });
+  }
+});
+
+// ─── DELETE /api/billing/subscription ─────────────────────────────────────────
+// Cancels the subscription at period end (user retains Pro access until then).
+
+router.delete('/subscription', requireAuth, async (req, res, next) => {
+  try {
+    const stripe = getStripe();
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { stripeSubscriptionId: true },
+    });
+    if (!user) return res.status(404).json({ error: 'Not Found', message: 'User not found' });
+    if (!user.stripeSubscriptionId) {
+      return res.status(400).json({ error: 'Bad Request', message: 'No active subscription found.' });
+    }
+
+    const sub = await stripe.subscriptions.update(user.stripeSubscriptionId, {
+      cancel_at_period_end: true,
+    });
+
+    res.json({
+      subscriptionCurrentPeriodEnd: new Date(sub.current_period_end * 1000),
+    });
+  } catch (e) {
+    next(e);
   }
 });
 
