@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { TOKEN_KEY } from '../hooks/useAuth.js';
 import { Upload, X, Star, ChevronDown, Check, FileText, Eye, EyeOff } from 'lucide-react';
-import { fetchSettings, patchSettings, uploadResume, deleteResume, patchEmail, patchPassword, deleteAccount, createPortalSession } from '../lib/api';
+import { fetchSettings, patchSettings, uploadResume, deleteResume, patchEmail, patchPassword, deleteAccount, createPortalSession, cancelSubscription } from '../lib/api';
 import ProModal from './ProModal';
 
 function SectionTitle({ children, className = '' }) {
@@ -118,8 +118,65 @@ const PRO_FEATURES = [
   'Priority email delivery',
 ];
 
-function PlanSection({ plan = 'free', onUpgrade, onManageSubscription }) {
+function PlanSection({ plan = 'free', subscriptionStatus, subscriptionCurrentPeriodEnd, onUpgrade, onManageSubscription, onSubscriptionCanceled }) {
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  const isCanceling = plan === 'pro' && subscriptionCurrentPeriodEnd && subscriptionStatus !== 'canceled';
+
+  async function handleConfirmCancel() {
+    setCancelLoading(true);
+    try {
+      const { subscriptionCurrentPeriodEnd: periodEnd } = await cancelSubscription();
+      onSubscriptionCanceled(new Date(periodEnd));
+      setShowCancelConfirm(false);
+    } catch (e) {
+      console.error('[Coldbase] Cancel subscription failed:', e.message);
+    } finally {
+      setCancelLoading(false);
+    }
+  }
+
   if (plan === 'pro') {
+    const endDate = subscriptionCurrentPeriodEnd?.toLocaleDateString('en-US', {
+      month: 'long', day: 'numeric', year: 'numeric',
+    });
+
+    if (isCanceling && !showCancelConfirm) {
+      return (
+        <section aria-label="Plan">
+          <SectionTitle>Plan</SectionTitle>
+          <div className="rounded-lg border border-chrome-rim bg-chrome-card overflow-hidden">
+            <div className="px-4 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Star size={13} className="text-accent fill-accent flex-shrink-0" aria-hidden="true" />
+                    <span className="text-[14px] font-semibold text-chrome-text">Coldbase Pro</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-700">
+                      Canceling
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-chrome-muted mt-1">
+                    Your Pro access ends on <span className="font-semibold text-chrome-text">{endDate}</span>.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-chrome-border px-4 py-3 flex items-center justify-between">
+              <span className="text-[12px] text-chrome-muted">You won't be charged after {endDate}</span>
+              <button
+                onClick={onUpgrade}
+                className="text-[13px] font-medium text-accent hover:text-accent-hover transition-colors"
+              >
+                Resubscribe
+              </button>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
     return (
       <section aria-label="Plan">
         <SectionTitle>Plan</SectionTitle>
@@ -146,14 +203,47 @@ function PlanSection({ plan = 'free', onUpgrade, onManageSubscription }) {
               </div>
             </div>
           </div>
+
+          {showCancelConfirm && endDate && (
+            <div className="border-t border-chrome-border px-4 py-3 bg-chrome-deep">
+              <p className="text-[13px] text-chrome-text mb-3">
+                You'll keep Pro access until <span className="font-semibold">{endDate}</span>, then move to the free plan. No further charges.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleConfirmCancel}
+                  disabled={cancelLoading}
+                  className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-[13px] font-semibold hover:bg-red-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {cancelLoading ? 'Canceling…' : 'Confirm cancel'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="px-3 py-1.5 rounded-lg text-[13px] font-medium text-chrome-muted hover:text-chrome-text hover:bg-chrome-surface transition-colors"
+                >
+                  Keep plan
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="border-t border-chrome-border px-4 py-3 flex items-center justify-between">
-            <span className="text-[12px] text-chrome-muted">Billing managed through Stripe</span>
             <button
               onClick={onManageSubscription}
               className="text-[13px] font-medium text-accent hover:text-accent-hover transition-colors"
             >
               Manage subscription
             </button>
+            {!showCancelConfirm && (
+              <button
+                type="button"
+                onClick={() => setShowCancelConfirm(true)}
+                className="text-[13px] text-chrome-muted hover:text-chrome-text transition-colors"
+              >
+                Cancel plan
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -212,6 +302,8 @@ export default function SettingsPage() {
   // Billing
   const [showProModal, setShowProModal] = useState(false);
   const [stripeSuccess, setStripeSuccess] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [subscriptionCurrentPeriodEnd, setSubscriptionCurrentPeriodEnd] = useState(null);
 
   // Account — which row is expanded
   const [expandedRow, setExpandedRow] = useState(null);
@@ -225,6 +317,10 @@ export default function SettingsPage() {
     fetchSettings()
       .then(data => {
         if (data.plan) setPlan(data.plan);
+        if (data.subscriptionStatus) setSubscriptionStatus(data.subscriptionStatus);
+        if (data.subscriptionCurrentPeriodEnd) {
+          setSubscriptionCurrentPeriodEnd(new Date(data.subscriptionCurrentPeriodEnd));
+        }
         if (data.emailDigest) setEmailDigest(data.emailDigest);
         setResumeName(data.resumeName ?? null);
         setSettingsLoaded(true);
@@ -542,8 +638,13 @@ export default function SettingsPage() {
         {/* ── Plan ───────────────────────────────────────────────────── */}
         <PlanSection
           plan={plan}
+          subscriptionStatus={subscriptionStatus}
+          subscriptionCurrentPeriodEnd={subscriptionCurrentPeriodEnd}
           onUpgrade={() => setShowProModal(true)}
           onManageSubscription={handleManageSubscription}
+          onSubscriptionCanceled={(periodEnd) => {
+            setSubscriptionCurrentPeriodEnd(periodEnd);
+          }}
         />
 
         {/* ── Account ────────────────────────────────────────────────── */}
