@@ -648,6 +648,7 @@ export default function SettingsPage() {
           onUpgrade={() => setShowProModal(true)}
           onManageSubscription={handleManageSubscription}
           onSubscriptionCanceled={(periodEnd) => {
+            setSubscriptionStatus('canceling');
             setSubscriptionCurrentPeriodEnd(periodEnd);
           }}
         />
