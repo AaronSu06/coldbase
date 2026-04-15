@@ -121,8 +121,9 @@ const PRO_FEATURES = [
 function PlanSection({ plan = 'free', subscriptionStatus, subscriptionCurrentPeriodEnd, onUpgrade, onManageSubscription, onSubscriptionCanceled }) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
 
-  const isCanceling = plan === 'pro' && subscriptionCurrentPeriodEnd && subscriptionStatus !== 'canceled';
+  const isCanceling = plan === 'pro' && subscriptionStatus === 'canceling';
 
   async function handleConfirmCancel() {
     setCancelLoading(true);
@@ -132,6 +133,7 @@ function PlanSection({ plan = 'free', subscriptionStatus, subscriptionCurrentPer
       setShowCancelConfirm(false);
     } catch (e) {
       console.error('[Coldbase] Cancel subscription failed:', e.message);
+      setCancelError('Something went wrong. Please try again.');
     } finally {
       setCancelLoading(false);
     }
@@ -219,12 +221,15 @@ function PlanSection({ plan = 'free', subscriptionStatus, subscriptionCurrentPer
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowCancelConfirm(false)}
+                  onClick={() => { setShowCancelConfirm(false); setCancelError(null); }}
                   className="px-3 py-1.5 rounded-lg text-[13px] font-medium text-chrome-muted hover:text-chrome-text hover:bg-chrome-surface transition-colors"
                 >
                   Keep plan
                 </button>
               </div>
+              {cancelError && (
+                <p className="text-[13px] text-red-500 font-medium mt-2">{cancelError}</p>
+              )}
             </div>
           )}
 

@@ -143,7 +143,7 @@ router.post('/webhook', async (req, res) => {
         await prisma.user.updateMany({
           where: { stripeSubscriptionId: subscription.id },
           data: {
-            subscriptionStatus: subscription.status,
+            subscriptionStatus: subscription.cancel_at_period_end ? 'canceling' : subscription.status,
             subscriptionCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
           },
         });
@@ -193,6 +193,11 @@ router.delete('/subscription', requireAuth, async (req, res, next) => {
 
     const sub = await stripe.subscriptions.update(user.stripeSubscriptionId, {
       cancel_at_period_end: true,
+    });
+
+    await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { subscriptionStatus: 'canceling' },
     });
 
     res.json({
