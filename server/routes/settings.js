@@ -12,7 +12,13 @@ router.get('/', async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { emailDigest: true, resumeName: true, plan: true },
+      select: {
+        emailDigest: true,
+        resumeName: true,
+        plan: true,
+        subscriptionStatus: true,
+        subscriptionCurrentPeriodEnd: true,
+      },
     });
     if (!user) return res.status(404).json({ error: 'Not Found', message: 'User not found', statusCode: 404 });
     res.json(user);
@@ -34,7 +40,13 @@ router.patch('/', async (req, res, next) => {
     const user = await prisma.user.update({
       where: { id: req.user.userId },
       data,
-      select: { emailDigest: true, resumeName: true, plan: true },
+      select: {
+        emailDigest: true,
+        resumeName: true,
+        plan: true,
+        subscriptionStatus: true,
+        subscriptionCurrentPeriodEnd: true,
+      },
     });
     res.json(user);
   } catch (e) {
