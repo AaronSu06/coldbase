@@ -124,6 +124,9 @@ export const createCheckoutSession = (plan) =>
 export const createPortalSession = () =>
   apiFetch(`${BASE}/billing/portal`, { method: 'POST' }).then(r => r.json());
 
+export const cancelSubscription = () =>
+  apiFetch(`${BASE}/billing/subscription`, { method: 'DELETE' }).then(r => r.json());
+
 export const generateFeedback = (record) =>
   apiFetch(`${BASE}/feedback`, {
     method: 'POST',
