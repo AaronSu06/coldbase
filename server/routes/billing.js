@@ -115,26 +115,46 @@ router.post('/webhook', async (req, res) => {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
-        const userId = session.metadata?.userId ? Number(session.metadata.userId) : null;
-        if (!userId) break;
-
-        // Retrieve subscription to get current_period_end
-        let periodEnd = null;
-        if (session.subscription) {
-          const sub = await stripe.subscriptions.retrieve(session.subscription);
-          periodEnd = new Date(sub.current_period_end * 1000);
-        }
-
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            plan: 'pro',
-            stripeCustomerId: session.customer,
-            stripeSubscriptionId: session.subscription,
-            subscriptionStatus: 'active',
-            subscriptionCurrentPeriodEnd: periodEnd,
-          },
+        console.log('[Billing] checkout.session.completed:', {
+          sessionId: session.id,
+          metadataUserId: session.metadata?.userId,
+          customer: session.customer,
+          subscription: session.subscription,
         });
+
+        const userId = session.metadata?.userId ? Number(session.metadata.userId) : null;
+
+        // Helper to retrieve period end safely
+        const getPeriodEnd = async (subscriptionId) => {
+          if (!subscriptionId) return null;
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          return sub.current_period_end ? new Date(sub.current_period_end * 1000) : null;
+        };
+
+        const upgradeData = {
+          plan: 'pro',
+          stripeCustomerId: session.customer,
+          stripeSubscriptionId: session.subscription,
+          subscriptionStatus: 'active',
+          subscriptionCurrentPeriodEnd: await getPeriodEnd(session.subscription),
+        };
+
+        if (userId) {
+          await prisma.user.update({ where: { id: userId }, data: upgradeData });
+          console.log('[Billing] checkout.session.completed: updated user', userId, '→ pro');
+        } else if (session.customer) {
+          // Fallback: metadata.userId missing — look up by Stripe customer ID
+          console.error('[Billing] checkout.session.completed: missing userId in metadata, falling back to customer lookup', session.metadata);
+          const userByCustomer = await prisma.user.findFirst({ where: { stripeCustomerId: session.customer } });
+          if (userByCustomer) {
+            await prisma.user.update({ where: { id: userByCustomer.id }, data: upgradeData });
+            console.log('[Billing] checkout.session.completed: updated user via customer fallback', userByCustomer.id, '→ pro');
+          } else {
+            console.error('[Billing] checkout.session.completed: no user found for customer', session.customer);
+          }
+        } else {
+          console.error('[Billing] checkout.session.completed: no userId in metadata and no customer ID — cannot update user', session.metadata);
+        }
         break;
       }
 
