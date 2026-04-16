@@ -333,6 +333,26 @@ export default function SettingsPage() {
       .catch(e => console.error('[Coldbase] Failed to load settings:', e.message));
   }, []);
 
+  async function pollForProPlan(fetchSettingsFn, setters, maxAttempts = 8, intervalMs = 1500) {
+    for (let i = 0; i < maxAttempts; i++) {
+      await new Promise(r => setTimeout(r, intervalMs));
+      try {
+        const data = await fetchSettingsFn();
+        if (data?.plan === 'pro') {
+          setters.setPlan(data.plan);
+          setters.setSubscriptionStatus(data.subscriptionStatus ?? null);
+          setters.setSubscriptionCurrentPeriodEnd(
+            data.subscriptionCurrentPeriodEnd ? new Date(data.subscriptionCurrentPeriodEnd) : null
+          );
+          return true;
+        }
+      } catch (_) {
+        // network hiccup — keep retrying
+      }
+    }
+    return false; // timed out
+  }
+
   // Handle ?scrollTo=resume query param
   useEffect(() => {
     const params = new URLSearchParams(search);
@@ -345,6 +365,14 @@ export default function SettingsPage() {
       const url = new URL(window.location.href);
       url.searchParams.delete('stripe');
       window.history.replaceState({}, '', url.toString());
+
+      pollForProPlan(fetchSettings, { setPlan, setSubscriptionStatus, setSubscriptionCurrentPeriodEnd })
+        .then(upgraded => {
+          if (!upgraded) {
+            // Webhook took too long — nudge user to refresh
+            console.warn('[Coldbase] Plan not yet updated after payment — webhook may be delayed');
+          }
+        });
     }
   }, [search]);
 
