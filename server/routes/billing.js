@@ -102,9 +102,10 @@ router.post('/webhook', async (req, res) => {
     return res.status(500).send('Webhook secret not configured');
   }
 
+  let stripe;
   let event;
   try {
-    const stripe = getStripe();
+    stripe = getStripe();
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
     console.error('[Billing] Webhook signature verification failed:', err.message);
