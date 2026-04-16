@@ -206,32 +206,51 @@ function PlanSection({ plan = 'free', subscriptionStatus, subscriptionCurrentPer
             </div>
           </div>
 
-          {showCancelConfirm && endDate && (
-            <div className="border-t border-chrome-border px-4 py-3">
-              <p className="text-[13px] text-chrome-muted mb-3">
-                You'll keep Pro access until <span className="font-semibold text-chrome-text">{endDate}</span>, then move to the free plan. No further charges.
-              </p>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleConfirmCancel}
-                  disabled={cancelLoading}
-                  className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-[13px] font-semibold hover:bg-red-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {cancelLoading ? 'Canceling…' : 'Confirm cancel'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setShowCancelConfirm(false); setCancelError(null); }}
-                  className="text-[13px] font-medium text-chrome-muted hover:text-chrome-text transition-colors"
-                >
-                  Keep plan
-                </button>
+          {/* Animated cancel confirmation — grid-template-rows avoids layout thrashing */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: showCancelConfirm ? '1fr' : '0fr',
+              transition: 'grid-template-rows 240ms cubic-bezier(0.25, 1, 0.5, 1)',
+            }}
+          >
+            <div className="overflow-hidden">
+              <div
+                className="border-t border-chrome-border px-4 py-3"
+                style={{
+                  opacity: showCancelConfirm ? 1 : 0,
+                  transition: `opacity ${showCancelConfirm ? '200ms' : '120ms'} cubic-bezier(0.25, 1, 0.5, 1) ${showCancelConfirm ? '60ms' : '0ms'}`,
+                }}
+              >
+                {endDate && (
+                  <>
+                    <p className="text-[13px] text-chrome-muted mb-3">
+                      You'll keep Pro access until <span className="font-semibold text-chrome-text">{endDate}</span>, then move to the free plan. No further charges.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleConfirmCancel}
+                        disabled={cancelLoading}
+                        className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-[13px] font-semibold hover:bg-red-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {cancelLoading ? 'Canceling…' : 'Confirm cancel'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowCancelConfirm(false); setCancelError(null); }}
+                        className="text-[13px] font-medium text-chrome-muted hover:text-chrome-text transition-colors"
+                      >
+                        Keep plan
+                      </button>
+                    </div>
+                    {cancelError && (
+                      <p className="text-[13px] text-red-500 font-medium mt-2">{cancelError}</p>
+                    )}
+                  </>
+                )}
               </div>
-              {cancelError && (
-                <p className="text-[13px] text-red-500 font-medium mt-2">{cancelError}</p>
-              )}
             </div>
-          )}
+          </div>
 
           <div className="border-t border-chrome-border px-4 py-3 flex items-center justify-between">
             <button
@@ -240,15 +259,18 @@ function PlanSection({ plan = 'free', subscriptionStatus, subscriptionCurrentPer
             >
               Manage subscription
             </button>
-            {!showCancelConfirm && (
-              <button
-                type="button"
-                onClick={() => setShowCancelConfirm(true)}
-                className="text-[13px] text-chrome-muted hover:text-chrome-text transition-colors"
-              >
-                Cancel plan
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setShowCancelConfirm(true)}
+              style={{
+                opacity: showCancelConfirm ? 0 : 1,
+                pointerEvents: showCancelConfirm ? 'none' : 'auto',
+                transition: 'opacity 150ms cubic-bezier(0.25, 1, 0.5, 1)',
+              }}
+              className="text-[13px] text-chrome-muted hover:text-chrome-text transition-colors"
+            >
+              Cancel plan
+            </button>
           </div>
         </div>
       </section>
