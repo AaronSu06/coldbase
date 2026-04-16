@@ -6,7 +6,7 @@ const freeFeatures = [
   'Unlimited contact tracking',
   'Basic email templates',
   'Reply tracking',
-  'Send-time insights (limited)',
+  'Send-time insights',
   'CSV export',
 ];
 
@@ -94,10 +94,8 @@ export default function ProModal({ onClose }) {
             <p className="text-[11px] text-chrome-muted mb-4 leading-relaxed">The full suite, to help you close more opportunities.</p>
             <ul className="space-y-3">
               {proFeatures.map(f => (
-                <li key={f.title} className="flex items-start gap-2.5">
-                  <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-accent flex items-center justify-center">
-                    <span className="text-white text-[9px] leading-none">✓</span>
-                  </span>
+                <li key={f.title} className="flex items-start gap-2">
+                  <span className="text-accent text-[10px] mt-0.5 flex-shrink-0">✦</span>
                   <div>
                     <p className="text-[12px] font-semibold text-chrome-text">{f.title}</p>
                     {f.desc && <p className="text-[11px] text-chrome-muted leading-relaxed mt-0.5">{f.desc}</p>}
