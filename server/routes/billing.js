@@ -170,6 +170,17 @@ router.post('/webhook', async (req, res) => {
         break;
       }
 
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object;
+        if (invoice.subscription) {
+          await prisma.user.updateMany({
+            where: { stripeSubscriptionId: invoice.subscription },
+            data: { subscriptionStatus: 'past_due' },
+          });
+        }
+        break;
+      }
+
       default:
         break;
     }
