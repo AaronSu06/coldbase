@@ -143,8 +143,10 @@ router.post('/webhook', async (req, res) => {
         const isCanceling = subscription.cancel_at_period_end;
         const updateData = {
           subscriptionStatus: isCanceling ? 'canceling' : subscription.status,
-          subscriptionCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
         };
+        if (subscription.current_period_end) {
+          updateData.subscriptionCurrentPeriodEnd = new Date(subscription.current_period_end * 1000);
+        }
         // Re-assert pro on active renewals so plan never drifts
         if (subscription.status === 'active') {
           updateData.plan = 'pro';
