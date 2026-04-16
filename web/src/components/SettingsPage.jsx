@@ -197,7 +197,7 @@ function PlanSection({ plan = 'free', subscriptionStatus, subscriptionCurrentPer
                 <ul className="space-y-1 mt-2">
                   {PRO_FEATURES.map(f => (
                     <li key={f} className="flex items-center gap-2 text-[13px] text-chrome-muted">
-                      <Check size={12} className="text-accent flex-shrink-0" strokeWidth={2.5} aria-hidden="true" />
+                      <span className="text-accent text-[10px] flex-shrink-0" aria-hidden="true">✦</span>
                       {f}
                     </li>
                   ))}
