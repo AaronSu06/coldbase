@@ -207,11 +207,11 @@ function PlanSection({ plan = 'free', subscriptionStatus, subscriptionCurrentPer
           </div>
 
           {showCancelConfirm && endDate && (
-            <div className="border-t border-chrome-border px-4 py-3 bg-chrome-deep">
-              <p className="text-[13px] text-chrome-text mb-3">
-                You'll keep Pro access until <span className="font-semibold">{endDate}</span>, then move to the free plan. No further charges.
+            <div className="border-t border-chrome-border px-4 py-3">
+              <p className="text-[13px] text-chrome-muted mb-3">
+                You'll keep Pro access until <span className="font-semibold text-chrome-text">{endDate}</span>, then move to the free plan. No further charges.
               </p>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={handleConfirmCancel}
                   disabled={cancelLoading}
@@ -222,7 +222,7 @@ function PlanSection({ plan = 'free', subscriptionStatus, subscriptionCurrentPer
                 <button
                   type="button"
                   onClick={() => { setShowCancelConfirm(false); setCancelError(null); }}
-                  className="px-3 py-1.5 rounded-lg text-[13px] font-medium text-chrome-muted hover:text-chrome-text hover:bg-chrome-surface transition-colors"
+                  className="text-[13px] font-medium text-chrome-muted hover:text-chrome-text transition-colors"
                 >
                   Keep plan
                 </button>
