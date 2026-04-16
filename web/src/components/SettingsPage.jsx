@@ -113,9 +113,9 @@ function FormStatus({ status, message }) {
 }
 
 const PRO_FEATURES = [
-  'Unlimited contacts & outreach campaigns',
-  'Advanced analytics and reply tracking',
-  'Priority email delivery',
+  '10x more email finding',
+  'AI-drafted follow-up emails',
+  'Personalised AI feedback',
 ];
 
 function PlanSection({ plan = 'free', subscriptionStatus, subscriptionCurrentPeriodEnd, onUpgrade, onManageSubscription, onSubscriptionCanceled }) {
