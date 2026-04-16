@@ -140,12 +140,18 @@ router.post('/webhook', async (req, res) => {
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object;
+        const isCanceling = subscription.cancel_at_period_end;
+        const updateData = {
+          subscriptionStatus: isCanceling ? 'canceling' : subscription.status,
+          subscriptionCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        };
+        // Re-assert pro on active renewals so plan never drifts
+        if (subscription.status === 'active') {
+          updateData.plan = 'pro';
+        }
         await prisma.user.updateMany({
           where: { stripeSubscriptionId: subscription.id },
-          data: {
-            subscriptionStatus: subscription.cancel_at_period_end ? 'canceling' : subscription.status,
-            subscriptionCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
-          },
+          data: updateData,
         });
         break;
       }
