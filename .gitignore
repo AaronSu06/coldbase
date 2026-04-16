@@ -21,3 +21,4 @@ extension/config.js
 # Local config overrides
 **/config.local.js
 .worktrees/
+.vercel

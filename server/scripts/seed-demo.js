@@ -1,9 +1,10 @@
 import 'dotenv/config';
+import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const USER_ID = 10; // admin@gmail.com (pro)
+const USER_ID = 1; // admin account
 
 const now = new Date();
 const daysAgo = (d) => new Date(now - d * 24 * 60 * 60 * 1000);
@@ -11,6 +12,9 @@ const daysAgo = (d) => new Date(now - d * 24 * 60 * 60 * 1000);
 const existingUpdates = [
   {
     id: 17, // Amazon / Jeff Bezos
+    threadId: 'thread-amazon-001',
+    company: 'Amazon',
+    contactName: 'Jeff Bezos',
     status: 'Ghosted',
     sentDate: daysAgo(12),
     latestActivity: daysAgo(12),
@@ -28,6 +32,8 @@ const existingUpdates = [
   },
   {
     id: 18, // Anthropic
+    threadId: 'thread-anthropic-001',
+    company: 'Anthropic',
     contactName: 'Dario Amodei',
     status: 'Interviewing',
     sentDate: daysAgo(6),
@@ -47,6 +53,9 @@ const existingUpdates = [
   },
   {
     id: 19, // Meta / Mark Zuckerberg
+    threadId: 'thread-meta-001',
+    company: 'Meta',
+    contactName: 'Mark Zuckerberg',
     status: 'Interviewing',
     sentDate: daysAgo(8),
     latestActivity: daysAgo(2),
@@ -65,6 +74,9 @@ const existingUpdates = [
   },
   {
     id: 20, // OpenAI / Sam Altman
+    threadId: 'thread-openai-001',
+    company: 'OpenAI',
+    contactName: 'Sam Altman',
     status: 'Replied',
     sentDate: daysAgo(5),
     latestActivity: daysAgo(1),
@@ -240,8 +252,14 @@ const newOutreaches = [
 
 for (const update of existingUpdates) {
   const { id, ...data } = update;
-  await prisma.outreach.update({ where: { id }, data });
-  console.log(`Updated: id=${id} (${data.company || data.contactName})`);
+  const existing = await prisma.outreach.findUnique({ where: { id } });
+  if (existing) {
+    await prisma.outreach.update({ where: { id }, data });
+    console.log(`Updated: id=${id} (${data.company || data.contactName})`);
+  } else {
+    await prisma.outreach.create({ data: { ...data, userId: USER_ID } });
+    console.log(`Created: ${data.company || data.contactName}`);
+  }
 }
 
 for (const outreach of newOutreaches) {

@@ -7,12 +7,15 @@
     "identity",
     "storage",
     "alarms",
-    "scripting"
+    "scripting",
+    "activeTab"
   ],
   "host_permissions": [
     "https://mail.google.com/*",
     "https://www.googleapis.com/*",
-    "https://generativelanguage.googleapis.com/*"
+    "https://generativelanguage.googleapis.com/*",
+    "http://localhost:5173/*",
+    "https://coldbase.vercel.app/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -24,6 +27,14 @@
       "js": ["logger.js", "email-detector.js", "compose-widget.js", "tracking.js", "content.js"],
       "run_at": "document_idle",
       "all_frames": false
+    },
+    {
+      "matches": [
+        "http://localhost:5173/*",
+        "https://coldbase.vercel.app/*"
+      ],
+      "js": ["dashboard-sync.js"],
+      "run_at": "document_idle"
     }
   ],
   "icons": {

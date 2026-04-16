@@ -49,7 +49,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 async function checkJwtPresent() {
   const token = await getColdbaseToken();
   if (!token) {
-    log.warn('No Coldbase JWT in storage. Visit http://localhost:5173 and log in to sync your session.');
+    log.warn(`No Coldbase JWT in storage. Visit ${DASH_URL} and log in to sync your session.`);
   }
 }
 

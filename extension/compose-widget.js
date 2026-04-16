@@ -1439,11 +1439,24 @@ window.ColdbaseWidget = (function () {
   }
 
   async function openComposePanel(editorEl) {
-    // Auth gate check
+    // Auth gate check — token presence
     const result = await new Promise(resolve =>
       chrome.storage.local.get('coldbase_jwt', resolve)
     );
     if (!result.coldbase_jwt) {
+      showComposeAuthGate(editorEl);
+      return;
+    }
+
+    // Auth gate check — token validity (catches stale/expired JWTs after logout)
+    const profile = await new Promise(resolve =>
+      chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, (res) => {
+        void chrome.runtime.lastError;
+        resolve(res);
+      })
+    );
+    if (!profile?.ok) {
+      chrome.runtime.sendMessage({ type: 'CLEAR_COLDBASE_TOKEN' }, () => { void chrome.runtime.lastError; });
       showComposeAuthGate(editorEl);
       return;
     }

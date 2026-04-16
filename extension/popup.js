@@ -1,4 +1,4 @@
-const DEFAULT_DASHBOARD_URL = 'http://localhost:5173';
+const DEFAULT_DASHBOARD_URL = 'https://coldbase.vercel.app';
 
 function loadStats() {
   const sentEl = document.getElementById('stat-sent');
