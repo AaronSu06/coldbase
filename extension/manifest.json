@@ -15,7 +15,7 @@
     "https://www.googleapis.com/*",
     "https://generativelanguage.googleapis.com/*",
     "http://localhost:5173/*",
-    "https://coldbase.vercel.app/*"
+    "https://coldbase.live/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -31,7 +31,7 @@
     {
       "matches": [
         "http://localhost:5173/*",
-        "https://coldbase.vercel.app/*"
+        "https://coldbase.live/*"
       ],
       "js": ["dashboard-sync.js"],
       "run_at": "document_idle"
