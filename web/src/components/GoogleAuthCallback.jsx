@@ -16,7 +16,7 @@ export default function GoogleAuthCallback() {
     } else {
       navigate(`/auth?error=${error ?? 'google_failed'}`, { replace: true });
     }
-  }, []);
+  }, [searchParams, login, navigate]);
 
   return null;
 }
