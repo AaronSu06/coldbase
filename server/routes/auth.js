@@ -5,6 +5,13 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';
 import requireAuth from '../middleware/requireAuth.js';
+import { OAuth2Client } from 'google-auth-library';
+
+const oauthClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  `${process.env.CLIENT_URL}/auth/google/callback`
+);
 
 const router = Router();
 
@@ -158,6 +165,58 @@ router.delete('/account', requireAuth, async (req, res, next) => {
   try {
     await prisma.user.delete({ where: { id: req.user.userId } });
     res.json({ success: true });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// ─── GET /google ───────────────────────────────────────────────────────────────
+
+router.get('/google', (req, res) => {
+  const url = oauthClient.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['openid', 'email', 'profile'],
+    prompt: 'select_account',
+  });
+  res.redirect(url);
+});
+
+// ─── GET /google/callback ──────────────────────────────────────────────────────
+
+router.get('/google/callback', async (req, res, next) => {
+  const { code } = req.query;
+  if (!code) return res.redirect(`${process.env.CLIENT_URL}/auth?error=no_code`);
+
+  try {
+    const { tokens } = await oauthClient.getToken(code);
+    oauthClient.setCredentials(tokens);
+
+    const ticket = await oauthClient.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email } = payload;
+
+    let user = await prisma.user.findFirst({
+      where: { OR: [{ googleId }, { email }] },
+    });
+
+    if (user) {
+      if (!user.googleId) {
+        user = await prisma.user.update({ where: { id: user.id }, data: { googleId } });
+      }
+    } else {
+      user = await prisma.user.create({ data: { email, googleId } });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.redirect(`${process.env.CLIENT_URL}/auth/google/callback?token=${token}`);
   } catch (e) {
     next(e);
   }
