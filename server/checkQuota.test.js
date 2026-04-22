@@ -3,8 +3,10 @@
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 process.env.DIRECT_URL   = process.env.TEST_DIRECT_URL;
 process.env.JWT_SECRET   = 'test-jwt-secret';
-process.env.BCRYPT_ROUNDS = '1';
-process.env.HUNTER_KEY   = 'test-hunter-key';
+process.env.BCRYPT_ROUNDS      = '1';
+process.env.NODE_ENV           = 'test';
+process.env.SNOV_CLIENT_ID     = 'test-snov-id';
+process.env.SNOV_CLIENT_SECRET = 'test-snov-secret';
 
 import { describe, it, before, after, mock } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,11 +18,13 @@ import jwt from 'jsonwebtoken';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Mock fetch globally so no real Hunter API calls are made
-const mockFetch = mock.fn(async () => ({
-  ok: true,
-  json: async () => ({ data: { emails: [{ value: 'test@example.com', confidence: 80 }] } }),
-}));
+// Mock fetch globally so no real Snov.io API calls are made
+const mockFetch = mock.fn(async (url) => {
+  if (url === 'https://api.snov.io/v1/oauth/access_token') {
+    return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
+  }
+  return { ok: true, json: async () => ({ emails: [{ email: 'test@example.com' }] }) };
+});
 global.fetch = mockFetch;
 
 let server, port, prisma, request, authHeader;

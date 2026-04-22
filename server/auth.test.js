@@ -4,6 +4,7 @@ process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 process.env.DIRECT_URL = process.env.TEST_DIRECT_URL;
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.BCRYPT_ROUNDS = '1'; // Fast hashing in tests
+process.env.NODE_ENV      = 'test';
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';

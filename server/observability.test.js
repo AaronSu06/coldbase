@@ -2,6 +2,7 @@
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 process.env.DIRECT_URL = process.env.TEST_DIRECT_URL;
 process.env.REACH_SECRET = 'test-secret';
+process.env.NODE_ENV     = 'test';
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
