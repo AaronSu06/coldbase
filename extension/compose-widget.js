@@ -411,7 +411,6 @@ window.ColdbaseWidget = (function () {
       font-family: 'IBM Plex Mono', ui-monospace, monospace;
       word-break: break-all;
     }
-    .result-score { font-size: 10px; color: #78716c; flex-shrink: 0; }
     .copy-btn {
       background: #f6f5f1; border: none; border-radius: 4px;
       padding: 3px 7px; cursor: pointer; font-size: 10px;
@@ -835,7 +834,6 @@ window.ColdbaseWidget = (function () {
     resultsEl.innerHTML = results.map(function(r, i) {
       return '<div class="result-row" data-idx="' + i + '">'
         + '<span class="result-email">' + _cpEscapeHtml(r.email) + '</span>'
-        + '<span class="result-score">' + r.confidence + '%</span>'
         + '<button class="copy-btn" data-email="' + _cpEscapeHtml(r.email) + '">Copy</button>'
         + '</div>';
     }).join('');
