@@ -1,0 +1,18 @@
+{
+  "planPath": "docs/plans/2026-04-21-prod-launch.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 1: Domain Routing — Vercel", "status": "pending"},
+    {"id": 1, "subject": "Task 2: Domain Routing — Railway", "status": "pending"},
+    {"id": 2, "subject": "Task 3: Update Extension URLs", "status": "pending", "blockedBy": [0, 1]},
+    {"id": 3, "subject": "Task 4: Update Railway Env Vars", "status": "pending", "blockedBy": [0, 1]},
+    {"id": 4, "subject": "Task 5: Create Stripe Production Webhook", "status": "pending", "blockedBy": [1]},
+    {"id": 5, "subject": "Task 6: Google Cloud Console — OAuth Setup", "status": "pending"},
+    {"id": 6, "subject": "Task 7: Google OAuth — Schema Migration", "status": "pending"},
+    {"id": 7, "subject": "Task 8: Install google-auth-library", "status": "pending"},
+    {"id": 8, "subject": "Task 9: Google OAuth — Backend Routes", "status": "pending", "blockedBy": [5, 6, 7]},
+    {"id": 9, "subject": "Task 10: Google OAuth — Frontend Callback Route", "status": "pending", "blockedBy": [8]},
+    {"id": 10, "subject": "Task 11: Update Vercel Env Vars", "status": "pending", "blockedBy": [0]},
+    {"id": 11, "subject": "Task 12: Package and Re-submit Extension", "status": "pending", "blockedBy": [2]}
+  ],
+  "lastUpdated": "2026-04-21T00:00:00Z"
+}

@@ -1,0 +1,12 @@
+{
+  "planPath": "docs/plans/2026-04-06-legal-pages.md",
+  "tasks": [
+    {"id": 6, "subject": "Task 1: Create LegalShell.jsx", "status": "pending"},
+    {"id": 7, "subject": "Task 2: Create PrivacyPage.jsx", "status": "pending", "blockedBy": [6]},
+    {"id": 8, "subject": "Task 3: Create TermsPage.jsx", "status": "pending", "blockedBy": [6]},
+    {"id": 9, "subject": "Task 4: Wire public routes in main.jsx", "status": "pending", "blockedBy": [7, 8]},
+    {"id": 10, "subject": "Task 5: Add consent line to SignupPage and LoginPage", "status": "pending", "blockedBy": [9]},
+    {"id": 11, "subject": "Task 6: Push to main", "status": "pending", "blockedBy": [10]}
+  ],
+  "lastUpdated": "2026-04-06T00:00:00Z"
+}
