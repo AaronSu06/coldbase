@@ -59,30 +59,16 @@ export default function AuthPage({ onLogin }) {
   return (
     <AuthShell>
       {/* Logo + Wordmark */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-6">
         <img src="/logo.png" alt="" className="w-8 h-8 flex-shrink-0" onError={e => { e.currentTarget.style.display = 'none'; }} />
         <span className="font-display text-[28px] font-bold text-chrome-text leading-none tracking-tight">
           Coldbase
         </span>
       </div>
 
-      {/* Mode tabs */}
-      <div className="flex gap-0 mb-8 border-b border-chrome-border">
-        {[{ id: 'signin', label: 'Sign in' }, { id: 'signup', label: 'Create account' }].map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => switchMode(id)}
-            className={`px-4 pb-2.5 text-[14px] font-semibold font-sans border-b-2 transition-all duration-150 -mb-px ${
-              mode === id
-                ? 'border-accent text-chrome-text'
-                : 'border-transparent text-chrome-muted hover:text-chrome-text'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <h1 className="font-sans font-bold text-2xl text-chrome-text leading-snug mb-8">
+        {mode === 'signin' ? 'Sign in to your account' : 'Create your account'}
+      </h1>
 
       {/* Google OAuth */}
       <button
@@ -192,6 +178,22 @@ export default function AuthPage({ onLogin }) {
             : (mode === 'signin' ? 'Sign in' : 'Create account')}
         </button>
       </form>
+
+      <p className="mt-5 text-[13px] font-sans text-chrome-muted">
+        {mode === 'signin' ? (
+          <>Don't have an account?{' '}
+            <button type="button" onClick={() => switchMode('signup')} className="text-accent hover:text-accent-hover transition-colors font-medium px-1 py-0.5 -ml-1 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50">
+              Register.
+            </button>
+          </>
+        ) : (
+          <>Already have an account?{' '}
+            <button type="button" onClick={() => switchMode('signin')} className="text-accent hover:text-accent-hover transition-colors font-medium px-1 py-0.5 -ml-1 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50">
+              Sign in.
+            </button>
+          </>
+        )}
+      </p>
     </AuthShell>
   );
 }
