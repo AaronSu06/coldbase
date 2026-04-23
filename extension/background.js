@@ -248,8 +248,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 // ─── Dashboard token sync ──────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'SYNC_COLDBASE_TOKEN' && msg.token) {
-    setColdbaseToken(msg.token);
-    return;
+    setColdbaseToken(msg.token).then(() => sendResponse({ ok: true }));
+    return true;
   }
   if (msg.type === 'CLEAR_COLDBASE_TOKEN') {
     clearColdbaseToken().then(() => sendResponse({ ok: true }));

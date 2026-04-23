@@ -3,16 +3,19 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authLogin, authSignup } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 import AuthShell, { GoogleIcon } from './AuthShell';
+import EyeIcon from './icons/EyeIcon';
+import EyeSlashIcon from './icons/EyeSlashIcon';
 
 export default function AuthPage({ onLogin }) {
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'signin');
 
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm]   = useState('');
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [email, setEmail]           = useState('');
+  const [password, setPassword]     = useState('');
+  const [confirm, setConfirm]       = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError]           = useState('');
+  const [loading, setLoading]       = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -26,6 +29,7 @@ export default function AuthPage({ onLogin }) {
     setError('');
     setPassword('');
     setConfirm('');
+    setShowPassword(false);
   }
 
   async function handleSubmit(e) {
@@ -55,10 +59,8 @@ export default function AuthPage({ onLogin }) {
   return (
     <AuthShell>
       {/* Logo + Wordmark */}
-      <div className="flex items-center gap-3 mb-4">
-        <span className="w-8 h-8 rounded-md bg-accent overflow-hidden flex items-center justify-center flex-shrink-0">
-          <img src="/logo.png" alt="" className="w-full h-full object-contain" onError={e => { e.currentTarget.style.display = 'none'; }} />
-        </span>
+      <div className="flex items-center gap-2 mb-4">
+        <img src="/logo.png" alt="" className="w-8 h-8 flex-shrink-0" onError={e => { e.currentTarget.style.display = 'none'; }} />
         <span className="font-display text-[28px] font-bold text-chrome-text leading-none tracking-tight">
           Coldbase
         </span>
@@ -140,16 +142,26 @@ export default function AuthPage({ onLogin }) {
               </button>
             )}
           </div>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder={mode === 'signup' ? 'Min. 8 characters' : '••••••••'}
-            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-            required
-            className="w-full px-3.5 py-2.5 rounded-xl border border-chrome-border bg-chrome-surface text-[14px] font-sans text-chrome-text placeholder:text-chrome-subtle focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder={mode === 'signup' ? 'Min. 8 characters' : '••••••••'}
+              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+              required
+              className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-chrome-border bg-chrome-surface text-[14px] font-sans text-chrome-text placeholder:text-chrome-subtle focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(v => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-chrome-subtle hover:text-chrome-muted transition-colors"
+            >
+              {showPassword ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {mode === 'signup' && (
