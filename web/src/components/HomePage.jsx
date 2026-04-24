@@ -220,12 +220,12 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
         </div>
 
         {/* Cards — fills remaining height on desktop; natural height on mobile */}
-        <div className="px-4 sm:px-6 pb-4 sm:pb-6 sm:flex-1 sm:min-h-0 sm:flex sm:flex-col">
-          <div className="max-w-5xl mx-auto sm:h-full sm:flex sm:flex-col">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-3 flex-shrink-0">
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+          <div className="max-w-5xl mx-auto">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-3">
               Your account
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:flex-1 sm:min-h-0">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Follow-up */}
               <div className="order-2 sm:order-1 sm:h-full">
                 <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} onSelectRecord={onSelectRecord} />
