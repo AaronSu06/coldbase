@@ -61,11 +61,11 @@ export default function SignupPage() {
         Create your account
       </h1>
 
-      {/* Google OAuth (UI only — wire when provider is added) */}
+      {/* Google OAuth */}
       <button
         type="button"
-        disabled
-        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-chrome-surface border border-chrome-border rounded-lg text-[14px] font-medium text-chrome-muted transition-colors cursor-pointer opacity-60"
+        onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'}/auth/google`; }}
+        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-chrome-surface border border-chrome-border rounded-lg text-[14px] font-medium text-chrome-text transition-colors hover:bg-chrome-hover"
       >
         <GoogleIcon />
         Continue with Google
