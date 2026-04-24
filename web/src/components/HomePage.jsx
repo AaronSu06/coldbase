@@ -180,7 +180,7 @@ function UpgradeCard({ onOpenProModal }) {
 
 function DeveloperNote() {
   return (
-    <ActionCard className="flex-1">
+    <ActionCard>
       <p className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted mb-2">
         A note from the developer
       </p>
@@ -205,46 +205,45 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Insights — natural height, does not scroll */}
-      <div className="border-b border-chrome-border flex-shrink-0">
-        <InsightsPanel
-          dateFrom={insightsDateFrom}
-          dateTo={insightsDateTo}
-          data={insightsData}
-          loading={insightsLoading}
-          error={insightsError}
-          onRangeChange={onInsightsRangeChange}
-        />
-      </div>
+      {/* Single unified container — mobile: one page scroll; desktop: viewport-constrained */}
+      <div className="flex-1 min-h-0 overflow-y-auto sm:overflow-hidden sm:flex sm:flex-col">
+        {/* Insights */}
+        <div className="flex-shrink-0">
+          <InsightsPanel
+            dateFrom={insightsDateFrom}
+            dateTo={insightsDateTo}
+            data={insightsData}
+            loading={insightsLoading}
+            error={insightsError}
+            onRangeChange={onInsightsRangeChange}
+          />
+        </div>
 
-      {/* Cards — fills remaining viewport height */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6">
-        <div className="max-w-5xl mx-auto sm:h-full sm:flex sm:flex-col">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-3 flex-shrink-0">
-            Your account
-          </p>
-          {/*
-            Mobile: natural-height stacked cards, scrollable.
-            Desktop: single-row grid that fills remaining height — all columns equal.
-          */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:flex-1 sm:min-h-0">
-            {/* Follow-up */}
-            <div className="order-2 sm:order-1 sm:h-full">
-              <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} onSelectRecord={onSelectRecord} />
-            </div>
-            {/* Pro — mobile: first, desktop: center */}
-            <div className="order-1 sm:order-2 sm:h-full">
-              <UpgradeCard onOpenProModal={onOpenProModal} />
-            </div>
-            {/* Profile + note — stacked right column */}
-            <div className="order-3 sm:order-3 flex flex-col gap-4 sm:h-full">
-              {resumeName !== undefined && (
-                <CompleteProfileCard
-                  hasResume={!!resumeName}
-                  onSetupProfile={() => navigate(resumeName ? '/settings' : '/settings?scrollTo=resume')}
-                />
-              )}
-              <DeveloperNote />
+        {/* Cards — fills remaining height on desktop; natural height on mobile */}
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6 sm:flex-1 sm:min-h-0 sm:flex sm:flex-col">
+          <div className="max-w-5xl mx-auto sm:h-full sm:flex sm:flex-col">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-3 flex-shrink-0">
+              Your account
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:flex-1 sm:min-h-0">
+              {/* Follow-up */}
+              <div className="order-2 sm:order-1 sm:h-full">
+                <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} onSelectRecord={onSelectRecord} />
+              </div>
+              {/* Pro — mobile: first, desktop: center */}
+              <div className="order-1 sm:order-2 sm:h-full">
+                <UpgradeCard onOpenProModal={onOpenProModal} />
+              </div>
+              {/* Profile + note — stacked right column */}
+              <div className="order-3 sm:order-3 flex flex-col gap-4 sm:h-full">
+                {resumeName !== undefined && (
+                  <CompleteProfileCard
+                    hasResume={!!resumeName}
+                    onSetupProfile={() => navigate(resumeName ? '/settings' : '/settings?scrollTo=resume')}
+                  />
+                )}
+                <DeveloperNote />
+              </div>
             </div>
           </div>
         </div>
