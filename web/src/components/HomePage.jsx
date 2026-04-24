@@ -35,7 +35,7 @@ function FollowUpCard({ records = [], onGoToTracker, onSelectRecord }) {
   const count = records.length;
 
   return (
-    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 h-full flex flex-col">
+    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 flex flex-col sm:h-full max-h-[420px] sm:max-h-none">
       <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
         {count === 0
           ? "You're all caught up"
@@ -219,7 +219,7 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
 
       {/* Cards — fills remaining viewport height */}
       <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6">
-        <div className="max-w-5xl mx-auto sm:h-full sm:flex sm:flex-col sm:overflow-hidden">
+        <div className="max-w-5xl mx-auto sm:h-full sm:flex sm:flex-col">
           <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-3 flex-shrink-0">
             Your account
           </p>
