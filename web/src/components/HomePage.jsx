@@ -35,7 +35,7 @@ function FollowUpCard({ records = [], onGoToTracker, onSelectRecord }) {
   const count = records.length;
 
   return (
-    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 flex flex-col sm:h-full max-h-[420px] sm:max-h-none">
+    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 flex flex-col sm:flex-1 max-h-[420px] sm:max-h-none">
       <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
         {count === 0
           ? "You're all caught up"
@@ -144,7 +144,7 @@ function UpgradeCard({ onOpenProModal }) {
   ];
 
   return (
-    <ActionCard className="border-accent/20 bg-accent/[0.03] flex flex-col h-full">
+    <ActionCard className="border-accent/20 bg-accent/[0.03] flex flex-col sm:flex-1">
       <div className="mb-3">
         <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
           Coldbase Pro
@@ -227,15 +227,15 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Follow-up */}
-              <div className="order-2 sm:order-1 sm:h-full">
+              <div className="order-2 sm:order-1 sm:flex sm:flex-col">
                 <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} onSelectRecord={onSelectRecord} />
               </div>
               {/* Pro — mobile: first, desktop: center */}
-              <div className="order-1 sm:order-2 sm:h-full">
+              <div className="order-1 sm:order-2 sm:flex sm:flex-col">
                 <UpgradeCard onOpenProModal={onOpenProModal} />
               </div>
               {/* Profile + note — stacked right column */}
-              <div className="order-3 sm:order-3 flex flex-col gap-4 sm:h-full">
+              <div className="order-3 sm:order-3 flex flex-col gap-4">
                 {resumeName !== undefined && (
                   <CompleteProfileCard
                     hasResume={!!resumeName}
