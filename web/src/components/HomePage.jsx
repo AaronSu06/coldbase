@@ -35,7 +35,7 @@ function FollowUpCard({ records = [], onGoToTracker, onSelectRecord }) {
   const count = records.length;
 
   return (
-    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 flex flex-col sm:flex-1 max-h-[420px] sm:max-h-none">
+    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 flex flex-col flex-1 max-h-[420px] sm:max-h-none">
       <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
         {count === 0
           ? "You're all caught up"
@@ -144,7 +144,7 @@ function UpgradeCard({ onOpenProModal }) {
   ];
 
   return (
-    <ActionCard className="border-accent/20 bg-accent/[0.03] flex flex-col sm:flex-1">
+    <ActionCard className="border-accent/20 bg-accent/[0.03] flex flex-col flex-1">
       <div className="mb-3">
         <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
           Coldbase Pro
@@ -225,23 +225,32 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
             <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-3">
               Your account
             </p>
+            {/*
+              Desktop: 3-col × 2-row grid.
+              Col 3 has two natural-height cards (rows 1 + 2) that set each row's height.
+              Cols 1 and 2 span both rows, so their height exactly matches col 3's combined height.
+              Mobile: single column, stacked in display order via `order-*`.
+            */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Follow-up */}
-              <div className="order-2 sm:order-1 sm:flex sm:flex-col">
+              {/* Follow-up — desktop col 1, spans both rows */}
+              <div className="order-2 sm:order-1 sm:row-span-2 flex flex-col">
                 <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} onSelectRecord={onSelectRecord} />
               </div>
-              {/* Pro — mobile: first, desktop: center */}
-              <div className="order-1 sm:order-2 sm:flex sm:flex-col">
+              {/* Pro — desktop col 2, spans both rows; mobile: shown first */}
+              <div className="order-1 sm:order-2 sm:row-span-2 flex flex-col">
                 <UpgradeCard onOpenProModal={onOpenProModal} />
               </div>
-              {/* Profile + note — stacked right column */}
-              <div className="order-3 sm:order-3 flex flex-col gap-4">
-                {resumeName !== undefined && (
+              {/* Profile — desktop col 3 row 1 */}
+              {resumeName !== undefined && (
+                <div className="order-3">
                   <CompleteProfileCard
                     hasResume={!!resumeName}
                     onSetupProfile={() => navigate(resumeName ? '/settings' : '/settings?scrollTo=resume')}
                   />
-                )}
+                </div>
+              )}
+              {/* Dev note — desktop col 3 row 2 */}
+              <div className="order-4">
                 <DeveloperNote />
               </div>
             </div>
