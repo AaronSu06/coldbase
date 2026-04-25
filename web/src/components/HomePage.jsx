@@ -233,7 +233,7 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
             */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Follow-up — desktop col 1, spans both rows */}
-              <div className="order-2 sm:order-1 sm:row-span-2 flex flex-col">
+              <div className="order-2 sm:order-1 sm:row-span-2 flex flex-col sm:overflow-hidden sm:rounded-lg">
                 <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} onSelectRecord={onSelectRecord} />
               </div>
               {/* Pro — desktop col 2, spans both rows; mobile: shown first */}
