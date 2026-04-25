@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Coldbase",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Auto-detect cold outreach emails from Gmail and manage them in a kanban board.",
   "permissions": [
     "identity",
