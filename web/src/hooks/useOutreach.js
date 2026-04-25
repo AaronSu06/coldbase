@@ -52,10 +52,11 @@ export function useOutreach() {
 
   const updateStatus = useCallback((threadId, newStatus) => {
     const normalizedStatus = normalizeStatus(newStatus);
+    const extra = normalizedStatus === 'Sent' ? { hasReply: false } : {};
     applyOptimisticMutation(
       threadId,
-      (record) => ({ ...record, status: normalizedStatus }),
-      () => ({ status: normalizedStatus }),
+      (record) => ({ ...record, status: normalizedStatus, ...extra }),
+      () => ({ status: normalizedStatus, ...extra }),
       'status update'
     );
   }, [applyOptimisticMutation]);

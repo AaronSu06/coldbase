@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { TOKEN_KEY } from './hooks/useAuth.js';
 import { UserProvider } from './hooks/useUser.jsx';
@@ -227,14 +227,19 @@ export default function App() {
     setProModalOpen(true);
   }
 
-  function refreshInsights() {
-    setInsightsLoading(true);
+  const refreshInsights = useCallback((silent = false) => {
+    if (!silent) setInsightsLoading(true);
     setInsightsError(null);
     fetchInsights({ from: insightsDateFrom || undefined, to: insightsDateTo || undefined })
       .then(setInsightsData)
       .catch(e => setInsightsError(e.message))
-      .finally(() => setInsightsLoading(false));
-  }
+      .finally(() => { if (!silent) setInsightsLoading(false); });
+  }, [insightsDateFrom, insightsDateTo]);
+
+  const handleStatusChange = useCallback((threadId, newStatus) => {
+    updateStatus(threadId, newStatus);
+    refreshInsights(true);
+  }, [updateStatus, refreshInsights]);
 
   async function handleRefresh() {
     if (isRefreshing) return;
@@ -325,11 +330,11 @@ export default function App() {
         { source: 'coldbase-webapp', type: 'RECHECK_REPLIES', requestId },
         '*'
       );
-      setTimeout(() => { refresh(); refreshInsights(); }, 3_500);
+      setTimeout(() => { refresh(); refreshInsights(true); }, 3_500);
     }
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
-  }, [refresh]);
+  }, [refresh, refreshInsights]);
 
   if (!isAuthenticated) {
     return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
@@ -611,7 +616,7 @@ export default function App() {
           ) : (
             <KanbanBoard
               records={filtered}
-              onStatusChange={updateStatus}
+              onStatusChange={handleStatusChange}
               onCardClick={(record) => setSelectedThreadId(record.threadId)}
               visibleColumns={visibleColumns}
               onToggleFavorite={toggleFavorite}

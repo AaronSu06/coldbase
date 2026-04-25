@@ -35,7 +35,7 @@ function FollowUpCard({ records = [], onGoToTracker, onSelectRecord }) {
   const count = records.length;
 
   return (
-    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 flex flex-col flex-1 max-h-[420px] sm:max-h-none">
+    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 flex flex-col flex-1 max-h-[420px] sm:absolute sm:inset-0 sm:max-h-none sm:overflow-hidden">
       <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
         {count === 0
           ? "You're all caught up"
@@ -52,25 +52,28 @@ function FollowUpCard({ records = [], onGoToTracker, onSelectRecord }) {
       {count > 0 && (
         <>
           <div className="flex-1 overflow-y-auto -mx-5 min-h-0">
-            <ul className="divide-y divide-chrome-border">
-              {records.map(r => (
-                <li key={r.threadId} className="flex items-center justify-between gap-3 px-5 py-2.5">
-                  <div className="min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => onSelectRecord?.(r)}
-                      className="group flex items-center gap-0.5 text-[13px] font-medium text-chrome-text hover:text-accent transition-colors text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 max-w-full"
-                    >
-                      <span className="truncate">{r.company}</span>
-                      <ArrowUpRight size={11} className="flex-shrink-0 text-chrome-muted group-hover:text-accent transition-colors" />
-                    </button>
-                    {r.contactName && (
-                      <p className="text-[11px] text-chrome-muted truncate">{r.contactName}</p>
-                    )}
+            <ul>
+              {records.map((r, idx) => (
+                <li key={r.threadId}>
+                  {idx > 0 && <div className="border-t border-chrome-border mx-5" />}
+                  <div className="flex items-center justify-between gap-3 px-5 py-2.5">
+                    <div className="min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => onSelectRecord?.(r)}
+                        className="group flex items-center gap-0.5 text-[13px] font-medium text-chrome-text hover:text-accent transition-colors text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/50 max-w-full"
+                      >
+                        <span className="truncate">{r.company}</span>
+                        <ArrowUpRight size={11} className="flex-shrink-0 text-chrome-muted group-hover:text-accent transition-colors" />
+                      </button>
+                      {r.contactName && (
+                        <p className="text-[11px] text-chrome-muted truncate">{r.contactName}</p>
+                      )}
+                    </div>
+                    <span className={`font-mono text-[11px] flex-shrink-0 ${daysAgoColor(daysAgo(r.sentDate))}`}>
+                      {daysAgoLabel(daysAgo(r.sentDate))}
+                    </span>
                   </div>
-                  <span className={`font-mono text-[11px] flex-shrink-0 ${daysAgoColor(daysAgo(r.sentDate))}`}>
-                    {daysAgoLabel(daysAgo(r.sentDate))}
-                  </span>
                 </li>
               ))}
             </ul>
@@ -154,7 +157,7 @@ function UpgradeCard({ onOpenProModal }) {
         </p>
       </div>
 
-      <div className="border-t border-chrome-border -mx-5 mb-4" />
+      <div className="border-t border-chrome-border mx-5 mb-4" />
 
       <ul className="space-y-2 mb-4 flex-1">
         {features.map(f => (
@@ -233,7 +236,7 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
             */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Follow-up — desktop col 1, spans both rows */}
-              <div className="order-2 sm:order-1 sm:row-span-2 flex flex-col sm:overflow-hidden sm:rounded-lg sm:min-h-0">
+              <div className="order-2 sm:order-1 sm:row-span-2 flex flex-col sm:relative sm:overflow-hidden sm:rounded-lg">
                 <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} onSelectRecord={onSelectRecord} />
               </div>
               {/* Pro — desktop col 2, spans both rows; mobile: shown first */}
