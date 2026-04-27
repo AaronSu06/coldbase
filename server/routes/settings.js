@@ -4,7 +4,7 @@ import { prisma } from '../lib/prisma.js';
 
 const router = Router();
 
-const VALID_DIGESTS = new Set(['daily', 'weekly', 'never']);
+const VALID_DIGESTS = new Set(['weekly', 'monthly', 'none']);
 
 // ─── GET /settings ─────────────────────────────────────────────────────────────
 
@@ -32,11 +32,24 @@ router.get('/', async (req, res, next) => {
 router.patch('/', async (req, res, next) => {
   const { emailDigest } = req.body;
   if (emailDigest !== undefined && !VALID_DIGESTS.has(emailDigest)) {
-    return res.status(400).json({ error: 'Validation Error', message: 'emailDigest must be daily, weekly, or never', statusCode: 400 });
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: 'emailDigest must be weekly, monthly, or none',
+      statusCode: 400,
+    });
   }
   try {
     const data = {};
-    if (emailDigest !== undefined) data.emailDigest = emailDigest;
+    if (emailDigest !== undefined) {
+      data.emailDigest = emailDigest;
+      if (emailDigest === 'weekly') {
+        data.digestSendDay = req.user.userId % 7;
+      } else if (emailDigest === 'monthly') {
+        data.digestSendDay = (req.user.userId % 28) + 1;
+      } else {
+        data.digestSendDay = null;
+      }
+    }
     const user = await prisma.user.update({
       where: { id: req.user.userId },
       data,
