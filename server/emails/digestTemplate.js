@@ -27,7 +27,6 @@ export function buildDigestEmail({ frequency, stats, dashboardUrl }) {
     { label: 'Follow-ups due', value: stats.followUpsDue, note: 'all time' },
     { label: 'Total contacts', value: stats.totalContacts, note: 'all time' },
     { label: 'Emails sent', value: stats.emailsSent, note: periodLabel },
-    { label: 'Send rate', value: pct(stats.sendRate), note: periodLabel },
     ...(stats.replyRate != null
       ? [{ label: 'Reply rate', value: pct(stats.replyRate), note: periodLabel }]
       : []),
