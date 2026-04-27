@@ -14,7 +14,8 @@ model User {
   passwordHash   String?
   googleId       String?         @unique
   plan                 String          @default("free")
-  emailDigest          String          @default("weekly")
+  emailDigest          String          @default("none")
+  digestSendDay        Int?
   isAdmin              Boolean         @default(false)
   resumeText           String?
   resumeName           String?
