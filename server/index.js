@@ -16,9 +16,11 @@ try {
   process.exit(1);
 }
 
-// Dynamic import ensures app module (and Prisma client) loads after migration completes
 const { default: app } = await import('./app.js');
+const { startDigestCron } = await import('./cron/digestCron.js');
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`[Coldbase server] Listening on http://localhost:${PORT}`);
+  startDigestCron();
 });
