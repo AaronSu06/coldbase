@@ -658,7 +658,7 @@ export default function SettingsPage() {
                 role="radiogroup"
                 aria-label="Email update frequency"
               >
-                {['Daily', 'Weekly', 'Never'].map((opt, i) => (
+                {['Weekly', 'Monthly', 'None'].map((opt, i) => (
                   <label key={opt} className="cursor-pointer">
                     <input
                       type="radio"
