@@ -1,0 +1,298 @@
+<section class="module" id="module-5" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">05</span>
+      <h1 class="module-title">When Things Break</h1>
+      <p class="module-subtitle">The most common failure modes, how to debug them, and the full architecture picture</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- Screen 1: Failure modes -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The 5 most common things to go wrong</h2>
+        <p>Every app has a set of failures it&apos;s prone to — based on its architecture. Knowing Reach&apos;s failure modes turns you from someone who randomly tries things into someone who can diagnose systematically.</p>
+
+        <div class="step-cards stagger-children animate-in" style="margin-top: var(--space-8)">
+          <div class="step-card animate-in">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Email sent but no card appears</strong>
+              <p>Check: Did the classifier flag it as cold outreach? Did the Gmail API return the thread? Is the user authenticated? Is the server running? This is a chain problem — any broken link stops the card.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Card stuck on &quot;Sent&quot; when a reply came in</strong>
+              <p>Check: Did the 30-minute alarm fire? Is the access token expired? Did reply-checker.js find the reply in the right Gmail thread? The reply detection uses the Gmail <span class="term" data-definition="A thread ID is Gmail&apos;s unique identifier for an email conversation. All replies to an email share the same thread ID — Reach uses it to track whether a specific conversation got a response.">thread ID</span> to match replies to outreach records.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Dashboard shows &quot;Failed to load data&quot;</strong>
+              <p>Check: Is the server running? Is the JWT <span class="term" data-definition="A JWT (JSON Web Token) is a digital pass — a string of characters that proves who you are to the server. It has an expiration date. If it expires, you need to log in again to get a new one.">token</span> expired? Is CORS blocking the request? Open the browser DevTools Network tab to see the exact error code.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Wrong Gmail account tracked</strong>
+              <p>Reach compares the Gmail account currently open with the Reach account email. If they differ, it shows an &quot;account mismatch&quot; toast and skips tracking. You must be logged into Gmail AS the same account you used to sign up for Reach.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <strong>&quot;Quota exceeded&quot; on email lookup</strong>
+              <p>Free users have a monthly cap on contact lookups. The server returns a 429 response with the used/limit counts. Solution: upgrade to pro, or wait for the monthly reset (first of the month).</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: Debugging playbook -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The debugging playbook</h2>
+        <p>When something breaks in Reach, you have three power tools. Use them in order before asking an AI for help — the AI will give a much better answer when you show it real error output.</p>
+
+        <div class="pattern-cards stagger-children" style="margin-top: var(--space-8)">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">🔍</div>
+            <h4 class="pattern-title">Chrome DevTools → Extensions</h4>
+            <p class="pattern-desc">Open chrome://extensions, find Coldbase, click &quot;Service Worker&quot; to get the background script&apos;s console. Every background.js log appears here. This is where to look for Gmail API errors and storage events.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🌐</div>
+            <h4 class="pattern-title">Gmail Tab → DevTools Console</h4>
+            <p class="pattern-desc">Open Gmail, right-click → Inspect → Console. content.js logs appear here — search for &quot;[coldbase]&quot; or &quot;[content]&quot;. This is where to see email detection decisions and widget errors.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">📡</div>
+            <h4 class="pattern-title">Dashboard → Network Tab</h4>
+            <p class="pattern-desc">Open coldbase.live, DevTools → Network. Filter by &quot;/api&quot; to see every request the dashboard makes to the server. Look for red rows (error status codes). Click a row to see the full response body — the error message is usually there.</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top: var(--space-8)">
+          <div class="callout-icon">🎯</div>
+          <div class="callout-content">
+            <strong class="callout-title">Debugging tip: Find the broken link</strong>
+            <p>Every problem in Reach is a broken link in a chain. Start from where the user experiences the symptom and trace backwards. &quot;Card not showing&quot; → was it saved? → was it tracked? → was the email detected? You&apos;ll find the broken link before you run out of steps.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: The architecture in one view -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The full picture — architecture at a glance</h2>
+        <p>Now that you know all the pieces, here&apos;s the complete system. Click or hover any component to see what it does.</p>
+
+        <div class="arch-diagram animate-in" style="margin-top: var(--space-8)">
+          <div class="arch-zone arch-zone-browser" style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: var(--space-4); background: var(--color-surface)">
+            <h4 class="arch-zone-label" style="font-size: var(--text-xs); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-4)">Chrome Extension (inside your browser)</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-3)">
+              <div class="arch-component" data-desc="Injected into Gmail pages. Detects compose windows, reads email content, injects the Reach sidebar widget. Can NOT call Chrome APIs directly — communicates via chrome.storage." onclick="showArchDesc(this)" style="background: var(--color-accent-light); border: 2px solid var(--color-accent-muted); border-radius: var(--radius-sm); padding: var(--space-4); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-2)">📝</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">content.js</span>
+              </div>
+              <div class="arch-component" data-desc="The background brain. Runs as a Chrome Service Worker. Has full Chrome API access. Calls Gmail API, runs the 30-min reply check alarm, routes messages. Can be shut down by Chrome when idle." onclick="showArchDesc(this)" style="background: #E4F2F7; border: 2px solid #5A9DB8; border-radius: var(--radius-sm); padding: var(--space-4); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-2)">⚡</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">background.js</span>
+              </div>
+              <div class="arch-component" data-desc="The smart classifier. Reads email body, runs fuzzy keyword matching across 9 keyword groups. Returns true if this is cold outreach. Also extracts company name from subject patterns + Clearbit API." onclick="showArchDesc(this)" style="background: #F3EFFA; border: 2px solid #9B89C8; border-radius: var(--radius-sm); padding: var(--space-4); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-2)">🧠</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">classifier.js</span>
+              </div>
+              <div class="arch-component" data-desc="A content script injected into the coldbase.live web page. Bridges the gap between the React dashboard (a regular website) and the Chrome extension. Forwards window.postMessage commands into chrome.runtime messages and back." onclick="showArchDesc(this)" style="background: #FDF5E0; border: 2px solid #D4A843; border-radius: var(--radius-sm); padding: var(--space-4); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-2)">🔁</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">dashboard-sync.js</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4)">
+            <div style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); background: var(--color-surface)">
+              <h4 class="arch-zone-label" style="font-size: var(--text-xs); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-4)">React Dashboard (coldbase.live)</h4>
+              <div style="display: flex; flex-direction: column; gap: var(--space-3)">
+                <div class="arch-component" data-desc="The main React app shell. Manages routing, global state, filter logic, and refresh handling. Talks to the server via fetch() and to the extension via window.postMessage." onclick="showArchDesc(this)" style="background: #E8F5EE; border: 2px solid #5AAD7A; border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                  <span style="font-size: var(--text-sm); font-weight: 600">App.jsx + KanbanBoard</span>
+                </div>
+                <div class="arch-component" data-desc="The slide-out detail panel when you click a card. Shows full outreach info, lets you change status, add notes, generate a follow-up draft, and archive or delete." onclick="showArchDesc(this)" style="background: #E8F5EE; border: 2px solid #5AAD7A; border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                  <span style="font-size: var(--text-sm); font-weight: 600">Sidebar.jsx</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); background: var(--color-surface)">
+              <h4 class="arch-zone-label" style="font-size: var(--text-xs); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-4)">Backend (Vercel / Node.js)</h4>
+              <div style="display: flex; flex-direction: column; gap: var(--space-3)">
+                <div class="arch-component" data-desc="Express.js server. Handles auth (JWT + Google OAuth), outreach CRUD, contact lookup, email drafting (Gemini AI), billing (Stripe), and tracking pixel hits. Deployed to Vercel as serverless functions." onclick="showArchDesc(this)" style="background: var(--color-accent-light); border: 2px solid var(--color-accent-muted); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                  <span style="font-size: var(--text-sm); font-weight: 600">server/app.js (Express)</span>
+                </div>
+                <div class="arch-component" data-desc="PostgreSQL database managed by Prisma. Four tables: User, Outreach, TrackingPixel, OpenEvent. Hosted on Supabase/Neon. The single source of truth for all user data." onclick="showArchDesc(this)" style="background: var(--color-accent-light); border: 2px solid var(--color-accent-muted); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                  <span style="font-size: var(--text-sm); font-weight: 600">PostgreSQL + Prisma</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); background: var(--color-surface-warm)">
+            <h4 class="arch-zone-label" style="font-size: var(--text-xs); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-4)">External Services</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-3)">
+              <div class="arch-component" data-desc="Google&apos;s Gmail REST API. Reach calls it to fetch sent email threads, check for replies, and get email metadata. Requires an OAuth token from the user." onclick="showArchDesc(this)" style="background: white; border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.25rem; margin-bottom: var(--space-1)">📬</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">Gmail API</span>
+              </div>
+              <div class="arch-component" data-desc="Company database API. Given a company name or domain, returns the official company name. Used in the classifier to validate candidate company names extracted from email bodies." onclick="showArchDesc(this)" style="background: white; border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.25rem; margin-bottom: var(--space-1)">🏢</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">Clearbit</span>
+              </div>
+              <div class="arch-component" data-desc="Google&apos;s generative AI model. Powers the follow-up email drafting feature in the sidebar. The server sends context (company, contact, notes, previous email) and Gemini writes a personalized draft." onclick="showArchDesc(this)" style="background: white; border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.25rem; margin-bottom: var(--space-1)">🤖</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">Gemini AI</span>
+              </div>
+              <div class="arch-component" data-desc="Payment processing. Handles Pro plan subscriptions, checkout sessions, and billing portal. Stripe webhooks tell the server when a payment succeeds or a subscription is canceled." onclick="showArchDesc(this)" style="background: white; border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.25rem; margin-bottom: var(--space-1)">💳</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">Stripe</span>
+              </div>
+              <div class="arch-component" data-desc="Error monitoring platform. When the server crashes or throws an unhandled error, Sentry captures a full stack trace and sends an alert. Lets you know about bugs before users report them." onclick="showArchDesc(this)" style="background: white; border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.25rem; margin-bottom: var(--space-1)">🛡️</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">Sentry</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-description" id="arch-desc" style="margin-top: var(--space-6); padding: var(--space-4); background: var(--color-accent-light); border-radius: var(--radius-md); border-left: 4px solid var(--color-accent); color: var(--color-text); min-height: 48px; font-size: var(--text-sm)">Click any component to learn what it does</div>
+        </div>
+      </section>
+
+      <!-- Screen 4: What you can now do -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What you can now do differently</h2>
+        <p>You started this course not knowing how the code worked. Here&apos;s what changed:</p>
+
+        <div class="pattern-cards stagger-children" style="margin-top: var(--space-8)">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">🎯</div>
+            <h4 class="pattern-title">Tell AI where to look</h4>
+            <p class="pattern-desc">Instead of &quot;fix the email tracking,&quot; you can say &quot;the classifier in extension/classifier.js isn&apos;t matching emails with the word &apos;recruiting&apos; — check the KEYWORD_GROUPS array.&quot;</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🔍</div>
+            <h4 class="pattern-title">Debug systematically</h4>
+            <p class="pattern-desc">When a card doesn&apos;t appear, you now trace the chain: classifier → storage trigger → Gmail API → server → database → dashboard. You&apos;ll find the broken link in minutes, not hours.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🏗️</div>
+            <h4 class="pattern-title">Scope new features correctly</h4>
+            <p class="pattern-desc">Adding a &quot;snooze&quot; feature? You know it needs: a database field (Prisma schema), a server endpoint (routes/outreach.js), and a UI button (compose-widget.js or Sidebar.jsx). No guesswork.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">💬</div>
+            <h4 class="pattern-title">Speak the vocabulary</h4>
+            <p class="pattern-desc">Service worker, middleware, fuzzy matching, rate limiting, content script, tracking pixel — you now use these terms precisely when talking to AI agents or engineers.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 5: Final quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Final challenge</h2>
+
+        <div class="quiz-container" id="quiz-module5">
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Exactly right. The tracking pixel fires when the email is opened, which hits the server&apos;s /track endpoint. The server saves an OpenEvent record. The dashboard then needs to fetch and display this. That&apos;s server, database, and dashboard — at minimum. The extension isn&apos;t involved in rendering the open count."
+               data-explanation-wrong="Think about what &apos;opened&apos; means for Reach: a pixel fires, the server logs it, the dashboard shows it. Which parts of the system need to know about a new type of analytics event?">
+            <h3 class="quiz-question">You want to show &quot;opened 3 times&quot; on each kanban card. Currently Reach shows an eye icon but no count. What needs to change?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Only the React component OutreachCard.jsx — just show the openCount field</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The extension classifier — it needs to count opens</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The server route must return openCount in the API response, AND the React card must display it</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The database schema — add a new &apos;openCount&apos; field to the Outreach table</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Spot on. The extension uses chrome.storage as a message bus to wake up the service worker — this is the key insight from module 3. Any new feature that needs to communicate from content.js to background.js should use this same pattern."
+               data-explanation-wrong="Recall how content.js and background.js communicate in Reach. What pattern does the codebase already use? Would you change that pattern for a new feature, or reuse it?">
+            <h3 class="quiz-question">You want to build a new feature: when you save a draft in Gmail (not send), Reach saves a &quot;draft tracked&quot; note. How should content.js notify background.js about the save event?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Call chrome.runtime.sendMessage() directly from content.js</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Write a new key to chrome.storage.local and have background.js listen for it via onChanged</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Use window.postMessage to the relay script, which forwards to background.js</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Have the React dashboard poll for draft saves via the server API</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-a"
+               data-explanation-right="Correct. Sentry captures unhandled errors with full stack traces automatically — you don&apos;t need to reproduce the error yourself. Check Sentry first, read the stack trace, then look at the specific line of code it points to. That&apos;s the fastest path to a fix."
+               data-explanation-wrong="Reach has an error monitoring tool called Sentry built in. What does Sentry do, and how does it change your first step when investigating a production crash?">
+            <h3 class="quiz-question">A user reports &quot;the server crashed and I got a 500 error.&quot; You can&apos;t reproduce it locally. What&apos;s your first move?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Check Sentry — it captured the full stack trace and error message from the production crash</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Ask the user to send a screenshot of the error</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Add console.log statements to every server route and redeploy</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Check the database for corrupted records — 500 errors are always database issues</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">Try Again</button>
+        </div>
+
+        <div class="callout callout-accent" style="margin-top: var(--space-10)">
+          <div class="callout-icon">🎓</div>
+          <div class="callout-content">
+            <strong class="callout-title">You finished the course.</strong>
+            <p>You now understand how Reach works at a level that most developers who didn&apos;t build it don&apos;t have. Use that knowledge: trace before you guess, name the layer before you change it, and show AI the exact file instead of describing the problem in vague terms.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

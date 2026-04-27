@@ -1,0 +1,254 @@
+<section class="module" id="module-3" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">03</span>
+      <h1 class="module-title">How They Talk</h1>
+      <p class="module-subtitle">The unusual communication patterns that connect Gmail, the extension, and your dashboard</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- Screen 1: The problem with normal messaging -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The walkie-talkie problem</h2>
+        <p>You&apos;d think components in an app would just call each other directly — like picking up a phone and dialing. But browser extensions have a harder version of this problem. It&apos;s more like walkie-talkies: you can only send a message if the other person&apos;s radio is already on and listening.</p>
+        <p>Chrome extensions have three distinct environments that can&apos;t share memory directly:</p>
+
+        <div class="step-cards stagger-children" style="margin-top: var(--space-8)">
+          <div class="step-card animate-in">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>The web page (Gmail)</strong>
+              <p>content.js runs here. It can read the Gmail DOM but lives in a sandbox — it can&apos;t directly access Chrome APIs.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>The extension background</strong>
+              <p>background.js runs here. Has full Chrome API access and can call the Gmail API — but can be shut down by Chrome when idle to save battery.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>The web dashboard (coldbase.live)</strong>
+              <p>The React app. Completely separate from the extension — it can&apos;t call chrome.runtime at all. It can only talk to the extension through a special relay trick.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: The storage trick -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 1: Use storage as a message bus</h2>
+        <p>When you send an email, content.js needs to tell background.js. The obvious approach is <code>chrome.runtime.sendMessage()</code> — like a direct phone call. But in <span class="term" data-definition="MV3 stands for Manifest Version 3, the current standard for Chrome extensions. It introduced stricter rules, including that background scripts run as 'service workers' that can be shut down by Chrome at any moment to save resources.">MV3</span>, if the background service worker is asleep, the phone rings with nobody home.</p>
+        <p>Reach&apos;s solution: use <span class="term" data-definition="chrome.storage is a built-in Chrome API for saving key-value data that persists even when the extension is closed — like a shared whiteboard that any part of the extension can read or write.">chrome.storage</span> like a bulletin board instead of a phone call.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-comment">// content.js — after detecting a send</span>
+<span class="code-function">chrome.storage.local.set</span>({
+  <span class="code-property">coldbase_pending_scan</span>: {
+    <span class="code-property">emailSubject</span>: subject,
+    <span class="code-property">emailRecipients</span>: recipients,
+  }
+});
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">After detecting you hit Send, content.js pins a note to the bulletin board.</p>
+              <p class="tl">The note is labeled &quot;coldbase_pending_scan&quot; — background.js watches for exactly this label.</p>
+              <p class="tl">The note contains the email subject and recipients as context.</p>
+              <p class="tl">Chrome wakes up background.js to deliver this storage change — the timing problem is solved.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-comment">// background.js — always listening</span>
+<span class="code-function">chrome.storage.onChanged.addListener</span>((changes, area) => {
+  <span class="code-keyword">if</span> (area === <span class="code-string">'local'</span> && <span class="code-string">'coldbase_pending_scan'</span> <span class="code-keyword">in</span> changes) {
+    <span class="code-keyword">const</span> pendingScan = changes.coldbase_pending_scan?.newValue;
+    <span class="code-keyword">if</span> (!pendingScan) <span class="code-keyword">return</span>;
+    <span class="code-function">chrome.storage.local.remove</span>(<span class="code-string">'coldbase_pending_scan'</span>);
+    <span class="code-function">trackLatestSent</span>(<span class="code-keyword">false</span>, pendingScan);
+  }
+});
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">background.js listens for any change to Chrome&apos;s local storage.</p>
+              <p class="tl">If the change is in local storage AND contains our specific bulletin-board note...</p>
+              <p class="tl">Read the note&apos;s contents (the email data).</p>
+              <p class="tl">If the note is empty (a deletion event), ignore it.</p>
+              <p class="tl">Remove the note from the board — so we don&apos;t process it twice.</p>
+              <p class="tl">Start tracking the sent email using the Gmail API.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent" style="margin-top: var(--space-6)">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Key Insight: Storage as a message bus</strong>
+            <p>Using storage instead of direct messaging is a pattern that solves <span class="term" data-definition="A race condition is when two things happen at the same time and the outcome depends on which one finishes first — which is unpredictable. Like two people reaching for the last slice of pizza simultaneously.">race conditions</span> caused by background scripts being asleep. If you&apos;re ever building an extension and messages aren&apos;t arriving, this pattern is worth knowing.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: The relay bridge -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 2: The window message relay</h2>
+        <p>The web dashboard (React) can&apos;t call chrome.runtime directly — it&apos;s a regular website. But it needs to tell the extension to do things (like trigger a rescan). The solution is a middleman script called dashboard-sync.js.</p>
+        <p>Think of it like a shipping dock: the React app drops packages through a chute (window.postMessage), the dock worker (<span class="term" data-definition="dashboard-sync.js is a content script that gets injected into the coldbase.live web page. Because it's an extension script, it can hear both the web page's messages and the extension's messages — making it a bridge between the two worlds.">dashboard-sync.js</span>) picks them up, re-labels them for the extension (chrome.runtime.sendMessage), and delivers them. The extension sends the response back the same way, in reverse.</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"You click Refresh on the dashboard"},
+          {"highlight":"flow-actor-1","label":"React posts a message to the window with type RESCAN","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"dashboard-sync.js hears the window message","packet":false},
+          {"highlight":"flow-actor-2","label":"Relay forwards it into the extension via chrome.runtime","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"background.js handles the RESCAN and calls Gmail API","packet":false},
+          {"highlight":"flow-actor-3","label":"background.js responds to the relay","packet":true,"from":"actor-3","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"Relay posts the result back to the window with the same requestId","packet":true,"from":"actor-2","to":"actor-1"},
+          {"highlight":"flow-actor-1","label":"React sees the response and stops spinning"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">⚛️</div>
+              <span>React Dashboard</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">🔁</div>
+              <span>Relay Script</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">⚡</div>
+              <span>Background.js</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click Next Step to trace the relay</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">Next Step</button>
+            <button class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: The permissions badge list -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Extension permissions — the ID card</h2>
+        <p>Chrome won&apos;t let an extension do anything sensitive without declaring it upfront in <code>manifest.json</code>. Think of it like a security clearance form: every capability must be listed. Users see this list when they install the extension.</p>
+
+        <div class="badge-list animate-in stagger-children" style="margin-top: var(--space-8)">
+          <div class="badge-item animate-in">
+            <code class="badge-code">identity</code>
+            <span class="badge-desc">Use Google OAuth to log in users without storing passwords</span>
+          </div>
+          <div class="badge-item animate-in">
+            <code class="badge-code">storage</code>
+            <span class="badge-desc">Save data between sessions — used as the message bus between content.js and background.js</span>
+          </div>
+          <div class="badge-item animate-in">
+            <code class="badge-code">alarms</code>
+            <span class="badge-desc">Schedule the reply-check to run every 30 minutes, even when Gmail isn&apos;t open</span>
+          </div>
+          <div class="badge-item animate-in">
+            <code class="badge-code">scripting</code>
+            <span class="badge-desc">Inject content scripts into Gmail tabs — how the sidebar widget gets injected</span>
+          </div>
+          <div class="badge-item animate-in">
+            <code class="badge-code">activeTab</code>
+            <span class="badge-desc">Access the currently open tab — only when the user explicitly clicks the extension icon</span>
+          </div>
+          <div class="badge-item animate-in">
+            <code class="badge-code">https://mail.google.com/*</code>
+            <span class="badge-desc">Host permission — required to inject content scripts into Gmail pages specifically</span>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top: var(--space-8)">
+          <div class="callout-icon">🔐</div>
+          <div class="callout-content">
+            <strong class="callout-title">Why this matters for your roadmap</strong>
+            <p>Adding a new capability to the extension? It almost certainly needs a new permission. Requesting too many permissions is the #1 reason Chrome Web Store rejects extensions — and why users get suspicious. Only ask for what you actually need.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 5: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check your understanding</h2>
+
+        <div class="quiz-container" id="quiz-module3">
+          <div class="quiz-question-block"
+               data-correct="option-a"
+               data-explanation-right="Exactly right. Reach uses chrome.storage as a relay because the MV3 background service worker can be asleep when a direct sendMessage arrives — the message would be lost. Storage changes wake the worker up reliably."
+               data-explanation-wrong="Think about why Reach uses storage instead of direct messaging. What would happen if background.js was asleep when content.js tried to call it directly?">
+            <h3 class="quiz-question">Why does Reach write to chrome.storage instead of calling chrome.runtime.sendMessage() directly when an email is sent?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because the background service worker can be asleep, and storage changes are guaranteed to wake it up</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because chrome.runtime.sendMessage is not available in content scripts</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because storage is faster than direct messaging</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because the Gmail API requires data to be stored before it can be processed</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Correct! The React dashboard can&apos;t call chrome.runtime directly because it&apos;s a regular website. It posts a window message, dashboard-sync.js (injected into the page as a content script) picks it up and forwards it into the extension."
+               data-explanation-wrong="Consider: what can a regular website do that an extension script can do that a website cannot? The relay exists to bridge that gap.">
+            <h3 class="quiz-question">Why does the React dashboard use window.postMessage instead of calling chrome.runtime.sendMessage directly?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>chrome.runtime is too slow for the dashboard&apos;s real-time requirements</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The React dashboard is a regular webpage and can&apos;t access chrome.runtime — only extension scripts can</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>window.postMessage is more secure than chrome.runtime messaging</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The extension blocks direct messages from the dashboard for security reasons</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

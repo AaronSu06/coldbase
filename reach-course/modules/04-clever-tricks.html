@@ -1,0 +1,289 @@
+<section class="module" id="module-4" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">04</span>
+      <h1 class="module-title">The Clever Tricks</h1>
+      <p class="module-subtitle">Fuzzy matching, invisible tracking pixels, quota gates, and the MV3 service worker alarm pattern</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- Screen 1: The classifier in depth -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 1: Fuzzy keyword matching</h2>
+        <p>The classifier doesn&apos;t just look for exact words — it uses <span class="term" data-definition="Edit distance (also called Levenshtein distance) measures how many single-character changes (add, delete, swap) it takes to turn one word into another. 'cat' and 'bat' have an edit distance of 1.">edit distance</span> to handle typos and spelling variations. So &quot;internships&quot; and &quot;internhsips&quot; both match the &quot;intern&quot; keyword group.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-keyword">function</span> <span class="code-function">tokenMatchesVariant</span>(token, variant) {
+  <span class="code-keyword">if</span> (token === variant) <span class="code-keyword">return true</span>;
+  <span class="code-keyword">const</span> limit = variant.length >= <span class="code-number">9</span> ? <span class="code-number">2</span>
+    : variant.length >= <span class="code-number">5</span> ? <span class="code-number">1</span>
+    : <span class="code-number">0</span>;
+  <span class="code-keyword">return</span> <span class="code-function">editDistanceWithinLimit</span>(token, variant, limit);
+}
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Check if a word from the email matches a keyword variant.</p>
+              <p class="tl">If it&apos;s an exact match, immediately return true — no need to do math.</p>
+              <p class="tl">Set a tolerance for typos based on the variant&apos;s length:</p>
+              <p class="tl">Long words (9+ chars) allow 2 typos. Medium words (5-8 chars) allow 1. Short words allow none.</p>
+              <p class="tl">Check if the word is close enough using the edit distance algorithm.</p>
+            </div>
+          </div>
+        </div>
+
+        <p style="margin-top: var(--space-6)">The classifier groups keywords by concept — not individual words. So &quot;intern,&quot; &quot;interns,&quot; &quot;internship,&quot; and &quot;interning&quot; all count as ONE match. This prevents an email stuffed with synonyms from scoring artificially high.</p>
+
+        <div class="pattern-cards stagger-children" style="margin-top: var(--space-6)">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">🎓</div>
+            <h4 class="pattern-title">intern group</h4>
+            <p class="pattern-desc">intern, interns, interned, interning, internship, internships</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🤝</div>
+            <h4 class="pattern-title">hiring group</h4>
+            <p class="pattern-desc">hiring, hire, hired</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">📋</div>
+            <h4 class="pattern-title">recruit group</h4>
+            <p class="pattern-desc">recruit, recruiter, recruiting, recruitment</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">📄</div>
+            <h4 class="pattern-title">apply group</h4>
+            <p class="pattern-desc">apply, application, applications</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: Company extraction -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 2: Company name extraction via Clearbit</h2>
+        <p>Once Reach knows it&apos;s a cold email, it needs the company name. It tries four strategies in order — from fastest to most expensive — and stops as soon as one works. Like a detective working through a list of leads.</p>
+
+        <div class="step-cards stagger-children animate-in" style="margin-top: var(--space-8)">
+          <div class="step-card animate-in">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>[Company Name] in brackets</strong>
+              <p>Subject line pattern: &quot;[Anthropic] Software Engineer Role&quot; — extracts instantly, no API call needed.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Company — prefix</strong>
+              <p>Subject line pattern: &quot;OpenAI — Interested in joining?&quot; — fast regex match.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>— Company suffix</strong>
+              <p>Subject line pattern: &quot;Software Engineering — Google&quot; — fast regex match in reverse.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Clearbit API lookup</strong>
+              <p>Scans the email body for capitalized word sequences, scores them by frequency, then validates the top candidates against <span class="term" data-definition="Clearbit is an external API service that has a database of company names and domains. Reach asks it: 'Is this phrase a real company name?' and Clearbit responds with the official company name if it finds a match.">Clearbit</span>. Slowest but catches any company name.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: Tracking pixels -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 3: The invisible tracking pixel</h2>
+        <p>How does Reach know when someone opens your email? It uses an <span class="term" data-definition="A tracking pixel is a 1×1 pixel transparent image embedded in an email. When the recipient opens the email, their mail client loads the image — which pings the server. The server records that ping as an 'open event.'">email tracking pixel</span> — the same technique used by major email marketing platforms. When the server saves an outreach record, it generates a unique tracking ID and embeds an invisible image URL in the email.</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"Server saves the Outreach record"},
+          {"highlight":"flow-actor-1","label":"Server creates a TrackingPixel with a unique ID","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"Tracking pixel URL is embedded in the email as a 1px image"},
+          {"highlight":"flow-actor-3","label":"Recipient opens your email in their mail client"},
+          {"highlight":"flow-actor-3","label":"Mail client loads the 1px image from your server","packet":true,"from":"actor-3","to":"actor-1"},
+          {"highlight":"flow-actor-1","label":"Server records the OpenEvent — timestamp, user agent, IP"},
+          {"highlight":"flow-actor-1","label":"Dashboard shows the eye icon on your card"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">⚙️</div>
+              <span>Your Server</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">📧</div>
+              <span>Email</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">📬</div>
+              <span>Recipient</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click Next Step to trace the pixel journey</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">Next Step</button>
+            <button class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top: var(--space-8)">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-content">
+            <strong class="callout-title">Limitation to know</strong>
+            <p>Many email clients (especially Gmail&apos;s web interface) now proxy images through their own servers to block tracking. An &quot;open&quot; event may mean Gmail pre-loaded the images — not that a human actually read the email. Open rate data should be treated as a signal, not ground truth.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: The quota gate -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 4: The quota gate (free vs pro)</h2>
+        <p>Reach has a freemium model — free users get a limited number of email lookups per month, pro users get more. This is enforced by a <span class="term" data-definition="Middleware is a function that runs in between a request arriving at the server and the route handler responding to it. It can block, modify, or pass along requests — like a security checkpoint between the door and the reception desk.">middleware</span> function called checkQuota that sits in front of the expensive API endpoints.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-comment">// server/app.js — rate limiters stack up</span>
+app.<span class="code-function">use</span>(<span class="code-string">'/api/find-email'</span>,
+  expensiveRateLimit,
+  checkQuota
+);
+app.<span class="code-function">use</span>(<span class="code-string">'/api/suggest-domains'</span>,
+  expensiveRateLimit
+);
+app.<span class="code-function">use</span>(<span class="code-string">'/api/draft-email'</span>,
+  expensiveRateLimit
+);
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">For the email-lookup endpoint — the most expensive one — apply TWO guards:</p>
+              <p class="tl">First, rate limiting: max 10 requests per 15 minutes per IP address.</p>
+              <p class="tl">Then, quota check: has this user hit their monthly lookup limit?</p>
+              <p class="tl">Domain suggestions: just rate limited (no quota — less expensive).</p>
+              <p class="tl">AI email drafting: just rate limited (no quota — Gemini is cheap at this scale).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent" style="margin-top: var(--space-6)">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Key Insight: Layered defenses</strong>
+            <p>Notice how Reach stacks two protections: a rate limiter (protects against bursts) and a quota gate (enforces monthly limits). These solve different problems — rate limiting handles abuse in a short window, quotas handle cumulative costs over time. When you ask AI to &quot;add protection&quot; to an endpoint, clarify which type you need.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 5: The 30-min alarm -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 5: The reply-check alarm</h2>
+        <p>Reach can&apos;t stay connected to Gmail 24/7 — that would drain your battery and violate Chrome&apos;s service worker rules. Instead, it uses Chrome&apos;s alarm system: a built-in scheduler that fires a named event every N minutes, even when Chrome is in the background.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-function">chrome.runtime.onInstalled.addListener</span>(() => {
+  <span class="code-function">chrome.alarms.create</span>(<span class="code-string">'coldbase-reply-check'</span>, {
+    <span class="code-property">periodInMinutes</span>: <span class="code-number">30</span>
+  });
+});
+
+<span class="code-function">chrome.alarms.onAlarm.addListener</span>(<span class="code-keyword">async</span> (alarm) => {
+  <span class="code-keyword">if</span> (alarm.name === <span class="code-string">'coldbase-reply-check'</span>) {
+    <span class="code-keyword">const</span> token = <span class="code-keyword">await</span> <span class="code-function">getAuthToken</span>(<span class="code-keyword">false</span>);
+    <span class="code-keyword">await</span> <span class="code-function">checkReplies</span>(token);
+  }
+});
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">When the extension is first installed, set up a repeating alarm...</p>
+              <p class="tl">Give it a name (&quot;coldbase-reply-check&quot;) so we can identify it later.</p>
+              <p class="tl">Set it to fire every 30 minutes — automatically, forever.</p>
+              <p class="tl">Whenever any alarm fires, check if it&apos;s our reply-check alarm.</p>
+              <p class="tl">If so, get the Gmail access token (silently, without showing a login popup).</p>
+              <p class="tl">Call checkReplies, which scans Gmail for replies to tracked emails.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="quiz-container" id="quiz-module4" style="margin-top: var(--space-10)">
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Exactly! The alarm system fires background.js every 30 minutes regardless of whether Gmail is open. background.js then calls the Gmail API to look for replies. This is why Reach can catch replies even if you never manually refresh."
+               data-explanation-wrong="Think about what runs periodically in Reach. Something checks Gmail every 30 minutes — but content.js only runs when Gmail is open. Which part runs in the background at a schedule?">
+            <h3 class="quiz-question">A recruiter replied to your email, but you haven&apos;t opened Gmail in 4 hours. When will Reach&apos;s card status update from &quot;Sent&quot; to &quot;Replied&quot;?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Never — Reach only detects replies when Gmail is open</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Immediately — content.js is watching Gmail constantly</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Within the next 30 minutes — the Chrome alarm fires background.js on a schedule</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>When you next open the dashboard and click Refresh</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Right! Free users get a monthly quota for email lookups (the expensive API calls), while rate limiting protects all endpoints from abuse. Adding a lookup feature would hit the quota gate — you would need to either route it through the existing quota system or decide if it&apos;s free for all users."
+               data-explanation-wrong="Consider what the quota system protects against vs. what rate limiting protects against. A new feature that looks up email addresses would be... expensive. Which protection would kick in?">
+            <h3 class="quiz-question">You want to add a &quot;Find LinkedIn profile&quot; feature that calls an external API for each lookup. Where should the protection logic live?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>No protection needed — users can look up as many profiles as they want</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Both rate limiting (burst protection) and quota gating (monthly limit for free users)</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Rate limiting only — the API is cheap enough that quotas aren&apos;t needed</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Only the frontend — add a UI modal that asks users to upgrade before using the feature</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

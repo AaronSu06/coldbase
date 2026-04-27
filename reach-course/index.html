@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How Reach Works: A Course for Builders</title>
+
+  <!-- Google Fonts: Bricolage Grotesque · DM Sans · JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    :root {
+      --color-accent:       #2A7B9B;
+      --color-accent-hover: #1F6280;
+      --color-accent-light: #E4F2F7;
+      --color-accent-muted: #5A9DB8;
+    }
+  </style>
+
+  <script src="main.js" defer></script>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="nav-inner">
+      <span class="nav-title">How Reach Works</span>
+      <div class="nav-dots" id="nav-dots" role="tablist">
+        <button class="nav-dot" data-target="module-1" data-tooltip="Hit Send" role="tab" aria-label="Module 1: Hit Send"></button>
+        <button class="nav-dot" data-target="module-2" data-tooltip="Meet the Characters" role="tab" aria-label="Module 2: Meet the Characters"></button>
+        <button class="nav-dot" data-target="module-3" data-tooltip="How They Talk" role="tab" aria-label="Module 3: How They Talk"></button>
+        <button class="nav-dot" data-target="module-4" data-tooltip="The Clever Tricks" role="tab" aria-label="Module 4: The Clever Tricks"></button>
+        <button class="nav-dot" data-target="module-5" data-tooltip="When Things Break" role="tab" aria-label="Module 5: When Things Break"></button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- modules/*.html content is assembled here by build.sh -->
+<section class="module" id="module-1" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">01</span>
+      <h1 class="module-title">Hit Send</h1>
+      <p class="module-subtitle">What Reach is, and what happens the moment you send a cold email</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- Screen 1: What is Reach -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">You built a job-search co-pilot</h2>
+        <p>Reach lives inside Gmail as a <span class="term" data-definition="A Chrome extension is a small program that runs inside the Chrome browser and can add new features to any website you visit — like a helper you've hired to work inside your browser.">Chrome extension</span>. The moment you send a cold outreach email — to a recruiter, a hiring manager, anyone — Reach silently notices, records it, and starts tracking what happens next.</p>
+        <p>The web dashboard at coldbase.live shows those tracked emails as cards on a <span class="term" data-definition="A kanban board is a visual task-management tool with columns that represent stages — like Sent, Replied, and Offer. You drag cards between columns as things progress.">kanban board</span>. Drag a card from Sent to Interviewing. See how many companies ghosted you. Ask for a follow-up draft written by AI.</p>
+
+        <div class="pattern-cards stagger-children" style="margin-top: var(--space-8)">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">📧</div>
+            <h4 class="pattern-title">Auto-detect</h4>
+            <p class="pattern-desc">Notices cold outreach emails the moment you send them — no manual entry.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">📋</div>
+            <h4 class="pattern-title">Track replies</h4>
+            <p class="pattern-desc">Checks Gmail every 30 minutes and updates cards when someone writes back.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">✍️</div>
+            <h4 class="pattern-title">Draft follow-ups</h4>
+            <p class="pattern-desc">Generates personalized follow-up emails using Google Gemini AI.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">👁️</div>
+            <h4 class="pattern-title">Open tracking</h4>
+            <p class="pattern-desc">Embeds an invisible pixel to know when a recipient opens your email.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: The journey when you hit send -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The 6-second journey behind one Send click</h2>
+        <p>When you click Send in Gmail, Reach kicks off a chain of events. Think of it like a relay race — six runners, each handing off a baton to the next.</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"You click Send in Gmail"},
+          {"highlight":"flow-actor-1","label":"content.js detects the compose window closing","packet":false},
+          {"highlight":"flow-actor-1","label":"content.js drops a signal in Chrome storage","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"background.js wakes up and calls the Gmail API","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"Gmail API returns the email thread and body","packet":true,"from":"actor-3","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"background.js sends the email data to the server","packet":true,"from":"actor-2","to":"actor-4"},
+          {"highlight":"flow-actor-4","label":"Server saves the Outreach record to the database","packet":true,"from":"actor-4","to":"actor-5"},
+          {"highlight":"flow-actor-5","label":"Your kanban board updates — new card appears!"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">🖱️</div>
+              <span>You in Gmail</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">🔌</div>
+              <span>Extension</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">📬</div>
+              <span>Gmail API</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-4">
+              <div class="flow-actor-icon">⚙️</div>
+              <span>Server</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-5">
+              <div class="flow-actor-icon">📊</div>
+              <span>Dashboard</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click "Next Step" to trace the journey</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">Next Step</button>
+            <button class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top: var(--space-8)">
+          <div class="callout-icon">🎯</div>
+          <div class="callout-content">
+            <strong class="callout-title">Why this matters for you</strong>
+            <p>Understanding this chain tells you exactly where to look when something breaks. Email not showing up on the board? Check each link in the chain — which handoff failed?</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: What it detects -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">How does it know it's a cold email?</h2>
+        <p>Reach reads the email body and scans for job-hunting keywords using a technique called <span class="term" data-definition="Fuzzy matching is a way of finding words that are close to, but not exactly, the target. It can handle typos and variations — so 'internship' and 'interships' both count.">fuzzy matching</span>. If at least one job-related keyword group matches — words like &ldquo;intern,&rdquo; &ldquo;recruit,&rdquo; &ldquo;apply,&rdquo; or &ldquo;hiring&rdquo; — it considers the email cold outreach.</p>
+        <p>It also ignores emails to personal addresses like Gmail or Yahoo — those are probably to friends, not recruiters.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-keyword">export function</span> <span class="code-function">isColdOutreach</span>(body) {
+  <span class="code-comment">// One strong job-related keyword is enough signal</span>
+  <span class="code-keyword">return</span> <span class="code-function">countKeywordMatches</span>(body) >= <span class="code-number">1</span>;
+}
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">This function answers a yes/no question: is this a cold outreach email?</p>
+              <p class="tl">It counts how many distinct job-related keyword groups appear in the email body.</p>
+              <p class="tl">If at least one keyword group matches — like finding "intern" or "hiring" — return true (yes, it&apos;s cold outreach).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent" style="margin-top: var(--space-6)">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Key Insight: Heuristics over perfection</strong>
+            <p>Reach doesn&apos;t use AI to classify emails — it uses a hand-crafted list of keywords with fuzzy matching. This makes it fast, free, and predictable. When steering AI on classification problems, ask yourself: does this need AI, or does a simple rule work well enough?</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check your understanding</h2>
+
+        <div class="quiz-container" id="quiz-module1">
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Exactly! The flow goes: Gmail (you) → Extension → Gmail API → Server → Database → Dashboard. Each step depends on the previous one completing successfully."
+               data-explanation-wrong="Not quite. The extension is the first thing that runs, but it needs to call the Gmail API to get the full email content — it can&apos;t write to the database directly. There&apos;s a full chain between you and the kanban card.">
+            <h3 class="quiz-question">You send an email to a recruiter at Apple. An hour later, no card appears on your kanban board. Where would you look FIRST to debug this?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The React dashboard code — maybe the card isn&apos;t rendering</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The Chrome extension — it&apos;s the first link in the chain, and if it didn&apos;t detect the send, nothing else runs</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The database — maybe the record was saved but the dashboard isn&apos;t fetching it</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The Gmail API — Apple&apos;s email domain might be blocked</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Right — Reach uses keyword matching (not AI) to classify emails. It&apos;s fast, free, and consistent. If the email doesn&apos;t contain words like intern, hiring, or recruit, Reach won&apos;t track it."
+               data-explanation-wrong="Think about how Reach decides whether an email is cold outreach. Does it read the subject line? Does it use AI? Or does it scan for specific words in the body?">
+            <h3 class="quiz-question">You send a cold email to a founder saying &ldquo;Would love to grab coffee and hear about what you&apos;re building.&rdquo; Reach doesn&apos;t track it. Why?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The founder&apos;s email domain is on a blocklist</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Reach only tracks emails you manually mark for tracking</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The email body contains no job-related keywords (intern, hiring, recruit, etc.) so the classifier returns false</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The Gmail API couldn&apos;t find the thread</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-2" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">02</span>
+      <h1 class="module-title">Meet the Characters</h1>
+      <p class="module-subtitle">The five actors that power Reach — and exactly what each one is responsible for</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- Screen 1: The cast -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Five specialists, one team</h2>
+        <p>Reach is not one program — it&apos;s a team of five specialists. Each one has a specific job and only talks to the others when it needs to. Think of it like a newsroom: reporters, editors, printers, and distributors — each expert at one thing, working in sync.</p>
+
+        <div class="icon-rows stagger-children" style="margin-top: var(--space-8)">
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-1)">📝</div>
+            <div>
+              <strong>content.js — The Gmail Observer</strong>
+              <p>Injected directly into Gmail. Watches for compose windows, detects sends, and injects the Reach sidebar widget. It&apos;s the only part of the app that can &ldquo;see&rdquo; what&apos;s on your screen.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-2)">⚡</div>
+            <div>
+              <strong>background.js — The Service Worker</strong>
+              <p>Runs silently in the background 24/7. Calls the Gmail API, runs the reply-check alarm every 30 minutes, and routes messages between the extension and the server.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-3)">🏗️</div>
+            <div>
+              <strong>server/app.js — The Express Server</strong>
+              <p>A Node.js <span class="term" data-definition="An API server is a program that listens for requests from other programs and sends back data. Think of it as a waiter: it takes your order (request), goes to the kitchen (database), and brings back your food (response).">API server</span> that handles all the business logic. Saves outreach records, checks quotas, generates AI drafts, and manages user accounts.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-4)">🗄️</div>
+            <div>
+              <strong>PostgreSQL Database — The Filing Cabinet</strong>
+              <p>Stores everything permanently: users, outreach records, tracking pixels, and open events. Managed through <span class="term" data-definition="Prisma is a tool that lets you talk to a database using JavaScript instead of raw SQL. It translates your code into database commands automatically.">Prisma</span>, which translates JavaScript into database language.</p>
+            </div>
+          </div>
+          <div class="icon-row animate-in">
+            <div class="icon-circle" style="background: var(--color-actor-5)">🖥️</div>
+            <div>
+              <strong>web/src — The React Dashboard</strong>
+              <p>The kanban board you interact with at coldbase.live. Built with <span class="term" data-definition="React is a JavaScript library for building user interfaces. You describe what the screen should look like, and React updates it automatically when data changes.">React</span> — fetches data from the server and renders your outreach cards with drag-and-drop.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: The file tree -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Where each character lives in the code</h2>
+        <p>When you ask an AI to &ldquo;add a feature to the sidebar,&rdquo; knowing which folder to point it at is the difference between a clean change and a mess. Here&apos;s the map:</p>
+
+        <div class="file-tree animate-in" style="margin-top: var(--space-8)">
+          <div class="ft-folder open">
+            <span class="ft-name">extension/</span>
+            <span class="ft-desc">Everything that runs inside Chrome</span>
+            <div class="ft-children">
+              <div class="ft-file">
+                <span class="ft-name">content.js</span>
+                <span class="ft-desc">Gmail observer — injects UI, detects sends</span>
+              </div>
+              <div class="ft-file">
+                <span class="ft-name">background.js</span>
+                <span class="ft-desc">Background service worker — Gmail API calls, alarms</span>
+              </div>
+              <div class="ft-file">
+                <span class="ft-name">classifier.js</span>
+                <span class="ft-desc">Is this a cold email? Keyword matching + fuzzy logic</span>
+              </div>
+              <div class="ft-file">
+                <span class="ft-name">compose-widget.js</span>
+                <span class="ft-desc">The sidebar panel that appears when you compose</span>
+              </div>
+              <div class="ft-file">
+                <span class="ft-name">manifest.json</span>
+                <span class="ft-desc">Extension ID card — tells Chrome what permissions it needs</span>
+              </div>
+            </div>
+          </div>
+          <div class="ft-folder">
+            <span class="ft-name">server/</span>
+            <span class="ft-desc">The backend — saves data, serves the API</span>
+            <div class="ft-children">
+              <div class="ft-file">
+                <span class="ft-name">app.js</span>
+                <span class="ft-desc">Main server — wires up all routes and middleware</span>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">routes/</span>
+                <span class="ft-desc">Handlers for each API endpoint (outreach, auth, billing…)</span>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">prisma/</span>
+                <span class="ft-desc">Database schema — defines what data looks like</span>
+              </div>
+            </div>
+          </div>
+          <div class="ft-folder">
+            <span class="ft-name">web/src/</span>
+            <span class="ft-desc">The React dashboard</span>
+            <div class="ft-children">
+              <div class="ft-file">
+                <span class="ft-name">App.jsx</span>
+                <span class="ft-desc">Main app shell — routing, state, toolbar</span>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">components/</span>
+                <span class="ft-desc">KanbanBoard, OutreachCard, Sidebar, TopNav…</span>
+              </div>
+              <div class="ft-folder">
+                <span class="ft-name">hooks/</span>
+                <span class="ft-desc">useAuth, useOutreach — shared data-fetching logic</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: The database schema as cards -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What gets saved — the data model</h2>
+        <p>The database has four tables. Think of each one as a sheet in a spreadsheet — every row is one record, every column is a field.</p>
+
+        <div class="pattern-cards stagger-children" style="margin-top: var(--space-8)">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">👤</div>
+            <h4 class="pattern-title">User</h4>
+            <p class="pattern-desc">Email, password hash, Google ID, subscription plan (free/pro), Stripe IDs, quota usage. One row per person.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">📨</div>
+            <h4 class="pattern-title">Outreach</h4>
+            <p class="pattern-desc">Company, contact name, email, subject, sent date, status (Sent / Replied / Interviewing / Offer / Ghosted), reply info, notes. One row per cold email sent.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🔍</div>
+            <h4 class="pattern-title">TrackingPixel</h4>
+            <p class="pattern-desc">Links each sent email to a unique tracking ID. When a recipient opens the email, their mail client loads an invisible image that records the event.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">👁️</div>
+            <h4 class="pattern-title">OpenEvent</h4>
+            <p class="pattern-desc">Records every time the tracking pixel fires — timestamp, user agent, IP address. Many open events can belong to one TrackingPixel.</p>
+          </div>
+        </div>
+
+        <div class="callout callout-accent" style="margin-top: var(--space-8)">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Key Insight: Relationships between tables</strong>
+            <p>One User has many Outreaches. One Outreach has one TrackingPixel. One TrackingPixel has many OpenEvents. This &ldquo;one-to-many&rdquo; relationship is the fundamental pattern in almost every database ever built.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: Group chat between components -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The team chat — components in conversation</h2>
+        <p>Here&apos;s what the conversation looks like when you manually click &ldquo;Refresh&rdquo; on the dashboard to re-scan your Gmail:</p>
+
+        <div class="chat-window" id="chat-module2">
+          <div class="chat-messages">
+            <div class="chat-message" data-msg="0" data-sender="dashboard" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-5)">📊</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-5)">Dashboard (React)</span>
+                <p>User clicked Refresh. I need to trigger a rescan AND a reply check. Let me post a message to the window.</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="1" data-sender="relay" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-1)">🔌</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-1)">dashboard-sync.js (Relay)</span>
+                <p>I see that window.postMessage. I&apos;ll forward it into the extension as a chrome.runtime message.</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="2" data-sender="background" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-2)">⚡</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-2)">background.js</span>
+                <p>Got it! Calling Gmail API now... found 3 new messages. Sending them to the server.</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="3" data-sender="server" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">🏗️</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-3)">Server (Express)</span>
+                <p>Received 3 outreach records. Saving to database. Done — 200 OK!</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="4" data-sender="relay" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-1)">🔌</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-1)">dashboard-sync.js (Relay)</span>
+                <p>Operation complete! Posting the result back to the window with the same requestId so Dashboard knows to stop spinning.</p>
+              </div>
+            </div>
+            <div class="chat-message" data-msg="5" data-sender="dashboard" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-5)">📊</div>
+              <div class="chat-bubble">
+                <span class="chat-sender" style="color: var(--color-actor-5)">Dashboard (React)</span>
+                <p>Got my response! Calling refresh() to re-fetch the outreach list. Board is up to date.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-typing" id="chat-typing" style="display:none">
+            <div class="chat-avatar" id="typing-avatar">?</div>
+            <div class="chat-typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+
+          <div class="chat-controls">
+            <button class="btn chat-next-btn">Next Message</button>
+            <button class="btn chat-all-btn">Play All</button>
+            <button class="btn chat-reset-btn">Replay</button>
+            <span class="chat-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 5: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check your understanding</h2>
+
+        <div class="quiz-container" id="quiz-module2">
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Correct! The compose widget UI lives in compose-widget.js inside the extension/ folder. The extension is the only part of Reach that can inject UI into Gmail."
+               data-explanation-wrong="Think about which part of Reach actually lives inside Gmail and can inject UI into the page. The server handles data — it can&apos;t add a button to Gmail.">
+            <h3 class="quiz-question">You want to add a &ldquo;Snooze follow-up&rdquo; button to the Gmail sidebar widget. Which file do you tell your AI to edit?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>server/routes/outreach.js — the outreach API</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>extension/compose-widget.js — the Gmail sidebar widget</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>web/src/components/Sidebar.jsx — the dashboard sidebar</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>server/prisma/schema.prisma — the database definition</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Yes! A new field on the Outreach record means a database schema change (Prisma), a server route change to accept and return the new field, and a dashboard UI change to display it. All three layers must agree."
+               data-explanation-wrong="Adding a new piece of data to outreach records touches multiple layers. Where does the data live? Where does it get sent? Where does it get displayed?">
+            <h3 class="quiz-question">You want to add a &ldquo;job posting URL&rdquo; field to every outreach card. How many of the five actors need changes?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Just one — the dashboard React component</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Two — the database and the dashboard</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>At least three — the database schema, the server route, and the dashboard UI</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>All five — every actor must know about every field</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module2')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module2')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-3" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">03</span>
+      <h1 class="module-title">How They Talk</h1>
+      <p class="module-subtitle">The unusual communication patterns that connect Gmail, the extension, and your dashboard</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- Screen 1: The problem with normal messaging -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The walkie-talkie problem</h2>
+        <p>You&apos;d think components in an app would just call each other directly — like picking up a phone and dialing. But browser extensions have a harder version of this problem. It&apos;s more like walkie-talkies: you can only send a message if the other person&apos;s radio is already on and listening.</p>
+        <p>Chrome extensions have three distinct environments that can&apos;t share memory directly:</p>
+
+        <div class="step-cards stagger-children" style="margin-top: var(--space-8)">
+          <div class="step-card animate-in">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>The web page (Gmail)</strong>
+              <p>content.js runs here. It can read the Gmail DOM but lives in a sandbox — it can&apos;t directly access Chrome APIs.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>The extension background</strong>
+              <p>background.js runs here. Has full Chrome API access and can call the Gmail API — but can be shut down by Chrome when idle to save battery.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>The web dashboard (coldbase.live)</strong>
+              <p>The React app. Completely separate from the extension — it can&apos;t call chrome.runtime at all. It can only talk to the extension through a special relay trick.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: The storage trick -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 1: Use storage as a message bus</h2>
+        <p>When you send an email, content.js needs to tell background.js. The obvious approach is <code>chrome.runtime.sendMessage()</code> — like a direct phone call. But in <span class="term" data-definition="MV3 stands for Manifest Version 3, the current standard for Chrome extensions. It introduced stricter rules, including that background scripts run as 'service workers' that can be shut down by Chrome at any moment to save resources.">MV3</span>, if the background service worker is asleep, the phone rings with nobody home.</p>
+        <p>Reach&apos;s solution: use <span class="term" data-definition="chrome.storage is a built-in Chrome API for saving key-value data that persists even when the extension is closed — like a shared whiteboard that any part of the extension can read or write.">chrome.storage</span> like a bulletin board instead of a phone call.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-comment">// content.js — after detecting a send</span>
+<span class="code-function">chrome.storage.local.set</span>({
+  <span class="code-property">coldbase_pending_scan</span>: {
+    <span class="code-property">emailSubject</span>: subject,
+    <span class="code-property">emailRecipients</span>: recipients,
+  }
+});
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">After detecting you hit Send, content.js pins a note to the bulletin board.</p>
+              <p class="tl">The note is labeled &quot;coldbase_pending_scan&quot; — background.js watches for exactly this label.</p>
+              <p class="tl">The note contains the email subject and recipients as context.</p>
+              <p class="tl">Chrome wakes up background.js to deliver this storage change — the timing problem is solved.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-comment">// background.js — always listening</span>
+<span class="code-function">chrome.storage.onChanged.addListener</span>((changes, area) => {
+  <span class="code-keyword">if</span> (area === <span class="code-string">'local'</span> && <span class="code-string">'coldbase_pending_scan'</span> <span class="code-keyword">in</span> changes) {
+    <span class="code-keyword">const</span> pendingScan = changes.coldbase_pending_scan?.newValue;
+    <span class="code-keyword">if</span> (!pendingScan) <span class="code-keyword">return</span>;
+    <span class="code-function">chrome.storage.local.remove</span>(<span class="code-string">'coldbase_pending_scan'</span>);
+    <span class="code-function">trackLatestSent</span>(<span class="code-keyword">false</span>, pendingScan);
+  }
+});
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">background.js listens for any change to Chrome&apos;s local storage.</p>
+              <p class="tl">If the change is in local storage AND contains our specific bulletin-board note...</p>
+              <p class="tl">Read the note&apos;s contents (the email data).</p>
+              <p class="tl">If the note is empty (a deletion event), ignore it.</p>
+              <p class="tl">Remove the note from the board — so we don&apos;t process it twice.</p>
+              <p class="tl">Start tracking the sent email using the Gmail API.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent" style="margin-top: var(--space-6)">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Key Insight: Storage as a message bus</strong>
+            <p>Using storage instead of direct messaging is a pattern that solves <span class="term" data-definition="A race condition is when two things happen at the same time and the outcome depends on which one finishes first — which is unpredictable. Like two people reaching for the last slice of pizza simultaneously.">race conditions</span> caused by background scripts being asleep. If you&apos;re ever building an extension and messages aren&apos;t arriving, this pattern is worth knowing.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: The relay bridge -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 2: The window message relay</h2>
+        <p>The web dashboard (React) can&apos;t call chrome.runtime directly — it&apos;s a regular website. But it needs to tell the extension to do things (like trigger a rescan). The solution is a middleman script called dashboard-sync.js.</p>
+        <p>Think of it like a shipping dock: the React app drops packages through a chute (window.postMessage), the dock worker (<span class="term" data-definition="dashboard-sync.js is a content script that gets injected into the coldbase.live web page. Because it's an extension script, it can hear both the web page's messages and the extension's messages — making it a bridge between the two worlds.">dashboard-sync.js</span>) picks them up, re-labels them for the extension (chrome.runtime.sendMessage), and delivers them. The extension sends the response back the same way, in reverse.</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"You click Refresh on the dashboard"},
+          {"highlight":"flow-actor-1","label":"React posts a message to the window with type RESCAN","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"dashboard-sync.js hears the window message","packet":false},
+          {"highlight":"flow-actor-2","label":"Relay forwards it into the extension via chrome.runtime","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"background.js handles the RESCAN and calls Gmail API","packet":false},
+          {"highlight":"flow-actor-3","label":"background.js responds to the relay","packet":true,"from":"actor-3","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"Relay posts the result back to the window with the same requestId","packet":true,"from":"actor-2","to":"actor-1"},
+          {"highlight":"flow-actor-1","label":"React sees the response and stops spinning"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">⚛️</div>
+              <span>React Dashboard</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">🔁</div>
+              <span>Relay Script</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">⚡</div>
+              <span>Background.js</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click Next Step to trace the relay</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">Next Step</button>
+            <button class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: The permissions badge list -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Extension permissions — the ID card</h2>
+        <p>Chrome won&apos;t let an extension do anything sensitive without declaring it upfront in <code>manifest.json</code>. Think of it like a security clearance form: every capability must be listed. Users see this list when they install the extension.</p>
+
+        <div class="badge-list animate-in stagger-children" style="margin-top: var(--space-8)">
+          <div class="badge-item animate-in">
+            <code class="badge-code">identity</code>
+            <span class="badge-desc">Use Google OAuth to log in users without storing passwords</span>
+          </div>
+          <div class="badge-item animate-in">
+            <code class="badge-code">storage</code>
+            <span class="badge-desc">Save data between sessions — used as the message bus between content.js and background.js</span>
+          </div>
+          <div class="badge-item animate-in">
+            <code class="badge-code">alarms</code>
+            <span class="badge-desc">Schedule the reply-check to run every 30 minutes, even when Gmail isn&apos;t open</span>
+          </div>
+          <div class="badge-item animate-in">
+            <code class="badge-code">scripting</code>
+            <span class="badge-desc">Inject content scripts into Gmail tabs — how the sidebar widget gets injected</span>
+          </div>
+          <div class="badge-item animate-in">
+            <code class="badge-code">activeTab</code>
+            <span class="badge-desc">Access the currently open tab — only when the user explicitly clicks the extension icon</span>
+          </div>
+          <div class="badge-item animate-in">
+            <code class="badge-code">https://mail.google.com/*</code>
+            <span class="badge-desc">Host permission — required to inject content scripts into Gmail pages specifically</span>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top: var(--space-8)">
+          <div class="callout-icon">🔐</div>
+          <div class="callout-content">
+            <strong class="callout-title">Why this matters for your roadmap</strong>
+            <p>Adding a new capability to the extension? It almost certainly needs a new permission. Requesting too many permissions is the #1 reason Chrome Web Store rejects extensions — and why users get suspicious. Only ask for what you actually need.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 5: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check your understanding</h2>
+
+        <div class="quiz-container" id="quiz-module3">
+          <div class="quiz-question-block"
+               data-correct="option-a"
+               data-explanation-right="Exactly right. Reach uses chrome.storage as a relay because the MV3 background service worker can be asleep when a direct sendMessage arrives — the message would be lost. Storage changes wake the worker up reliably."
+               data-explanation-wrong="Think about why Reach uses storage instead of direct messaging. What would happen if background.js was asleep when content.js tried to call it directly?">
+            <h3 class="quiz-question">Why does Reach write to chrome.storage instead of calling chrome.runtime.sendMessage() directly when an email is sent?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because the background service worker can be asleep, and storage changes are guaranteed to wake it up</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because chrome.runtime.sendMessage is not available in content scripts</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because storage is faster than direct messaging</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Because the Gmail API requires data to be stored before it can be processed</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Correct! The React dashboard can&apos;t call chrome.runtime directly because it&apos;s a regular website. It posts a window message, dashboard-sync.js (injected into the page as a content script) picks it up and forwards it into the extension."
+               data-explanation-wrong="Consider: what can a regular website do that an extension script can do that a website cannot? The relay exists to bridge that gap.">
+            <h3 class="quiz-question">Why does the React dashboard use window.postMessage instead of calling chrome.runtime.sendMessage directly?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>chrome.runtime is too slow for the dashboard&apos;s real-time requirements</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The React dashboard is a regular webpage and can&apos;t access chrome.runtime — only extension scripts can</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>window.postMessage is more secure than chrome.runtime messaging</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The extension blocks direct messages from the dashboard for security reasons</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-4" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">04</span>
+      <h1 class="module-title">The Clever Tricks</h1>
+      <p class="module-subtitle">Fuzzy matching, invisible tracking pixels, quota gates, and the MV3 service worker alarm pattern</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- Screen 1: The classifier in depth -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 1: Fuzzy keyword matching</h2>
+        <p>The classifier doesn&apos;t just look for exact words — it uses <span class="term" data-definition="Edit distance (also called Levenshtein distance) measures how many single-character changes (add, delete, swap) it takes to turn one word into another. 'cat' and 'bat' have an edit distance of 1.">edit distance</span> to handle typos and spelling variations. So &quot;internships&quot; and &quot;internhsips&quot; both match the &quot;intern&quot; keyword group.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-keyword">function</span> <span class="code-function">tokenMatchesVariant</span>(token, variant) {
+  <span class="code-keyword">if</span> (token === variant) <span class="code-keyword">return true</span>;
+  <span class="code-keyword">const</span> limit = variant.length >= <span class="code-number">9</span> ? <span class="code-number">2</span>
+    : variant.length >= <span class="code-number">5</span> ? <span class="code-number">1</span>
+    : <span class="code-number">0</span>;
+  <span class="code-keyword">return</span> <span class="code-function">editDistanceWithinLimit</span>(token, variant, limit);
+}
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Check if a word from the email matches a keyword variant.</p>
+              <p class="tl">If it&apos;s an exact match, immediately return true — no need to do math.</p>
+              <p class="tl">Set a tolerance for typos based on the variant&apos;s length:</p>
+              <p class="tl">Long words (9+ chars) allow 2 typos. Medium words (5-8 chars) allow 1. Short words allow none.</p>
+              <p class="tl">Check if the word is close enough using the edit distance algorithm.</p>
+            </div>
+          </div>
+        </div>
+
+        <p style="margin-top: var(--space-6)">The classifier groups keywords by concept — not individual words. So &quot;intern,&quot; &quot;interns,&quot; &quot;internship,&quot; and &quot;interning&quot; all count as ONE match. This prevents an email stuffed with synonyms from scoring artificially high.</p>
+
+        <div class="pattern-cards stagger-children" style="margin-top: var(--space-6)">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">🎓</div>
+            <h4 class="pattern-title">intern group</h4>
+            <p class="pattern-desc">intern, interns, interned, interning, internship, internships</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🤝</div>
+            <h4 class="pattern-title">hiring group</h4>
+            <p class="pattern-desc">hiring, hire, hired</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">📋</div>
+            <h4 class="pattern-title">recruit group</h4>
+            <p class="pattern-desc">recruit, recruiter, recruiting, recruitment</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">📄</div>
+            <h4 class="pattern-title">apply group</h4>
+            <p class="pattern-desc">apply, application, applications</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: Company extraction -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 2: Company name extraction via Clearbit</h2>
+        <p>Once Reach knows it&apos;s a cold email, it needs the company name. It tries four strategies in order — from fastest to most expensive — and stops as soon as one works. Like a detective working through a list of leads.</p>
+
+        <div class="step-cards stagger-children animate-in" style="margin-top: var(--space-8)">
+          <div class="step-card animate-in">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>[Company Name] in brackets</strong>
+              <p>Subject line pattern: &quot;[Anthropic] Software Engineer Role&quot; — extracts instantly, no API call needed.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Company — prefix</strong>
+              <p>Subject line pattern: &quot;OpenAI — Interested in joining?&quot; — fast regex match.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>— Company suffix</strong>
+              <p>Subject line pattern: &quot;Software Engineering — Google&quot; — fast regex match in reverse.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Clearbit API lookup</strong>
+              <p>Scans the email body for capitalized word sequences, scores them by frequency, then validates the top candidates against <span class="term" data-definition="Clearbit is an external API service that has a database of company names and domains. Reach asks it: 'Is this phrase a real company name?' and Clearbit responds with the official company name if it finds a match.">Clearbit</span>. Slowest but catches any company name.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: Tracking pixels -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 3: The invisible tracking pixel</h2>
+        <p>How does Reach know when someone opens your email? It uses an <span class="term" data-definition="A tracking pixel is a 1×1 pixel transparent image embedded in an email. When the recipient opens the email, their mail client loads the image — which pings the server. The server records that ping as an 'open event.'">email tracking pixel</span> — the same technique used by major email marketing platforms. When the server saves an outreach record, it generates a unique tracking ID and embeds an invisible image URL in the email.</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"Server saves the Outreach record"},
+          {"highlight":"flow-actor-1","label":"Server creates a TrackingPixel with a unique ID","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"Tracking pixel URL is embedded in the email as a 1px image"},
+          {"highlight":"flow-actor-3","label":"Recipient opens your email in their mail client"},
+          {"highlight":"flow-actor-3","label":"Mail client loads the 1px image from your server","packet":true,"from":"actor-3","to":"actor-1"},
+          {"highlight":"flow-actor-1","label":"Server records the OpenEvent — timestamp, user agent, IP"},
+          {"highlight":"flow-actor-1","label":"Dashboard shows the eye icon on your card"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">⚙️</div>
+              <span>Your Server</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">📧</div>
+              <span>Email</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">📬</div>
+              <span>Recipient</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click Next Step to trace the pixel journey</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">Next Step</button>
+            <button class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top: var(--space-8)">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-content">
+            <strong class="callout-title">Limitation to know</strong>
+            <p>Many email clients (especially Gmail&apos;s web interface) now proxy images through their own servers to block tracking. An &quot;open&quot; event may mean Gmail pre-loaded the images — not that a human actually read the email. Open rate data should be treated as a signal, not ground truth.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: The quota gate -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 4: The quota gate (free vs pro)</h2>
+        <p>Reach has a freemium model — free users get a limited number of email lookups per month, pro users get more. This is enforced by a <span class="term" data-definition="Middleware is a function that runs in between a request arriving at the server and the route handler responding to it. It can block, modify, or pass along requests — like a security checkpoint between the door and the reception desk.">middleware</span> function called checkQuota that sits in front of the expensive API endpoints.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-comment">// server/app.js — rate limiters stack up</span>
+app.<span class="code-function">use</span>(<span class="code-string">'/api/find-email'</span>,
+  expensiveRateLimit,
+  checkQuota
+);
+app.<span class="code-function">use</span>(<span class="code-string">'/api/suggest-domains'</span>,
+  expensiveRateLimit
+);
+app.<span class="code-function">use</span>(<span class="code-string">'/api/draft-email'</span>,
+  expensiveRateLimit
+);
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">For the email-lookup endpoint — the most expensive one — apply TWO guards:</p>
+              <p class="tl">First, rate limiting: max 10 requests per 15 minutes per IP address.</p>
+              <p class="tl">Then, quota check: has this user hit their monthly lookup limit?</p>
+              <p class="tl">Domain suggestions: just rate limited (no quota — less expensive).</p>
+              <p class="tl">AI email drafting: just rate limited (no quota — Gemini is cheap at this scale).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent" style="margin-top: var(--space-6)">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Key Insight: Layered defenses</strong>
+            <p>Notice how Reach stacks two protections: a rate limiter (protects against bursts) and a quota gate (enforces monthly limits). These solve different problems — rate limiting handles abuse in a short window, quotas handle cumulative costs over time. When you ask AI to &quot;add protection&quot; to an endpoint, clarify which type you need.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 5: The 30-min alarm -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Trick 5: The reply-check alarm</h2>
+        <p>Reach can&apos;t stay connected to Gmail 24/7 — that would drain your battery and violate Chrome&apos;s service worker rules. Instead, it uses Chrome&apos;s alarm system: a built-in scheduler that fires a named event every N minutes, even when Chrome is in the background.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-function">chrome.runtime.onInstalled.addListener</span>(() => {
+  <span class="code-function">chrome.alarms.create</span>(<span class="code-string">'coldbase-reply-check'</span>, {
+    <span class="code-property">periodInMinutes</span>: <span class="code-number">30</span>
+  });
+});
+
+<span class="code-function">chrome.alarms.onAlarm.addListener</span>(<span class="code-keyword">async</span> (alarm) => {
+  <span class="code-keyword">if</span> (alarm.name === <span class="code-string">'coldbase-reply-check'</span>) {
+    <span class="code-keyword">const</span> token = <span class="code-keyword">await</span> <span class="code-function">getAuthToken</span>(<span class="code-keyword">false</span>);
+    <span class="code-keyword">await</span> <span class="code-function">checkReplies</span>(token);
+  }
+});
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">When the extension is first installed, set up a repeating alarm...</p>
+              <p class="tl">Give it a name (&quot;coldbase-reply-check&quot;) so we can identify it later.</p>
+              <p class="tl">Set it to fire every 30 minutes — automatically, forever.</p>
+              <p class="tl">Whenever any alarm fires, check if it&apos;s our reply-check alarm.</p>
+              <p class="tl">If so, get the Gmail access token (silently, without showing a login popup).</p>
+              <p class="tl">Call checkReplies, which scans Gmail for replies to tracked emails.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="quiz-container" id="quiz-module4" style="margin-top: var(--space-10)">
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Exactly! The alarm system fires background.js every 30 minutes regardless of whether Gmail is open. background.js then calls the Gmail API to look for replies. This is why Reach can catch replies even if you never manually refresh."
+               data-explanation-wrong="Think about what runs periodically in Reach. Something checks Gmail every 30 minutes — but content.js only runs when Gmail is open. Which part runs in the background at a schedule?">
+            <h3 class="quiz-question">A recruiter replied to your email, but you haven&apos;t opened Gmail in 4 hours. When will Reach&apos;s card status update from &quot;Sent&quot; to &quot;Replied&quot;?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Never — Reach only detects replies when Gmail is open</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Immediately — content.js is watching Gmail constantly</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Within the next 30 minutes — the Chrome alarm fires background.js on a schedule</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>When you next open the dashboard and click Refresh</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Right! Free users get a monthly quota for email lookups (the expensive API calls), while rate limiting protects all endpoints from abuse. Adding a lookup feature would hit the quota gate — you would need to either route it through the existing quota system or decide if it&apos;s free for all users."
+               data-explanation-wrong="Consider what the quota system protects against vs. what rate limiting protects against. A new feature that looks up email addresses would be... expensive. Which protection would kick in?">
+            <h3 class="quiz-question">You want to add a &quot;Find LinkedIn profile&quot; feature that calls an external API for each lookup. Where should the protection logic live?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>No protection needed — users can look up as many profiles as they want</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Both rate limiting (burst protection) and quota gating (monthly limit for free users)</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Rate limiting only — the API is cheap enough that quotas aren&apos;t needed</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Only the frontend — add a UI modal that asks users to upgrade before using the feature</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module4')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module4')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+<section class="module" id="module-5" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">05</span>
+      <h1 class="module-title">When Things Break</h1>
+      <p class="module-subtitle">The most common failure modes, how to debug them, and the full architecture picture</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- Screen 1: Failure modes -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The 5 most common things to go wrong</h2>
+        <p>Every app has a set of failures it&apos;s prone to — based on its architecture. Knowing Reach&apos;s failure modes turns you from someone who randomly tries things into someone who can diagnose systematically.</p>
+
+        <div class="step-cards stagger-children animate-in" style="margin-top: var(--space-8)">
+          <div class="step-card animate-in">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Email sent but no card appears</strong>
+              <p>Check: Did the classifier flag it as cold outreach? Did the Gmail API return the thread? Is the user authenticated? Is the server running? This is a chain problem — any broken link stops the card.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Card stuck on &quot;Sent&quot; when a reply came in</strong>
+              <p>Check: Did the 30-minute alarm fire? Is the access token expired? Did reply-checker.js find the reply in the right Gmail thread? The reply detection uses the Gmail <span class="term" data-definition="A thread ID is Gmail&apos;s unique identifier for an email conversation. All replies to an email share the same thread ID — Reach uses it to track whether a specific conversation got a response.">thread ID</span> to match replies to outreach records.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Dashboard shows &quot;Failed to load data&quot;</strong>
+              <p>Check: Is the server running? Is the JWT <span class="term" data-definition="A JWT (JSON Web Token) is a digital pass — a string of characters that proves who you are to the server. It has an expiration date. If it expires, you need to log in again to get a new one.">token</span> expired? Is CORS blocking the request? Open the browser DevTools Network tab to see the exact error code.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Wrong Gmail account tracked</strong>
+              <p>Reach compares the Gmail account currently open with the Reach account email. If they differ, it shows an &quot;account mismatch&quot; toast and skips tracking. You must be logged into Gmail AS the same account you used to sign up for Reach.</p>
+            </div>
+          </div>
+          <div class="step-card animate-in">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <strong>&quot;Quota exceeded&quot; on email lookup</strong>
+              <p>Free users have a monthly cap on contact lookups. The server returns a 429 response with the used/limit counts. Solution: upgrade to pro, or wait for the monthly reset (first of the month).</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: Debugging playbook -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The debugging playbook</h2>
+        <p>When something breaks in Reach, you have three power tools. Use them in order before asking an AI for help — the AI will give a much better answer when you show it real error output.</p>
+
+        <div class="pattern-cards stagger-children" style="margin-top: var(--space-8)">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">🔍</div>
+            <h4 class="pattern-title">Chrome DevTools → Extensions</h4>
+            <p class="pattern-desc">Open chrome://extensions, find Coldbase, click &quot;Service Worker&quot; to get the background script&apos;s console. Every background.js log appears here. This is where to look for Gmail API errors and storage events.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🌐</div>
+            <h4 class="pattern-title">Gmail Tab → DevTools Console</h4>
+            <p class="pattern-desc">Open Gmail, right-click → Inspect → Console. content.js logs appear here — search for &quot;[coldbase]&quot; or &quot;[content]&quot;. This is where to see email detection decisions and widget errors.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">📡</div>
+            <h4 class="pattern-title">Dashboard → Network Tab</h4>
+            <p class="pattern-desc">Open coldbase.live, DevTools → Network. Filter by &quot;/api&quot; to see every request the dashboard makes to the server. Look for red rows (error status codes). Click a row to see the full response body — the error message is usually there.</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top: var(--space-8)">
+          <div class="callout-icon">🎯</div>
+          <div class="callout-content">
+            <strong class="callout-title">Debugging tip: Find the broken link</strong>
+            <p>Every problem in Reach is a broken link in a chain. Start from where the user experiences the symptom and trace backwards. &quot;Card not showing&quot; → was it saved? → was it tracked? → was the email detected? You&apos;ll find the broken link before you run out of steps.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: The architecture in one view -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The full picture — architecture at a glance</h2>
+        <p>Now that you know all the pieces, here&apos;s the complete system. Click or hover any component to see what it does.</p>
+
+        <div class="arch-diagram animate-in" style="margin-top: var(--space-8)">
+          <div class="arch-zone arch-zone-browser" style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: var(--space-4); background: var(--color-surface)">
+            <h4 class="arch-zone-label" style="font-size: var(--text-xs); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-4)">Chrome Extension (inside your browser)</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-3)">
+              <div class="arch-component" data-desc="Injected into Gmail pages. Detects compose windows, reads email content, injects the Reach sidebar widget. Can NOT call Chrome APIs directly — communicates via chrome.storage." onclick="showArchDesc(this)" style="background: var(--color-accent-light); border: 2px solid var(--color-accent-muted); border-radius: var(--radius-sm); padding: var(--space-4); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-2)">📝</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">content.js</span>
+              </div>
+              <div class="arch-component" data-desc="The background brain. Runs as a Chrome Service Worker. Has full Chrome API access. Calls Gmail API, runs the 30-min reply check alarm, routes messages. Can be shut down by Chrome when idle." onclick="showArchDesc(this)" style="background: #E4F2F7; border: 2px solid #5A9DB8; border-radius: var(--radius-sm); padding: var(--space-4); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-2)">⚡</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">background.js</span>
+              </div>
+              <div class="arch-component" data-desc="The smart classifier. Reads email body, runs fuzzy keyword matching across 9 keyword groups. Returns true if this is cold outreach. Also extracts company name from subject patterns + Clearbit API." onclick="showArchDesc(this)" style="background: #F3EFFA; border: 2px solid #9B89C8; border-radius: var(--radius-sm); padding: var(--space-4); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-2)">🧠</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">classifier.js</span>
+              </div>
+              <div class="arch-component" data-desc="A content script injected into the coldbase.live web page. Bridges the gap between the React dashboard (a regular website) and the Chrome extension. Forwards window.postMessage commands into chrome.runtime messages and back." onclick="showArchDesc(this)" style="background: #FDF5E0; border: 2px solid #D4A843; border-radius: var(--radius-sm); padding: var(--space-4); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.5rem; margin-bottom: var(--space-2)">🔁</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">dashboard-sync.js</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4)">
+            <div style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); background: var(--color-surface)">
+              <h4 class="arch-zone-label" style="font-size: var(--text-xs); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-4)">React Dashboard (coldbase.live)</h4>
+              <div style="display: flex; flex-direction: column; gap: var(--space-3)">
+                <div class="arch-component" data-desc="The main React app shell. Manages routing, global state, filter logic, and refresh handling. Talks to the server via fetch() and to the extension via window.postMessage." onclick="showArchDesc(this)" style="background: #E8F5EE; border: 2px solid #5AAD7A; border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                  <span style="font-size: var(--text-sm); font-weight: 600">App.jsx + KanbanBoard</span>
+                </div>
+                <div class="arch-component" data-desc="The slide-out detail panel when you click a card. Shows full outreach info, lets you change status, add notes, generate a follow-up draft, and archive or delete." onclick="showArchDesc(this)" style="background: #E8F5EE; border: 2px solid #5AAD7A; border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                  <span style="font-size: var(--text-sm); font-weight: 600">Sidebar.jsx</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); background: var(--color-surface)">
+              <h4 class="arch-zone-label" style="font-size: var(--text-xs); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-4)">Backend (Vercel / Node.js)</h4>
+              <div style="display: flex; flex-direction: column; gap: var(--space-3)">
+                <div class="arch-component" data-desc="Express.js server. Handles auth (JWT + Google OAuth), outreach CRUD, contact lookup, email drafting (Gemini AI), billing (Stripe), and tracking pixel hits. Deployed to Vercel as serverless functions." onclick="showArchDesc(this)" style="background: var(--color-accent-light); border: 2px solid var(--color-accent-muted); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                  <span style="font-size: var(--text-sm); font-weight: 600">server/app.js (Express)</span>
+                </div>
+                <div class="arch-component" data-desc="PostgreSQL database managed by Prisma. Four tables: User, Outreach, TrackingPixel, OpenEvent. Hosted on Supabase/Neon. The single source of truth for all user data." onclick="showArchDesc(this)" style="background: var(--color-accent-light); border: 2px solid var(--color-accent-muted); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                  <span style="font-size: var(--text-sm); font-weight: 600">PostgreSQL + Prisma</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); background: var(--color-surface-warm)">
+            <h4 class="arch-zone-label" style="font-size: var(--text-xs); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin-bottom: var(--space-4)">External Services</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-3)">
+              <div class="arch-component" data-desc="Google&apos;s Gmail REST API. Reach calls it to fetch sent email threads, check for replies, and get email metadata. Requires an OAuth token from the user." onclick="showArchDesc(this)" style="background: white; border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.25rem; margin-bottom: var(--space-1)">📬</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">Gmail API</span>
+              </div>
+              <div class="arch-component" data-desc="Company database API. Given a company name or domain, returns the official company name. Used in the classifier to validate candidate company names extracted from email bodies." onclick="showArchDesc(this)" style="background: white; border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.25rem; margin-bottom: var(--space-1)">🏢</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">Clearbit</span>
+              </div>
+              <div class="arch-component" data-desc="Google&apos;s generative AI model. Powers the follow-up email drafting feature in the sidebar. The server sends context (company, contact, notes, previous email) and Gemini writes a personalized draft." onclick="showArchDesc(this)" style="background: white; border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.25rem; margin-bottom: var(--space-1)">🤖</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">Gemini AI</span>
+              </div>
+              <div class="arch-component" data-desc="Payment processing. Handles Pro plan subscriptions, checkout sessions, and billing portal. Stripe webhooks tell the server when a payment succeeds or a subscription is canceled." onclick="showArchDesc(this)" style="background: white; border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.25rem; margin-bottom: var(--space-1)">💳</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">Stripe</span>
+              </div>
+              <div class="arch-component" data-desc="Error monitoring platform. When the server crashes or throws an unhandled error, Sentry captures a full stack trace and sends an alert. Lets you know about bugs before users report them." onclick="showArchDesc(this)" style="background: white; border: 2px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; text-align: center; transition: all 0.15s">
+                <div style="font-size: 1.25rem; margin-bottom: var(--space-1)">🛡️</div>
+                <span style="font-size: var(--text-sm); font-weight: 600">Sentry</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-description" id="arch-desc" style="margin-top: var(--space-6); padding: var(--space-4); background: var(--color-accent-light); border-radius: var(--radius-md); border-left: 4px solid var(--color-accent); color: var(--color-text); min-height: 48px; font-size: var(--text-sm)">Click any component to learn what it does</div>
+        </div>
+      </section>
+
+      <!-- Screen 4: What you can now do -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What you can now do differently</h2>
+        <p>You started this course not knowing how the code worked. Here&apos;s what changed:</p>
+
+        <div class="pattern-cards stagger-children" style="margin-top: var(--space-8)">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">🎯</div>
+            <h4 class="pattern-title">Tell AI where to look</h4>
+            <p class="pattern-desc">Instead of &quot;fix the email tracking,&quot; you can say &quot;the classifier in extension/classifier.js isn&apos;t matching emails with the word &apos;recruiting&apos; — check the KEYWORD_GROUPS array.&quot;</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🔍</div>
+            <h4 class="pattern-title">Debug systematically</h4>
+            <p class="pattern-desc">When a card doesn&apos;t appear, you now trace the chain: classifier → storage trigger → Gmail API → server → database → dashboard. You&apos;ll find the broken link in minutes, not hours.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🏗️</div>
+            <h4 class="pattern-title">Scope new features correctly</h4>
+            <p class="pattern-desc">Adding a &quot;snooze&quot; feature? You know it needs: a database field (Prisma schema), a server endpoint (routes/outreach.js), and a UI button (compose-widget.js or Sidebar.jsx). No guesswork.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">💬</div>
+            <h4 class="pattern-title">Speak the vocabulary</h4>
+            <p class="pattern-desc">Service worker, middleware, fuzzy matching, rate limiting, content script, tracking pixel — you now use these terms precisely when talking to AI agents or engineers.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 5: Final quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Final challenge</h2>
+
+        <div class="quiz-container" id="quiz-module5">
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Exactly right. The tracking pixel fires when the email is opened, which hits the server&apos;s /track endpoint. The server saves an OpenEvent record. The dashboard then needs to fetch and display this. That&apos;s server, database, and dashboard — at minimum. The extension isn&apos;t involved in rendering the open count."
+               data-explanation-wrong="Think about what &apos;opened&apos; means for Reach: a pixel fires, the server logs it, the dashboard shows it. Which parts of the system need to know about a new type of analytics event?">
+            <h3 class="quiz-question">You want to show &quot;opened 3 times&quot; on each kanban card. Currently Reach shows an eye icon but no count. What needs to change?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Only the React component OutreachCard.jsx — just show the openCount field</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The extension classifier — it needs to count opens</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The server route must return openCount in the API response, AND the React card must display it</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The database schema — add a new &apos;openCount&apos; field to the Outreach table</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Spot on. The extension uses chrome.storage as a message bus to wake up the service worker — this is the key insight from module 3. Any new feature that needs to communicate from content.js to background.js should use this same pattern."
+               data-explanation-wrong="Recall how content.js and background.js communicate in Reach. What pattern does the codebase already use? Would you change that pattern for a new feature, or reuse it?">
+            <h3 class="quiz-question">You want to build a new feature: when you save a draft in Gmail (not send), Reach saves a &quot;draft tracked&quot; note. How should content.js notify background.js about the save event?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Call chrome.runtime.sendMessage() directly from content.js</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Write a new key to chrome.storage.local and have background.js listen for it via onChanged</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Use window.postMessage to the relay script, which forwards to background.js</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Have the React dashboard poll for draft saves via the server API</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-a"
+               data-explanation-right="Correct. Sentry captures unhandled errors with full stack traces automatically — you don&apos;t need to reproduce the error yourself. Check Sentry first, read the stack trace, then look at the specific line of code it points to. That&apos;s the fastest path to a fix."
+               data-explanation-wrong="Reach has an error monitoring tool called Sentry built in. What does Sentry do, and how does it change your first step when investigating a production crash?">
+            <h3 class="quiz-question">A user reports &quot;the server crashed and I got a 500 error.&quot; You can&apos;t reproduce it locally. What&apos;s your first move?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Check Sentry — it captured the full stack trace and error message from the production crash</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Ask the user to send a screenshot of the error</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Add console.log statements to every server route and redeploy</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Check the database for corrupted records — 500 errors are always database issues</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">Try Again</button>
+        </div>
+
+        <div class="callout callout-accent" style="margin-top: var(--space-10)">
+          <div class="callout-icon">🎓</div>
+          <div class="callout-content">
+            <strong class="callout-title">You finished the course.</strong>
+            <p>You now understand how Reach works at a level that most developers who didn&apos;t build it don&apos;t have. Use that knowledge: trace before you guess, name the layer before you change it, and show AI the exact file instead of describing the problem in vague terms.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+  </main>
+
+</body>
+</html>

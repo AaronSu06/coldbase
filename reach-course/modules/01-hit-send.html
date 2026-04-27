@@ -1,0 +1,195 @@
+<section class="module" id="module-1" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">01</span>
+      <h1 class="module-title">Hit Send</h1>
+      <p class="module-subtitle">What Reach is, and what happens the moment you send a cold email</p>
+    </header>
+
+    <div class="module-body">
+
+      <!-- Screen 1: What is Reach -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">You built a job-search co-pilot</h2>
+        <p>Reach lives inside Gmail as a <span class="term" data-definition="A Chrome extension is a small program that runs inside the Chrome browser and can add new features to any website you visit — like a helper you've hired to work inside your browser.">Chrome extension</span>. The moment you send a cold outreach email — to a recruiter, a hiring manager, anyone — Reach silently notices, records it, and starts tracking what happens next.</p>
+        <p>The web dashboard at coldbase.live shows those tracked emails as cards on a <span class="term" data-definition="A kanban board is a visual task-management tool with columns that represent stages — like Sent, Replied, and Offer. You drag cards between columns as things progress.">kanban board</span>. Drag a card from Sent to Interviewing. See how many companies ghosted you. Ask for a follow-up draft written by AI.</p>
+
+        <div class="pattern-cards stagger-children" style="margin-top: var(--space-8)">
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">📧</div>
+            <h4 class="pattern-title">Auto-detect</h4>
+            <p class="pattern-desc">Notices cold outreach emails the moment you send them — no manual entry.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">📋</div>
+            <h4 class="pattern-title">Track replies</h4>
+            <p class="pattern-desc">Checks Gmail every 30 minutes and updates cards when someone writes back.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">✍️</div>
+            <h4 class="pattern-title">Draft follow-ups</h4>
+            <p class="pattern-desc">Generates personalized follow-up emails using Google Gemini AI.</p>
+          </div>
+          <div class="pattern-card animate-in" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">👁️</div>
+            <h4 class="pattern-title">Open tracking</h4>
+            <p class="pattern-desc">Embeds an invisible pixel to know when a recipient opens your email.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: The journey when you hit send -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The 6-second journey behind one Send click</h2>
+        <p>When you click Send in Gmail, Reach kicks off a chain of events. Think of it like a relay race — six runners, each handing off a baton to the next.</p>
+
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"You click Send in Gmail"},
+          {"highlight":"flow-actor-1","label":"content.js detects the compose window closing","packet":false},
+          {"highlight":"flow-actor-1","label":"content.js drops a signal in Chrome storage","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"background.js wakes up and calls the Gmail API","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-3","label":"Gmail API returns the email thread and body","packet":true,"from":"actor-3","to":"actor-2"},
+          {"highlight":"flow-actor-2","label":"background.js sends the email data to the server","packet":true,"from":"actor-2","to":"actor-4"},
+          {"highlight":"flow-actor-4","label":"Server saves the Outreach record to the database","packet":true,"from":"actor-4","to":"actor-5"},
+          {"highlight":"flow-actor-5","label":"Your kanban board updates — new card appears!"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">🖱️</div>
+              <span>You in Gmail</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">🔌</div>
+              <span>Extension</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">📬</div>
+              <span>Gmail API</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-4">
+              <div class="flow-actor-icon">⚙️</div>
+              <span>Server</span>
+            </div>
+            <div class="flow-actor" id="flow-actor-5">
+              <div class="flow-actor-icon">📊</div>
+              <span>Dashboard</span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click "Next Step" to trace the journey</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">Next Step</button>
+            <button class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top: var(--space-8)">
+          <div class="callout-icon">🎯</div>
+          <div class="callout-content">
+            <strong class="callout-title">Why this matters for you</strong>
+            <p>Understanding this chain tells you exactly where to look when something breaks. Email not showing up on the board? Check each link in the chain — which handoff failed?</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: What it detects -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">How does it know it's a cold email?</h2>
+        <p>Reach reads the email body and scans for job-hunting keywords using a technique called <span class="term" data-definition="Fuzzy matching is a way of finding words that are close to, but not exactly, the target. It can handle typos and variations — so 'internship' and 'interships' both count.">fuzzy matching</span>. If at least one job-related keyword group matches — words like &ldquo;intern,&rdquo; &ldquo;recruit,&rdquo; &ldquo;apply,&rdquo; or &ldquo;hiring&rdquo; — it considers the email cold outreach.</p>
+        <p>It also ignores emails to personal addresses like Gmail or Yahoo — those are probably to friends, not recruiters.</p>
+
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">CODE</span>
+            <pre><code>
+<span class="code-keyword">export function</span> <span class="code-function">isColdOutreach</span>(body) {
+  <span class="code-comment">// One strong job-related keyword is enough signal</span>
+  <span class="code-keyword">return</span> <span class="code-function">countKeywordMatches</span>(body) >= <span class="code-number">1</span>;
+}
+            </code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">This function answers a yes/no question: is this a cold outreach email?</p>
+              <p class="tl">It counts how many distinct job-related keyword groups appear in the email body.</p>
+              <p class="tl">If at least one keyword group matches — like finding "intern" or "hiring" — return true (yes, it&apos;s cold outreach).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-accent" style="margin-top: var(--space-6)">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Key Insight: Heuristics over perfection</strong>
+            <p>Reach doesn&apos;t use AI to classify emails — it uses a hand-crafted list of keywords with fuzzy matching. This makes it fast, free, and predictable. When steering AI on classification problems, ask yourself: does this need AI, or does a simple rule work well enough?</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: Quiz -->
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check your understanding</h2>
+
+        <div class="quiz-container" id="quiz-module1">
+          <div class="quiz-question-block"
+               data-correct="option-b"
+               data-explanation-right="Exactly! The flow goes: Gmail (you) → Extension → Gmail API → Server → Database → Dashboard. Each step depends on the previous one completing successfully."
+               data-explanation-wrong="Not quite. The extension is the first thing that runs, but it needs to call the Gmail API to get the full email content — it can&apos;t write to the database directly. There&apos;s a full chain between you and the kanban card.">
+            <h3 class="quiz-question">You send an email to a recruiter at Apple. An hour later, no card appears on your kanban board. Where would you look FIRST to debug this?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The React dashboard code — maybe the card isn&apos;t rendering</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The Chrome extension — it&apos;s the first link in the chain, and if it didn&apos;t detect the send, nothing else runs</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The database — maybe the record was saved but the dashboard isn&apos;t fetching it</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The Gmail API — Apple&apos;s email domain might be blocked</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <div class="quiz-question-block"
+               data-correct="option-c"
+               data-explanation-right="Right — Reach uses keyword matching (not AI) to classify emails. It&apos;s fast, free, and consistent. If the email doesn&apos;t contain words like intern, hiring, or recruit, Reach won&apos;t track it."
+               data-explanation-wrong="Think about how Reach decides whether an email is cold outreach. Does it read the subject line? Does it use AI? Or does it scan for specific words in the body?">
+            <h3 class="quiz-question">You send a cold email to a founder saying &ldquo;Would love to grab coffee and hear about what you&apos;re building.&rdquo; Reach doesn&apos;t track it. Why?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="option-a" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The founder&apos;s email domain is on a blocklist</span>
+              </button>
+              <button class="quiz-option" data-value="option-b" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>Reach only tracks emails you manually mark for tracking</span>
+              </button>
+              <button class="quiz-option" data-value="option-c" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The email body contains no job-related keywords (intern, hiring, recruit, etc.) so the classifier returns false</span>
+              </button>
+              <button class="quiz-option" data-value="option-d" onclick="selectOption(this)">
+                <div class="quiz-option-radio"></div>
+                <span>The Gmail API couldn&apos;t find the thread</span>
+              </button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
