@@ -8,22 +8,30 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = process.env.DIGEST_FROM_EMAIL;
 const DASHBOARD_URL = process.env.DASHBOARD_URL;
 
-async function getUserStats(userId) {
+async function getUserStats(userId, frequency) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const windowDays = frequency === 'monthly' ? 30 : 7;
+  const windowStart = new Date(today);
+  windowStart.setDate(windowStart.getDate() - windowDays);
+
   const [totalContacts, followUpsDue, emailsSent, repliedCount] = await Promise.all([
+    // All-time cumulative
     prisma.outreach.count({
       where: { userId, archived: false },
     }),
+    // All-time cumulative
     prisma.outreach.count({
       where: { userId, archived: false, nextActionDate: { lte: today } },
     }),
+    // This period only
     prisma.outreach.count({
-      where: { userId, archived: false, sentDate: { not: null } },
+      where: { userId, archived: false, sentDate: { gte: windowStart } },
     }),
+    // This period only
     prisma.outreach.count({
-      where: { userId, archived: false, repliedAt: { not: null } },
+      where: { userId, archived: false, repliedAt: { gte: windowStart } },
     }),
   ]);
 
@@ -31,6 +39,7 @@ async function getUserStats(userId) {
     totalContacts,
     followUpsDue,
     emailsSent,
+    windowDays,
     sendRate: totalContacts > 0 ? emailsSent / totalContacts : 0,
     replyRate: emailsSent > 0 ? repliedCount / emailsSent : null,
   };
@@ -55,7 +64,7 @@ async function sendDigests() {
 
   for (const user of users) {
     try {
-      const stats = await getUserStats(user.id);
+      const stats = await getUserStats(user.id, user.emailDigest);
       const html = buildDigestEmail({ frequency: user.emailDigest, stats, dashboardUrl: DASHBOARD_URL });
       const text = buildDigestEmailText({ frequency: user.emailDigest, stats, dashboardUrl: DASHBOARD_URL });
       const label = user.emailDigest === 'monthly' ? 'Monthly' : 'Weekly';
