@@ -112,7 +112,7 @@ async function snovFindEmail({ domain, firstName, lastName }) {
     const res  = await fetch('https://api.snov.io/v2/email-finder', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ domain, firstName, lastName, token }),
+      body:    JSON.stringify({ domain, firstName, lastName, access_token: token }),
     });
     const data = await res.json();
     const emails = data?.emails ?? [];
@@ -124,7 +124,7 @@ async function snovFindEmail({ domain, firstName, lastName }) {
   const res  = await fetch('https://api.snov.io/v1/get-domain-emails', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ domain, token, type: 'personal', limit: 5 }),
+    body:    JSON.stringify({ domain, access_token: token, type: 'personal', limit: 5 }),
   });
   const data = await res.json();
   const emails = data?.emails ?? [];
