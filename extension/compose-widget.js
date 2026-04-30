@@ -409,6 +409,7 @@ window.ColdbaseWidget = (function () {
     .result-email {
       flex: 1; font-size: 12px; color: #1c1917;
       font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      font-weight: 600;
       word-break: break-all;
     }
     .copy-btn {
