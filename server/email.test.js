@@ -108,7 +108,7 @@ describe('POST /api/find-email', () => {
       if (url === 'https://api.snov.io/v1/oauth/access_token') {
         return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
       }
-      return { ok: true, json: async () => ({ emails: [{ email: 'patrick@stripe.com' }] }) };
+      return { ok: true, json: async () => ({ data: { emails: [{ email: 'patrick@stripe.com' }] } }) };
     };
 
     const res = await request('POST', '/api/find-email',
@@ -175,7 +175,7 @@ describe('POST /api/find-email', () => {
       if (url === 'https://api.snov.io/v1/oauth/access_token') {
         return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
       }
-      return { ok: true, json: async () => ({ emails: [{ email: 'a@b.com' }] }) };
+      return { ok: true, json: async () => ({ data: { emails: [{ email: 'a@b.com' }] } }) };
     };
 
     await request('POST', '/api/find-email',

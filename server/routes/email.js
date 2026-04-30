@@ -116,7 +116,7 @@ async function snovFindEmail({ domain, firstName, lastName }) {
     });
     const data = await res.json();
     console.log('[snov] email-finder raw response:', JSON.stringify(data));
-    const emails = data?.emails ?? [];
+    const emails = data?.data?.emails ?? [];
     if (emails.length === 0) return { ok: false, reason: 'no_candidates' };
     return { ok: true, results: emails.map(e => ({ email: e.email })) };
   }
