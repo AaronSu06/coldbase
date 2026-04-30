@@ -182,16 +182,19 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'FIND_CONTACT') {
     (async () => {
       try {
+        const payload = {
+          company:   message.company,
+          firstName: message.firstName || undefined,
+          lastName:  message.lastName  || undefined,
+          domain:    message.domain    || undefined,
+        };
+        console.log('[coldbase] FIND_CONTACT payload:', JSON.stringify(payload));
         const res  = await serverFetch('/find-email', {
           method: 'POST',
-          body: JSON.stringify({
-            company:   message.company,
-            firstName: message.firstName || undefined,
-            lastName:  message.lastName  || undefined,
-            domain:    message.domain    || undefined,
-          }),
+          body: JSON.stringify(payload),
         });
         const body = await res.json();
+        console.log('[coldbase] FIND_CONTACT response status:', res.status, 'body:', JSON.stringify(body));
         if (res.status === 429) {
           sendResponse({ ok: false, error: 'quota_exceeded', used: body.used, limit: body.limit });
         } else {
