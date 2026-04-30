@@ -408,7 +408,7 @@ window.ColdbaseWidget = (function () {
     .result-row:last-child { border-bottom: none; }
     .result-email {
       flex: 1; font-size: 12px; color: #1c1917;
-      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       word-break: break-all;
     }
     .copy-btn {
