@@ -76,28 +76,26 @@ window.ColdbaseTracking = (function () {
       bottom: '24px',
       right: '24px',
       zIndex: '2147483647',
-      background: '#1e1e2e',
-      color: '#fff',
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: '13px',
+      background: '#1c1917',
+      color: '#f6f5f1',
+      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+      fontSize: '12px',
       lineHeight: '1.4',
-      padding: '12px 16px',
+      padding: '10px 12px 10px 14px',
       borderRadius: '10px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.22)',
       display: 'flex',
       alignItems: 'center',
-      gap: '12px',
-      maxWidth: '360px',
+      gap: '10px',
+      maxWidth: '320px',
     });
     banner.innerHTML = `
-      <span style="font-size:18px">&#x26A0;&#xFE0F;</span>
-      <span><strong>Coldbase</strong>: extension was reloaded \u2014 this email was <em>not</em> tracked.<br>
-      Reload Gmail to restore tracking.</span>
+      <span style="flex:1;color:#a8a29e;font-size:12px;">Email not tracked &mdash; reload to fix.</span>
       <button id="coldbase-reload-btn" style="
-        flex-shrink:0; background:#6366f1; color:#fff; border:none;
-        border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600;
-        cursor:pointer; white-space:nowrap;">
-        Reload now
+        flex-shrink:0; background:#b85212; color:#fff; border:none;
+        border-radius:6px; padding:5px 11px; font-size:11px; font-weight:600;
+        cursor:pointer; white-space:nowrap; font-family:inherit; letter-spacing:0.01em;">
+        Reload
       </button>
     `;
     document.body.appendChild(banner);
