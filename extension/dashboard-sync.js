@@ -5,8 +5,17 @@
   const token = localStorage.getItem('coldbase_token');
   if (token) {
     chrome.runtime.sendMessage({ type: 'SYNC_COLDBASE_TOKEN', token });
+  } else {
+    chrome.runtime.sendMessage({ type: 'CLEAR_COLDBASE_TOKEN' });
   }
 })();
+
+// Background tells us to log the web out (extension token was invalidated).
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type !== 'WEBAPP_LOGOUT') return;
+  localStorage.removeItem('coldbase_token');
+  window.postMessage({ source: 'coldbase-webapp', type: 'COLDBASE_LOGOUT' }, '*');
+});
 
 // Listen for login/logout messages from the web app.
 // window.postMessage crosses the MAIN→ISOLATED world boundary reliably.

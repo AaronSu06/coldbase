@@ -255,7 +255,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true;
   }
   if (msg.type === 'CLEAR_COLDBASE_TOKEN') {
-    clearColdbaseToken().then(() => sendResponse({ ok: true }));
+    (async () => {
+      await clearColdbaseToken();
+      const tabs = await chrome.tabs.query({
+        url: ['*://coldbase.live/*', 'http://localhost:5173/*'],
+      });
+      for (const tab of tabs) {
+        chrome.tabs.sendMessage(tab.id, { type: 'WEBAPP_LOGOUT' }).catch(() => {});
+      }
+      sendResponse({ ok: true });
+    })();
     return true;
   }
 });

@@ -79,7 +79,7 @@ export async function uploadResume(file) {
     headers: { Authorization: `Bearer ${token}` },
     body: form,
   });
-  if (res.status === 401) { localStorage.removeItem(TOKEN_KEY); window.location.href = '/login'; throw new Error('Session expired'); }
+  if (res.status === 401) { localStorage.removeItem(TOKEN_KEY); window.postMessage({ source: 'coldbase-webapp', type: 'COLDBASE_LOGOUT' }, '*'); window.location.href = '/login'; throw new Error('Session expired'); }
   if (!res.ok) { const b = await res.text().catch(() => ''); throw new Error(`Upload failed (${res.status}): ${b || res.statusText}`); }
   return res.json();
 }
