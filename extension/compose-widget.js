@@ -1342,6 +1342,7 @@ window.ColdbaseWidget = (function () {
   let _composePanelCurrentEditor  = null;
   let _composePanelLoadOverview   = null;
   let _composeAuthGateHost        = null;
+  let _openComposePanelInFlight   = false;
 
   function showComposeAuthGate(editorEl) {
     // If auth gate already open, toggle it off
@@ -1437,6 +1438,9 @@ window.ColdbaseWidget = (function () {
   }
 
   async function openComposePanel(editorEl) {
+    if (_openComposePanelInFlight) return;
+    _openComposePanelInFlight = true;
+    try {
     // Auth gate check — token presence
     const result = await new Promise(resolve =>
       chrome.storage.local.get('coldbase_jwt', resolve)
@@ -1484,6 +1488,9 @@ window.ColdbaseWidget = (function () {
     _composePanelCurrentEditor = editorEl;
     _composePanelSetEditor(editorEl);
     _composePanelHost.style.display = '';
+    } finally {
+      _openComposePanelInFlight = false;
+    }
   }
 
   function syncTrackMode() {
