@@ -108,7 +108,7 @@ describe('POST /api/find-email', () => {
       if (url === 'https://api.snov.io/v1/oauth/access_token') {
         return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
       }
-      return { ok: true, json: async () => ({ data: { emails: [{ email: 'patrick@stripe.com' }] } }) };
+      return { ok: true, json: async () => ({ emails: [{ email: 'patrick@stripe.com' }] }) };
     };
 
     const res = await request('POST', '/api/find-email',
@@ -175,7 +175,7 @@ describe('POST /api/find-email', () => {
       if (url === 'https://api.snov.io/v1/oauth/access_token') {
         return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
       }
-      return { ok: true, json: async () => ({ data: { emails: [{ email: 'a@b.com' }] } }) };
+      return { ok: true, json: async () => ({ emails: [{ email: 'a@b.com' }] }) };
     };
 
     await request('POST', '/api/find-email',
@@ -184,7 +184,7 @@ describe('POST /api/find-email', () => {
     );
 
     const allUrls = mockFetch.mock.calls.map(c => c.arguments[0]);
-    assert.ok(allUrls.some(u => u.includes('email-finder')), `Expected email-finder URL, got: ${allUrls}`);
+    assert.ok(allUrls.some(u => u.includes('get-emails-from-names')), `Expected get-emails-from-names URL, got: ${allUrls}`);
     assert.ok(!allUrls.some(u => u.includes('get-domain-emails')), 'Should not call domain-search when name is provided');
   });
 
@@ -203,7 +203,7 @@ describe('POST /api/find-email', () => {
 
     const allUrls = mockFetch.mock.calls.map(c => c.arguments[0]);
     assert.ok(allUrls.some(u => u.includes('get-domain-emails')), `Expected get-domain-emails URL, got: ${allUrls}`);
-    assert.ok(!allUrls.some(u => u.includes('email-finder')), 'Should not call email-finder when no name provided');
+    assert.ok(!allUrls.some(u => u.includes('get-emails-from-names')), 'Should not call email-finder when no name provided');
   });
 });
 

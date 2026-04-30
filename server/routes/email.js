@@ -109,14 +109,14 @@ async function snovFindEmail({ domain, firstName, lastName }) {
 
   if (hasName) {
     // Email finder mode: name + domain → best matching email(s) for that person
-    const res  = await fetch('https://api.snov.io/v2/email-finder', {
+    const res  = await fetch('https://api.snov.io/v1/get-emails-from-names', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ domain, firstName, lastName, access_token: token }),
     });
     const data = await res.json();
     console.log('[snov] email-finder raw response:', JSON.stringify(data));
-    const emails = data?.data?.emails ?? [];
+    const emails = data?.emails ?? [];
     if (emails.length === 0) return { ok: false, reason: 'no_candidates' };
     return { ok: true, results: emails.map(e => ({ email: e.email })) };
   }
