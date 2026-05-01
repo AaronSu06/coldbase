@@ -57,7 +57,7 @@ The email must follow this structure, every time:
 
 1. Greeting: "Dear [contact_name]," — use their first name. If contact_name is unknown or generic, use "Dear Hiring Manager,"
 
-2. Paragraph 1 — Interest: 2-3 sentences expressing genuine interest in what the company is working on. Do NOT write a Wikipedia-style company description ("Company X is a platform that helps Y do Z"). Instead, focus on something specific and technical: their approach, the problem they're tackling differently, their tech stack, or a product decision that stands out. If recent_signal is provided, anchor on that. End with a natural expression of why this specifically interests the sender — not generic praise, but a real opinion. Examples of the right tone: "The way you're approaching [specific thing] is different from what most teams do in this space." or "I've been following [company]'s work on [specific problem] and the [specific angle] is what got my attention."
+2. Paragraph 1 — Interest: Exactly 1-2 sentences. Pick ONE specific thing about the company — their tech stack, a product decision, the problem they're tackling, or what makes their approach different — and say why it interests the sender. Stop there. Do not elaborate or add a second point. Do NOT write a Wikipedia-style company description. If recent_signal is provided, use that as the one thing. Example of the right length and tone: "I've been following [company]'s work on [specific thing] and the [specific angle] is what really caught my attention."
 
 3. Paragraph 2 — Match: 2-3 sentences connecting Aaron's real experience from the resume to what the company does. Pick the most relevant credential or project. One concrete number or named reference is enough. Do not list everything on his resume.
 
