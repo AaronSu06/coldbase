@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const USER_ID = 1; // admin account
+const USER_ID = 17; // coldbaseapp@gmail.com
 
 const now = new Date();
 const daysAgo = (d) => new Date(now - d * 24 * 60 * 60 * 1000);
@@ -252,13 +252,19 @@ const newOutreaches = [
 
 for (const update of existingUpdates) {
   const { id, ...data } = update;
-  const existing = await prisma.outreach.findUnique({ where: { id } });
-  if (existing) {
+  const existingById = await prisma.outreach.findUnique({ where: { id } });
+  if (existingById) {
     await prisma.outreach.update({ where: { id }, data });
     console.log(`Updated: id=${id} (${data.company || data.contactName})`);
   } else {
-    await prisma.outreach.create({ data: { ...data, userId: USER_ID } });
-    console.log(`Created: ${data.company || data.contactName}`);
+    const existingByThread = await prisma.outreach.findUnique({ where: { threadId: data.threadId } });
+    if (existingByThread) {
+      await prisma.outreach.update({ where: { threadId: data.threadId }, data });
+      console.log(`Updated by threadId: ${data.company || data.contactName}`);
+    } else {
+      await prisma.outreach.create({ data: { ...data, userId: USER_ID } });
+      console.log(`Created: ${data.company || data.contactName}`);
+    }
   }
 }
 

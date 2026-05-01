@@ -748,12 +748,23 @@ window.ColdbaseWidget = (function () {
               <label>Contact Name</label>
               <input type="text" id="cp-draft-contact" placeholder="e.g. Hiring Team" />
             </div>
+            <div class="form-group" id="cp-draft-role-group">
+              <label>Contact role / title</label>
+              <input type="text" id="cp-draft-role" placeholder="e.g. CEO, Engineering Manager, University Recruiter" />
+            </div>
             <div class="form-group">
-              <label>Notes (optional)</label>
+              <label id="cp-draft-notes-label">Notes (optional)</label>
               <input type="text" id="cp-draft-notes" placeholder="Any extra context\u2026" />
             </div>
             <p class="autofill-note" id="cp-autofill-note"></p>
             <button class="action-btn" id="cp-generate-btn">Generate Draft \u2728</button>
+            <div id="cp-subject-row" style="display:none; margin-top:10px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                <label style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#78716c; margin:0;">Generated Subject</label>
+                <button class="copy-btn" id="cp-copy-subject">Copy</button>
+              </div>
+              <input type="text" id="cp-subject-output" readonly style="width:100%; background:#f6f5f1; color:#1c1917;" />
+            </div>
             <textarea class="draft-textarea" id="cp-draft-output" placeholder="Generated draft will appear here\u2026"></textarea>
             <div class="btn-row">
               <button class="action-btn secondary" id="cp-copy-draft">Copy</button>
@@ -1172,11 +1183,31 @@ window.ColdbaseWidget = (function () {
         : '';
     }
 
+    // Update notes label and role field visibility based on draft type
+    function updateColdFields() {
+      const draftType = shadow.getElementById('cp-draft-type').value;
+      const isCold = draftType === 'cold';
+      const notesLabel = shadow.getElementById('cp-draft-notes-label');
+      const notesInput = shadow.getElementById('cp-draft-notes');
+      const roleGroup  = shadow.getElementById('cp-draft-role-group');
+      roleGroup.style.display = isCold ? '' : 'none';
+      if (isCold) {
+        notesLabel.textContent = 'Recent signal (optional but important)';
+        notesInput.placeholder = 'Paste something verifiable they did \u2014 a post, tweet, funding round, talk, paper. Leave blank to skip.';
+      } else {
+        notesLabel.textContent = 'Notes (optional)';
+        notesInput.placeholder = 'Any extra context\u2026';
+      }
+    }
+    shadow.getElementById('cp-draft-type').addEventListener('change', updateColdFields);
+    updateColdFields();
+
     // Generate button
     shadow.getElementById('cp-generate-btn').addEventListener('click', () => {
       const draftType   = shadow.getElementById('cp-draft-type').value;
       const company     = shadow.getElementById('cp-draft-company').value.trim();
       const contactName = shadow.getElementById('cp-draft-contact').value.trim();
+      const contactRole = shadow.getElementById('cp-draft-role').value.trim();
       const notes       = shadow.getElementById('cp-draft-notes').value.trim();
       const genBtn      = shadow.getElementById('cp-generate-btn');
 
@@ -1193,22 +1224,46 @@ window.ColdbaseWidget = (function () {
       genBtn.textContent = 'Generating\u2026';
 
       chrome.runtime.sendMessage(
-        { type: 'DRAFT_EMAIL', draftType, company, contactName, subject, bodySnippet, notes },
+        { type: 'DRAFT_EMAIL', draftType, company, contactName, contactRole, subject, bodySnippet, notes },
         (res) => {
           genBtn.disabled = false;
           genBtn.textContent = 'Generate Draft \u2728';
-          const textarea = shadow.getElementById('cp-draft-output');
+          const textarea    = shadow.getElementById('cp-draft-output');
+          const subjectRow  = shadow.getElementById('cp-subject-row');
+          const subjectOut  = shadow.getElementById('cp-subject-output');
           if (chrome.runtime.lastError || !res?.ok) {
+            subjectRow.style.display = 'none';
             textarea.value = res?.error || 'Error \u2014 check that the Coldbase server is running.';
             return;
           }
-          textarea.value = res.text;
-          chrome.storage.session.set({ coldbase_draft_state: { text: res.text } });
+          if (res.subject !== undefined) {
+            // Cold email response: separate subject + body
+            subjectOut.value = res.subject || '';
+            subjectRow.style.display = res.subject ? '' : 'none';
+            textarea.value = res.body || '';
+            chrome.storage.session.set({ coldbase_draft_state: { subject: res.subject, text: res.body } });
+          } else {
+            // Bump / reply response: body only
+            subjectRow.style.display = 'none';
+            textarea.value = res.text;
+            chrome.storage.session.set({ coldbase_draft_state: { text: res.text } });
+          }
         }
       );
     });
 
-    // Copy button
+    // Copy subject button
+    shadow.getElementById('cp-copy-subject').addEventListener('click', () => {
+      const text = shadow.getElementById('cp-subject-output').value;
+      if (!text) return;
+      const btn = shadow.getElementById('cp-copy-subject');
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      });
+    });
+
+    // Copy body button
     shadow.getElementById('cp-copy-draft').addEventListener('click', () => {
       const text = shadow.getElementById('cp-draft-output').value;
       if (!text) return;
@@ -1231,8 +1286,12 @@ window.ColdbaseWidget = (function () {
 
     // Restore draft from session if present
     chrome.storage.session.get('coldbase_draft_state', function(data) {
-      if (data.coldbase_draft_state?.text) {
-        shadow.getElementById('cp-draft-output').value = data.coldbase_draft_state.text;
+      const state = data.coldbase_draft_state;
+      if (!state) return;
+      if (state.text) shadow.getElementById('cp-draft-output').value = state.text;
+      if (state.subject) {
+        shadow.getElementById('cp-subject-output').value = state.subject;
+        shadow.getElementById('cp-subject-row').style.display = '';
       }
     });
 
