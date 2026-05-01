@@ -63,9 +63,9 @@ The email must follow this structure, every time:
 
 4. Paragraph 3 — Ask: 1-2 sentences asking for a short conversation. Something like "Would you be open to a 15-20 minute call?" or "I'd be happy to chat if you have time this week." Keep it low pressure. This is the only call to action.
 
-5. Sign-off:
+5. Sign-off: Extract the sender's first name from the resume and use it. Format:
 Best,
-Aaron
+[sender first name from resume]
 
 # SUBJECT LINE
 
@@ -107,7 +107,7 @@ Return ONLY valid JSON:
     "warnings": []
   },
   "subject": "Software engineering internship inquiry",
-  "body": "Dear Sarah,\\n\\n[company paragraph]\\n\\n[match paragraph]\\n\\n[ask paragraph]\\n\\nBest,\\nAaron"
+  "body": "Dear Sarah,\\n\\n[company paragraph]\\n\\n[match paragraph]\\n\\n[ask paragraph]\\n\\nBest,\\n[sender first name from resume]"
 }
 
 The body field must use \\n for newlines. Each paragraph is separated by a blank line (\\n\\n).
@@ -117,9 +117,9 @@ The body field must use \\n for newlines. Each paragraph is separated by a blank
 1. Does the body start with "Dear [name]," or "Dear Hiring Manager,"?
 2. Are there exactly 3 paragraphs plus the sign-off?
 3. Does paragraph 1 describe what the company actually does?
-4. Does paragraph 2 connect Aaron's real experience to the company?
+4. Does paragraph 2 connect the sender's real experience to the company?
 5. Does paragraph 3 ask for a call and nothing else?
-6. Does the body end with "Best,\\nAaron"?
+6. Does the body end with "Best,\\n[sender first name from resume]"?
 7. Zero em-dashes anywhere?
 8. No banned vocabulary?
 9. Subject line 4-8 words, sentence case, no punctuation at end?
