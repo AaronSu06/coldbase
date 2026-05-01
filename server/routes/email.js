@@ -57,7 +57,7 @@ The email must follow this structure, every time:
 
 1. Greeting: "Dear [contact_name]," — use their first name. If contact_name is unknown or generic, use "Dear Hiring Manager,"
 
-2. Paragraph 1 — Company: 2-3 sentences describing what the company does or is building. Draw from your knowledge of contact_company. If recent_signal is provided, weave it in naturally. Be specific. Do not write generic praise.
+2. Paragraph 1 — Interest: 2-3 sentences expressing genuine interest in what the company is working on. Do NOT write a Wikipedia-style company description ("Company X is a platform that helps Y do Z"). Instead, focus on something specific and technical: their approach, the problem they're tackling differently, their tech stack, or a product decision that stands out. If recent_signal is provided, anchor on that. End with a natural expression of why this specifically interests the sender — not generic praise, but a real opinion. Examples of the right tone: "The way you're approaching [specific thing] is different from what most teams do in this space." or "I've been following [company]'s work on [specific problem] and the [specific angle] is what got my attention."
 
 3. Paragraph 2 — Match: 2-3 sentences connecting Aaron's real experience from the resume to what the company does. Pick the most relevant credential or project. One concrete number or named reference is enough. Do not list everything on his resume.
 
@@ -116,7 +116,7 @@ The body field must use \\n for newlines. Each paragraph is separated by a blank
 
 1. Does the body start with "Dear [name]," or "Dear Hiring Manager,"?
 2. Are there exactly 3 paragraphs plus the sign-off?
-3. Does paragraph 1 describe what the company actually does?
+3. Does paragraph 1 focus on something specific and technical about the company, NOT a generic description of what they do?
 4. Does paragraph 2 connect the sender's real experience to the company?
 5. Does paragraph 3 ask for a call and nothing else?
 6. Does the body end with "Best,\\n[sender first name from resume]"?
