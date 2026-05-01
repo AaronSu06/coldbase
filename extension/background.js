@@ -79,6 +79,17 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
 chrome.action.onClicked.addListener((tab) => {
   if (!tab.id) return;
+
+  // Non-Gmail pages: inject the stats panel (panel.js is idempotent — toggles if already present)
+  if (!tab.url?.startsWith('https://mail.google.com')) {
+    chrome.scripting.executeScript(
+      { target: { tabId: tab.id }, files: ['panel.js'] },
+      () => { void chrome.runtime.lastError; }
+    );
+    return;
+  }
+
+  // Gmail: compose widget flow
   chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => {
     const err = chrome.runtime.lastError;
     // "Could not establish connection" = no content script yet — inject and retry
