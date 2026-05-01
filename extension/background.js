@@ -232,6 +232,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             draftType:   message.draftType,
             company:     message.company,
             contactName: message.contactName,
+            contactRole: message.contactRole,
             notes:       message.notes,
             subject:     message.subject,
             bodySnippet: message.bodySnippet,
@@ -249,7 +250,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 // ─── Dashboard token sync ──────────────────────────────────────────────────────
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'SYNC_COLDBASE_TOKEN' && msg.token) {
     setColdbaseToken(msg.token).then(() => sendResponse({ ok: true }));
     return true;
@@ -261,6 +262,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         url: ['*://coldbase.live/*', 'http://localhost:5173/*'],
       });
       for (const tab of tabs) {
+        if (tab.id === sender.tab?.id) continue;
         chrome.tabs.sendMessage(tab.id, { type: 'WEBAPP_LOGOUT' }).catch(() => {});
       }
       sendResponse({ ok: true });
