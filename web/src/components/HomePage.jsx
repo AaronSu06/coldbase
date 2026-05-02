@@ -188,7 +188,7 @@ function DeveloperNote() {
         A note from the developer
       </p>
       <p className="text-[12px] text-chrome-subtle leading-relaxed">
-        It actually started as a small local project I built for myself. Gmail was a mess — I kept losing track of who I'd reached out to, missing the right moment to follow up, and had no single place to manage everything. After using it for a while, I thought: why not see if it could be useful to other students too?
+        Coldbase started as a small local project I built for myself. Initially, I kept losing track of who I'd reached out to, missing the right moment to follow up, and had no single place to manage everything. After building and using Coldbase for a while, I thought: why not see if it could be useful to other students too?
       </p>
     </ActionCard>
   );
