@@ -1568,9 +1568,38 @@ window.ColdbaseWidget = (function () {
 
   // ─── Public API ──────────────────────────────────────────────────────────────
 
+  // Transition panel UI when auth state changes (login/logout in another tab).
+  // Called from content.js storage listener and from the visibilitychange handler.
+  function syncAuthState(hasJwt) {
+    const panelOpen = _composePanelHost && _composePanelHost.style.display !== 'none';
+    const gateOpen  = _composeAuthGateHost && _composeAuthGateHost.style.display !== 'none';
+    if (!panelOpen && !gateOpen) return; // nothing visible, nothing to do
+
+    if (hasJwt && gateOpen) {
+      // Logged in elsewhere — dismiss auth gate and open the full panel
+      _composeAuthGateHost.style.display = 'none';
+      openComposePanel(_composePanelCurrentEditor || null);
+    } else if (!hasJwt && panelOpen) {
+      // Logged out elsewhere — close panel and show auth gate
+      _composePanelHost.style.display = 'none';
+      showComposeAuthGate(_composePanelCurrentEditor || null);
+    }
+  }
+
   function init(state) {
     _state = state;
     injectStyles();
+
+    // Re-validate auth whenever this tab becomes visible — catches login/logout
+    // that happened on another tab while this one was in the background.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      const panelOpen = _composePanelHost && _composePanelHost.style.display !== 'none';
+      const gateOpen  = _composeAuthGateHost && _composeAuthGateHost.style.display !== 'none';
+      if (!panelOpen && !gateOpen) return;
+      chrome.storage.local.get('coldbase_jwt', (r) => syncAuthState(!!r.coldbase_jwt));
+    });
+
     log.debug('ColdbaseWidget initialized.');
   }
 
@@ -1585,6 +1614,7 @@ window.ColdbaseWidget = (function () {
     update: updateWidget,
     openComposePanel,
     syncTrackMode,
+    syncAuthState,
     refreshOverview,
     clearEditorState,
     getComposeContainer,

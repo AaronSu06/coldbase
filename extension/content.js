@@ -91,6 +91,10 @@
         if ('coldbase_scan_complete' in changes && changes.coldbase_scan_complete.newValue) {
           window.ColdbaseWidget.refreshOverview();
         }
+        // Login/logout on another tab — update the panel immediately without reload.
+        if ('coldbase_jwt' in changes) {
+          window.ColdbaseWidget.syncAuthState(!!changes.coldbase_jwt.newValue);
+        }
       });
     } catch (e) { log.error('initStorageListeners failed:', e); }
   }
