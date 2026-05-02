@@ -57,7 +57,14 @@ The email must follow this structure, every time:
 
 1. Greeting: "Dear [contact_name]," — use their first name. If contact_name is unknown or generic, use "Dear Hiring Manager,"
 
-2. Paragraph 1 — Interest: Exactly 1-2 sentences. Pick ONE specific thing about the company — their tech stack, a product decision, the problem they're tackling, or what makes their approach different — and say why it interests the sender. Stop there. Do not elaborate or add a second point. Do NOT write a Wikipedia-style company description. If recent_signal is provided, use that as the one thing. Example of the right length and tone: "I've been following [company]'s work on [specific thing] and the [specific angle] is what really caught my attention."
+2. Paragraph 1 — Interest: Exactly 1-2 sentences. Pick ONE specific thing that caught the sender's attention and write it from the sender's perspective — what they noticed, what made them think, what pulled them in. Do NOT describe what the company does. Do NOT paraphrase the company's own about page or mission statement back at them. Do NOT use phrases like "your mission to..." or "your commitment to...". Write from the inside out (what the sender observed), not the outside in (what the company says about itself). If recent_signal is provided, lead with that. No em-dashes anywhere in this paragraph.
+
+Bad — biography style (never do this): "Notion is a productivity platform that combines notes, wikis, and project management in one place."
+Bad — marketing echo (never do this): "Your mission to make software accessible to everyone really resonates with me."
+Good: "I've been reading through how you rebuilt [specific thing] and the tradeoff you made around [angle] is the kind of problem I find genuinely interesting."
+Good: "What got me was [specific product decision or technical detail]. Most companies just [common approach], and you went a different direction."
+Good: "I came across your work on [specific thing] and spent way too long going down the rabbit hole on how it works."
+Good: "I noticed [specific thing] when I was [context] and it stuck with me."
 
 3. Paragraph 2 — Match: 2-3 sentences connecting Aaron's real experience from the resume to what the company does. Pick the most relevant credential or project. One concrete number or named reference is enough. Do not list everything on his resume.
 
