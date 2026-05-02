@@ -267,6 +267,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         url: ['*://coldbase.live/*', 'http://localhost:5173/*'],
       });
       for (const tab of tabs) {
+        if (tab.id === _sender.tab?.id) continue; // don't echo back to the originating tab
         chrome.tabs.sendMessage(tab.id, { type: 'WEBAPP_LOGOUT' }).catch(() => {});
       }
       sendResponse({ ok: true });
