@@ -77,33 +77,37 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 });
 
-chrome.action.onClicked.addListener((tab) => {
+const COMPOSE_SCRIPTS = ['logger.js', 'email-detector.js', 'compose-widget.js', 'tracking.js', 'content.js'];
+
+chrome.action.onClicked.addListener(async (tab) => {
   if (!tab.id) return;
 
-  // Non-Gmail pages: inject the stats panel (panel.js is idempotent — toggles if already present)
-  if (!tab.url?.startsWith('https://mail.google.com')) {
-    chrome.scripting.executeScript(
-      { target: { tabId: tab.id }, files: ['panel.js'] },
-      () => { void chrome.runtime.lastError; }
-    );
+  // On dashboard pages only dashboard-sync.js runs — the OPEN_PANEL message is
+  // delivered (no connection error) but silently ignored, so we must inject the
+  // compose scripts first before sending OPEN_PANEL.
+  const isDashboard = /coldbase\.live|localhost:5173/.test(tab.url || '');
+  if (isDashboard) {
+    const [check] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => typeof window.ColdbaseWidget !== 'undefined',
+    }).catch(() => [{ result: false }]);
+    if (!check?.result) {
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: COMPOSE_SCRIPTS })
+        .catch(() => {});
+    }
+    chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => { void chrome.runtime.lastError; });
     return;
   }
 
-  // Gmail: compose widget flow
   chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => {
     const err = chrome.runtime.lastError;
     // "Could not establish connection" = no content script yet — inject and retry
     if (!err?.message?.includes('Could not establish connection')) return;
     chrome.scripting.executeScript(
-      {
-        target: { tabId: tab.id },
-        files: ['logger.js', 'email-detector.js', 'compose-widget.js', 'tracking.js', 'content.js'],
-      },
+      { target: { tabId: tab.id }, files: COMPOSE_SCRIPTS },
       () => {
         if (chrome.runtime.lastError) return; // restricted page (chrome://, etc.)
-        chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => {
-          void chrome.runtime.lastError;
-        });
+        chrome.tabs.sendMessage(tab.id, { type: 'OPEN_PANEL' }, () => { void chrome.runtime.lastError; });
       }
     );
   });
@@ -243,7 +247,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             draftType:   message.draftType,
             company:     message.company,
             contactName: message.contactName,
-            contactRole: message.contactRole,
             notes:       message.notes,
             subject:     message.subject,
             bodySnippet: message.bodySnippet,
@@ -261,7 +264,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 // ─── Dashboard token sync ──────────────────────────────────────────────────────
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'SYNC_COLDBASE_TOKEN' && msg.token) {
     setColdbaseToken(msg.token).then(() => sendResponse({ ok: true }));
     return true;
@@ -273,7 +276,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         url: ['*://coldbase.live/*', 'http://localhost:5173/*'],
       });
       for (const tab of tabs) {
-        if (tab.id === sender.tab?.id) continue;
         chrome.tabs.sendMessage(tab.id, { type: 'WEBAPP_LOGOUT' }).catch(() => {});
       }
       sendResponse({ ok: true });

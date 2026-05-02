@@ -1401,9 +1401,8 @@ window.ColdbaseWidget = (function () {
   let _composePanelSyncTrackMode  = null;
   let _composePanelCurrentEditor  = null;
   let _composePanelLoadOverview   = null;
-  let _composeAuthGateHost            = null;
-  let _composeAuthGateStorageListener = null;
-  let _openComposePanelInFlight       = false;
+  let _composeAuthGateHost        = null;
+  let _openComposePanelInFlight   = false;
 
   function showComposeAuthGate(editorEl) {
     // If auth gate already open, toggle it off
@@ -1476,32 +1475,24 @@ window.ColdbaseWidget = (function () {
         if (res?.config?.dashboardUrl) _dashUrl = res.config.dashboardUrl;
       });
 
+      // Auto-unlock when JWT is set
+      function onStorageChanged(changes, area) {
+        if (area !== 'local' || !changes.coldbase_jwt?.newValue) return;
+        chrome.storage.onChanged.removeListener(onStorageChanged);
+        _composeAuthGateHost.remove();
+        _composeAuthGateHost = null;
+        openComposePanel(editorEl);
+      }
+      chrome.storage.onChanged.addListener(onStorageChanged);
+
       shadow.querySelector('.close-btn').addEventListener('click', () => {
-        if (_composeAuthGateStorageListener) {
-          chrome.storage.onChanged.removeListener(_composeAuthGateStorageListener);
-          _composeAuthGateStorageListener = null;
-        }
+        chrome.storage.onChanged.removeListener(onStorageChanged);
         host.style.display = 'none';
       });
 
       document.documentElement.appendChild(host);
       _composeAuthGateHost = host;
     }
-
-    // Re-register the auto-unlock listener every time the gate is shown so it
-    // works even after the user closed and re-opened the gate without logging in.
-    if (_composeAuthGateStorageListener) {
-      chrome.storage.onChanged.removeListener(_composeAuthGateStorageListener);
-    }
-    _composeAuthGateStorageListener = (changes, area) => {
-      if (area !== 'local' || !changes.coldbase_jwt?.newValue) return;
-      chrome.storage.onChanged.removeListener(_composeAuthGateStorageListener);
-      _composeAuthGateStorageListener = null;
-      _composeAuthGateHost.remove();
-      _composeAuthGateHost = null;
-      openComposePanel(editorEl);
-    };
-    chrome.storage.onChanged.addListener(_composeAuthGateStorageListener);
 
     _composeAuthGateHost.style.display = '';
   }
