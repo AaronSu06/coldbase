@@ -2,7 +2,7 @@
 // Reply detection logic, parsing helpers, and outreach tracking.
 
 import { logger } from './logger-esm.js';
-import { getAuthToken } from './auth.js';
+import { getAuthToken, getAuthTokenForEmail } from './auth.js';
 import { extractEmailAddress } from './text-utils.js';
 import { apiFetch, apiFetchRetry, serverFetch, postOutreach, postTrackingPixel, fetchOutreach } from './api-client.js';
 import { fetchClearbitCompany, extractFirstName, isGenericDomain } from './classifier.js';
@@ -122,9 +122,13 @@ export async function trackLatestSent(interactive = false, pendingScan = null) {
 async function _trackLatestSent(interactive = false, pendingScan = null) {
   log.info('trackLatestSent() called — acquiring auth token...');
 
+  // Resolve the Reach account email first so we can request a token for that
+  // specific Google account, even if it isn't the Chrome profile's primary account.
+  const reachEmail = await getColdbaseEmail();
+
   let token;
   try {
-    token = await getAuthToken(interactive);
+    token = await getAuthTokenForEmail(reachEmail, interactive);
     log.info('Auth token acquired.');
   } catch (e) {
     log.error('Could not acquire auth token:', e.message);
@@ -132,8 +136,9 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
   }
 
   // ─── Account-match guard ──────────────────────────────────────────────────
-  // Only track emails sent from the account that matches the logged-in Reach user.
-  const reachEmail = await getColdbaseEmail();
+  // Verify the token is actually for the right account. getAuthTokenForEmail
+  // already targets reachEmail, but it falls back to the default account if no
+  // matching Chrome account is found, so we still need to catch that case.
   if (reachEmail) {
     let gmailEmail = null;
     try {
@@ -142,8 +147,7 @@ async function _trackLatestSent(interactive = false, pendingScan = null) {
       log.warn('Could not verify Gmail account identity — proceeding anyway:', e.message);
     }
     if (gmailEmail && gmailEmail !== reachEmail) {
-      log.warn(`Account mismatch: OAuth is ${gmailEmail}, Reach account is ${reachEmail} — skipping track.`);
-      // Notify the active Gmail tab so the user sees a toast.
+      log.warn(`Account mismatch: token is for ${gmailEmail}, expected ${reachEmail} — skipping track.`);
       chrome.tabs.query({ url: 'https://mail.google.com/*' }, (tabs) => {
         const tab = tabs[0];
         if (tab?.id) {
@@ -356,9 +360,17 @@ export async function trackFromPendingScan(pendingScan) {
 
 // ─── Check threads for replies ─────────────────────────────────────────────────
 
-export async function checkReplies(token) {
-  // Account-match guard: skip background reply check if OAuth account ≠ Reach account.
+export async function checkReplies() {
   const reachEmail = await getColdbaseEmail();
+  let token;
+  try {
+    token = await getAuthTokenForEmail(reachEmail, false);
+  } catch (e) {
+    log.error('Auth failed for reply check:', e.message);
+    return;
+  }
+
+  // Verify the token resolves to the right account (guard against fallback case).
   if (reachEmail) {
     let gmailEmail = null;
     try {
@@ -367,7 +379,7 @@ export async function checkReplies(token) {
       log.warn('checkReplies: could not verify Gmail account identity — proceeding:', e.message);
     }
     if (gmailEmail && gmailEmail !== reachEmail) {
-      log.warn(`checkReplies: OAuth is ${gmailEmail}, Reach account is ${reachEmail} — skipping.`);
+      log.warn(`checkReplies: token is for ${gmailEmail}, expected ${reachEmail} — skipping.`);
       return;
     }
   }

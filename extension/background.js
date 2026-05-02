@@ -1,6 +1,5 @@
 import { countKeywordMatches } from './classifier.js';
 import { SERVER_URL, DASH_URL } from './config.js';
-import { getAuthToken } from './auth.js';
 import { serverFetch, fetchOutreach } from './api-client.js';
 import { checkReplies, trackLatestSent, trackFromPendingScan } from './reply-checker.js';
 import { getColdbaseToken, setColdbaseToken, clearColdbaseToken } from './coldbase-auth.js';
@@ -66,14 +65,7 @@ chrome.runtime.onStartup.addListener(() => {
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'coldbase-reply-check') {
     log.info('Alarm fired — checking for replies.');
-    let token;
-    try {
-      token = await getAuthToken(false);
-    } catch (e) {
-      log.error('Auth failed for reply check:', e.message);
-      return;
-    }
-    await checkReplies(token);
+    await checkReplies();
   }
 });
 
@@ -153,8 +145,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message.type === 'RECHECK_REPLIES') {
     log.info('RECHECK_REPLIES received — running reply check now.');
-    getAuthToken(false)
-      .then(token => checkReplies(token))
+    checkReplies()
       .then(() => sendResponse({ ok: true }))
       .catch(e => {
         log.error('RECHECK_REPLIES failed:', e.message);
