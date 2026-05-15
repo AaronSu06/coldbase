@@ -6,6 +6,24 @@ import AuthShell, { GoogleIcon } from './AuthShell';
 import EyeIcon from './icons/EyeIcon';
 import EyeSlashIcon from './icons/EyeSlashIcon';
 
+function ChromeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="9" cy="9" r="3.6" fill="#4285F4"/>
+      <path d="M9 5.4h7.2A9 9 0 1 0 5.4 14.22L9 5.4z" fill="#EA4335"/>
+      <path d="M9 5.4h7.2A9 9 0 1 0 5.4 14.22L9 5.4z" fill="url(#cg1)"/>
+      <path d="M5.4 14.22A9 9 0 0 0 16.2 9H9l-3.6 5.22z" fill="#FBBC05"/>
+      <path d="M9 12.6a3.6 3.6 0 0 0 3.117-5.4H5.883A3.6 3.6 0 0 0 9 12.6z" fill="#4285F4"/>
+      <defs>
+        <linearGradient id="cg1" x1="9" y1="5.4" x2="16.2" y2="9" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#EA4335"/>
+          <stop offset="1" stopColor="#FBBC05" stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
 export default function AuthPage({ onLogin }) {
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'signin');
@@ -194,6 +212,25 @@ export default function AuthPage({ onLogin }) {
           </>
         )}
       </p>
+
+      {/* Chrome Extension CTA */}
+      <div className="mt-6 pt-5 border-t border-chrome-border">
+        <p className="text-[12px] font-semibold font-sans uppercase tracking-[0.08em] text-chrome-muted mb-3">
+          Get the extension
+        </p>
+        <a
+          href="https://chromewebstore.google.com/detail/coldbase/eighoglbnlendebcekihijhfogifeijp"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-chrome-surface border border-chrome-border rounded-xl text-[14px] font-medium text-chrome-text transition-colors hover:bg-chrome-hover"
+        >
+          <ChromeIcon />
+          Add to Chrome, it's free
+        </a>
+        <p className="mt-2 text-[12px] text-chrome-subtle font-sans">
+          Required to track outreach from Gmail
+        </p>
+      </div>
     </AuthShell>
   );
 }
