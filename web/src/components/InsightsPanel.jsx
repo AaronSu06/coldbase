@@ -348,7 +348,7 @@ export default function InsightsPanel({ dateFrom, dateTo, data, loading, error, 
     : undefined;
 
   return (
-    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6">
       {/* Top bar: stats (left) + date picker (right) */}
       <div className="flex items-start justify-between gap-4 mb-4 sm:mb-6">
         <div>
@@ -416,6 +416,37 @@ export default function InsightsPanel({ dateFrom, dateTo, data, loading, error, 
           />
         ))}
       </div>
+
+      {/* Unlock progress — only shown while any insight is still locked */}
+      {(data.bestTime?.insufficient || data.responseTime?.insufficient || data.replyTrend?.insufficient) && (
+        <div className="mt-5 pt-4 border-t border-chrome-border">
+          <p className="text-[10px] font-semibold font-sans uppercase tracking-[0.1em] text-chrome-muted mb-3">
+            Unlock insights
+          </p>
+          <div className="space-y-3">
+            {[
+              { label: 'Best Time to Send',  current: data.bestTime?.sent ?? 0,          needed: 20, done: !data.bestTime?.insufficient },
+              { label: 'Avg Response Time',  current: data.responseTime?.replied ?? 0,    needed: 10, done: !data.responseTime?.insufficient },
+              { label: 'Reply Rate Trend',   current: data.replyTrend?.sent ?? 0,         needed: 10, done: !data.replyTrend?.insufficient },
+            ].map(({ label, current, needed, done }) => (
+              <div key={label}>
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-[11px] text-chrome-muted">{label}</span>
+                  <span className="font-mono text-[10px] text-chrome-subtle">
+                    {done ? '✓ unlocked' : `${current} / ${needed}`}
+                  </span>
+                </div>
+                <div className="h-1 bg-chrome-deep rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${done ? 'bg-accent' : 'bg-accent/40'}`}
+                    style={{ width: `${Math.min((current / needed) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

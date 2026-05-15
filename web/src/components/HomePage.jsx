@@ -35,7 +35,7 @@ function FollowUpCard({ records = [], onGoToTracker, onSelectRecord }) {
   const count = records.length;
 
   return (
-    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 flex flex-col flex-1 max-h-[420px] sm:absolute sm:inset-0 sm:max-h-none sm:overflow-hidden">
+    <div className="bg-chrome-surface border border-chrome-rim rounded-lg p-5 flex flex-col">
       <p className="font-sans font-semibold text-[14px] text-chrome-text mb-0.5">
         {count === 0
           ? "You're all caught up"
@@ -208,55 +208,45 @@ export default function HomePage({ insightsDateFrom, insightsDateTo, insightsDat
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Single unified container — mobile: one page scroll; desktop: viewport-constrained */}
+      {/* Mobile: natural scroll. Desktop: no scroll, fill viewport exactly */}
       <div className="flex-1 min-h-0 overflow-y-auto sm:overflow-hidden sm:flex sm:flex-col">
-        {/* Insights */}
-        <div className="flex-shrink-0">
-          <InsightsPanel
-            dateFrom={insightsDateFrom}
-            dateTo={insightsDateTo}
-            data={insightsData}
-            loading={insightsLoading}
-            error={insightsError}
-            onRangeChange={onInsightsRangeChange}
-          />
-        </div>
+        <div className="px-4 sm:px-6 py-4 sm:py-6 flex flex-col flex-1 min-h-0">
+          <div className="max-w-5xl w-full mx-auto flex flex-col flex-1 min-h-0 gap-4">
 
-        {/* Cards — fills remaining height on desktop; natural height on mobile */}
-        <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-          <div className="max-w-5xl mx-auto">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-chrome-muted mb-3">
-              Your account
-            </p>
-            {/*
-              Desktop: 3-col × 2-row grid.
-              Col 3 has two natural-height cards (rows 1 + 2) that set each row's height.
-              Cols 1 and 2 span both rows, so their height exactly matches col 3's combined height.
-              Mobile: single column, stacked in display order via `order-*`.
-            */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Follow-up — desktop col 1, spans both rows */}
-              <div className="order-2 sm:order-1 sm:row-span-2 flex flex-col sm:relative sm:overflow-hidden sm:rounded-lg">
-                <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} onSelectRecord={onSelectRecord} />
+            {/* 2-col: stacked on mobile, side-by-side on desktop, fills available height */}
+            <div className="flex flex-col sm:flex-row gap-4 flex-1 min-h-0">
+
+              {/* Left (2/3): InsightsPanel */}
+              <div className="sm:flex-[2] bg-chrome-surface border border-chrome-rim rounded-lg overflow-hidden">
+                <InsightsPanel
+                  dateFrom={insightsDateFrom}
+                  dateTo={insightsDateTo}
+                  data={insightsData}
+                  loading={insightsLoading}
+                  error={insightsError}
+                  onRangeChange={onInsightsRangeChange}
+                />
               </div>
-              {/* Pro — desktop col 2, spans both rows; mobile: shown first */}
-              <div className="order-1 sm:order-2 sm:row-span-2 flex flex-col">
+
+              {/* Right (1/3): stacked action cards, scrollable if they exceed column height */}
+              <div className="sm:flex-[1] flex flex-col gap-4 sm:overflow-y-auto">
                 <UpgradeCard onOpenProModal={onOpenProModal} />
-              </div>
-              {/* Profile — desktop col 3 row 1 */}
-              {resumeName !== undefined && (
-                <div className="order-3">
+                <FollowUpCard records={followUps} onGoToTracker={onGoToTracker} onSelectRecord={onSelectRecord} />
+                {resumeName !== undefined && (
                   <CompleteProfileCard
                     hasResume={!!resumeName}
                     onSetupProfile={() => navigate(resumeName ? '/settings' : '/settings?scrollTo=resume')}
                   />
-                </div>
-              )}
-              {/* Dev note — desktop col 3 row 2 */}
-              <div className="order-4">
-                <DeveloperNote />
+                )}
               </div>
             </div>
+
+            {/* Developer note — inline footer */}
+            <p className="flex-shrink-0 text-[11px] text-chrome-subtle leading-relaxed pb-2">
+              <span className="font-semibold font-sans uppercase tracking-[0.08em] text-[9px] text-chrome-muted">Note · </span>
+              Coldbase started as a small local project I built for myself. Initially, I kept losing track of who I'd reached out to, missing the right moment to follow up, and had no single place to manage everything. After building and using Coldbase for a while, I thought, <em>why not see if it could be useful to other students too?</em>
+            </p>
+
           </div>
         </div>
       </div>
