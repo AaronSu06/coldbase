@@ -12,7 +12,7 @@ const freeFeatures = [
 
 const proFeatures = [
   { title: 'Everything in Free', desc: null },
-  { title: '10x more email finding', desc: '50 contact lookups per month, vs 5 on the free plan.' },
+  { title: '10x more email finding', desc: '30 contact lookups per month, vs 3 on the free plan.' },
   { title: 'AI-drafted follow-up emails', desc: 'Generate personalised follow-ups in one click based on your prior conversation.' },
   { title: 'Personalised AI feedback', desc: 'Get actionable feedback on your emails before you send them.' },
 ];
