@@ -88,12 +88,17 @@ router.get('/me', requireAuth, async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { id: true, email: true, plan: true, isAdmin: true, resumeName: true, resumeText: true, createdAt: true },
+      select: { id: true, email: true, plan: true, isAdmin: true, resumeName: true, resumeText: true, createdAt: true, lookupsUsedThisMonth: true, lookupsResetAt: true },
     });
     if (!user) return res.status(404).json({ error: 'Not Found' });
+    const { PLAN_LIMITS } = await import('../lib/planLimits.js');
+    const lookupsLimit = PLAN_LIMITS[user.plan]?.emailLookupsPerMonth ?? PLAN_LIMITS.free.emailLookupsPerMonth;
+    const lookupsUsed  = (!user.lookupsResetAt || user.lookupsResetAt <= new Date()) ? 0 : user.lookupsUsedThisMonth;
     res.json({
       ...user,
       resumeText: user.resumeText ? user.resumeText.slice(0, 3000) : null,
+      lookupsUsed,
+      lookupsLimit,
     });
   } catch (e) {
     next(e);

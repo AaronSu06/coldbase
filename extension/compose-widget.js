@@ -680,30 +680,45 @@ window.ColdbaseWidget = (function () {
 
         <!-- Find Contacts -->
         <div class="tab-panel" id="cp-panel-find">
-          <div class="cp-search-box" id="cp-search-box">
-            <div class="cp-search-favicon" id="cp-search-favicon"></div>
-            <input
-              type="text"
-              class="cp-search-input"
-              id="cp-company"
-              placeholder="Enter a domain or company name\u2026"
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <button class="cp-search-clear" id="cp-search-clear" aria-label="Clear" style="display:none">&times;</button>
-            <div class="cp-domain-dropdown" id="cp-domain-dropdown" style="display:none"></div>
+          <!-- Quota gate \u2014 shown when user hits lookup limit -->
+          <div id="cp-find-quota-gate" class="cp-plan-gate" style="display:none">
+            <div class="cp-plan-gate-body">
+              <p class="cp-plan-gate-heading">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Lookup limit reached
+              </p>
+              <p class="cp-plan-gate-sub" id="cp-find-quota-sub"></p>
+            </div>
+            <button class="action-btn" id="cp-quota-upgrade-btn">Upgrade to Pro</button>
           </div>
-          <div class="form-group">
-            <label>First Name</label>
-            <input type="text" id="cp-first-name" placeholder="Optional" />
+          <!-- Form \u2014 hidden when quota gate is shown -->
+          <div id="cp-find-form">
+            <div class="cp-search-box" id="cp-search-box">
+              <div class="cp-search-favicon" id="cp-search-favicon"></div>
+              <input
+                type="text"
+                class="cp-search-input"
+                id="cp-company"
+                placeholder="Enter a domain or company name\u2026"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <button class="cp-search-clear" id="cp-search-clear" aria-label="Clear" style="display:none">&times;</button>
+              <div class="cp-domain-dropdown" id="cp-domain-dropdown" style="display:none"></div>
+            </div>
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" id="cp-first-name" placeholder="Optional" />
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" id="cp-last-name" placeholder="Optional" />
+            </div>
+            <div id="cp-find-warning" style="font-size:11px;color:#dc2626;margin-bottom:6px;display:none"></div>
+            <button class="action-btn" id="cp-find-btn">Find Emails</button>
+            <div id="cp-lookup-usage" style="display:none;font-size:11px;color:#78716c;text-align:center;margin-top:8px"></div>
+            <div class="results-list" id="cp-results"></div>
           </div>
-          <div class="form-group">
-            <label>Last Name</label>
-            <input type="text" id="cp-last-name" placeholder="Optional" />
-          </div>
-          <div id="cp-find-warning" style="font-size:11px;color:#dc2626;margin-bottom:6px;display:none"></div>
-          <button class="action-btn" id="cp-find-btn">Find Emails</button>
-          <div class="results-list" id="cp-results"></div>
         </div>
 
         <!-- Draft AI -->
@@ -871,6 +886,28 @@ window.ColdbaseWidget = (function () {
     function _cpTitleCase(str) {
       return str.replace(/\b\w/g, function(c) { return c.toUpperCase(); });
     }
+
+    // Dashboard URL for upgrade links
+    var _cpDashUrl = 'https://coldbase.live';
+    chrome.runtime.sendMessage({ type: 'GET_RUNTIME_CONFIG' }, function(res) {
+      _cpDashUrl = res?.config?.dashboardUrl ?? 'https://coldbase.live';
+    });
+
+    // Wire quota gate upgrade button once
+    shadow.getElementById('cp-quota-upgrade-btn').addEventListener('click', function() {
+      window.open(_cpDashUrl + '?upgrade=true', '_blank');
+    });
+
+    // Fetch profile to display lookup usage counter
+    chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, function(res) {
+      if (!res?.ok) return;
+      var usageEl = shadow.getElementById('cp-lookup-usage');
+      if (!usageEl) return;
+      var used  = res.lookupsUsed ?? 0;
+      var limit = res.lookupsLimit ?? 3;
+      usageEl.textContent = used + ' of ' + limit + ' lookups used this month';
+      usageEl.style.display = '';
+    });
 
     // State
     var _cpSelectedDomain = null;
@@ -1046,22 +1083,20 @@ window.ColdbaseWidget = (function () {
             coldbase_find_state:   { domain: company, firstName: firstName, lastName: lastName },
             coldbase_find_results: { results: res.results },
           });
-        } else if (res && res.error === 'quota_exceeded') {
-          resultsEl.innerHTML = `
-            <div class="cp-plan-gate" style="padding: 6px 0 2px;">
-              <div class="cp-plan-gate-body">
-                <p class="cp-plan-gate-heading">
-                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  Lookup limit reached
-                </p>
-                <p class="cp-plan-gate-sub">You've used all ${res.limit} of your monthly lookups. Pro gives you 50 per month.</p>
-              </div>
-              <button class="action-btn" id="cp-quota-upgrade-btn">Upgrade to Pro</button>
-            </div>`;
-          var quotaBtn = shadow.getElementById('cp-quota-upgrade-btn');
-          if (quotaBtn) quotaBtn.addEventListener('click', function() {
-            window.open(_dashUrlForResume + '?upgrade=true', '_blank');
+          // Refresh usage counter after a successful lookup
+          chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, function(profileRes) {
+            if (!profileRes?.ok) return;
+            var usageEl = shadow.getElementById('cp-lookup-usage');
+            if (!usageEl) return;
+            var used  = profileRes.lookupsUsed ?? 0;
+            var limit = profileRes.lookupsLimit ?? 3;
+            usageEl.textContent = used + ' of ' + limit + ' lookups used this month';
           });
+        } else if (res && res.error === 'quota_exceeded') {
+          shadow.getElementById('cp-find-quota-sub').textContent =
+            `You've used all ${res.limit} of your monthly lookups. Pro gives you 30 per month.`;
+          shadow.getElementById('cp-find-quota-gate').style.display = '';
+          shadow.getElementById('cp-find-form').style.display = 'none';
         } else if (!res || !res.ok) {
           var msgs = {
             no_domain:     'Could not resolve a domain for this company.',

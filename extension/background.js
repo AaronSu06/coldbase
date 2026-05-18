@@ -220,7 +220,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         const res = await serverFetch('/auth/me');
         if (!res.ok) { sendResponse({ ok: false }); return; }
         const data = await res.json();
-        sendResponse({ ok: true, plan: data.plan, isAdmin: data.isAdmin ?? false, resumeName: data.resumeName ?? null });
+        sendResponse({ ok: true, plan: data.plan, isAdmin: data.isAdmin ?? false, resumeName: data.resumeName ?? null, lookupsUsed: data.lookupsUsed ?? 0, lookupsLimit: data.lookupsLimit ?? 3 });
       } catch (e) {
         log.error('GET_USER_PROFILE failed:', e.message);
         sendResponse({ ok: false });
