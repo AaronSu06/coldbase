@@ -898,13 +898,20 @@ window.ColdbaseWidget = (function () {
       window.open(_cpDashUrl + '?upgrade=true', '_blank');
     });
 
-    // Fetch profile to display lookup usage counter
+    // Fetch profile on load — show quota gate immediately if already at limit
     chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, function(res) {
       if (!res?.ok) return;
-      var usageEl = shadow.getElementById('cp-lookup-usage');
-      if (!usageEl) return;
       var used  = res.lookupsUsed ?? 0;
       var limit = res.lookupsLimit ?? 3;
+      if (used >= limit) {
+        shadow.getElementById('cp-find-quota-sub').textContent =
+          'You\'ve used all ' + limit + ' of your monthly lookups. Pro gives you 30 per month.';
+        shadow.getElementById('cp-find-quota-gate').style.display = '';
+        shadow.getElementById('cp-find-form').style.display = 'none';
+        return;
+      }
+      var usageEl = shadow.getElementById('cp-lookup-usage');
+      if (!usageEl) return;
       usageEl.textContent = used + ' of ' + limit + ' lookups used this month';
       usageEl.style.display = '';
     });
