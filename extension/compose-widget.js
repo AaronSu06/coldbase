@@ -898,23 +898,44 @@ window.ColdbaseWidget = (function () {
       window.open(_cpDashUrl + '?upgrade=true', '_blank');
     });
 
+    // Shared fetch helper
+    function _cpFetchQuota(callback) {
+      chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, function(res) {
+        if (!res?.ok) return;
+        callback(res.lookupsUsed ?? 0, res.lookupsLimit ?? 3);
+      });
+    }
+
+    // Full refresh — shows gate if at limit (used on load + tab focus)
+    function _cpRefreshQuota() {
+      _cpFetchQuota(function(used, limit) {
+        if (used >= limit) {
+          shadow.getElementById('cp-find-quota-sub').textContent =
+            'You\'ve used all ' + limit + ' of your monthly lookups. Pro gives you 30 per month.';
+          shadow.getElementById('cp-find-quota-gate').style.display = '';
+          shadow.getElementById('cp-find-form').style.display = 'none';
+          return;
+        }
+        var usageEl = shadow.getElementById('cp-lookup-usage');
+        if (!usageEl) return;
+        usageEl.textContent = used + ' of ' + limit + ' lookups used this month';
+        usageEl.style.display = '';
+      });
+    }
+
+    // Counter-only refresh — does NOT show gate; used after a successful lookup
+    // so the form stays open until the user actively tries to exceed the limit
+    function _cpRefreshCounter() {
+      _cpFetchQuota(function(used, limit) {
+        var usageEl = shadow.getElementById('cp-lookup-usage');
+        if (!usageEl) return;
+        usageEl.textContent = used + ' of ' + limit + ' lookups used this month';
+        usageEl.style.display = '';
+      });
+    }
+
     // Fetch profile on load — show quota gate immediately if already at limit
-    chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, function(res) {
-      if (!res?.ok) return;
-      var used  = res.lookupsUsed ?? 0;
-      var limit = res.lookupsLimit ?? 3;
-      if (used >= limit) {
-        shadow.getElementById('cp-find-quota-sub').textContent =
-          'You\'ve used all ' + limit + ' of your monthly lookups. Pro gives you 30 per month.';
-        shadow.getElementById('cp-find-quota-gate').style.display = '';
-        shadow.getElementById('cp-find-form').style.display = 'none';
-        return;
-      }
-      var usageEl = shadow.getElementById('cp-lookup-usage');
-      if (!usageEl) return;
-      usageEl.textContent = used + ' of ' + limit + ' lookups used this month';
-      usageEl.style.display = '';
-    });
+    _cpRefreshQuota();
 
     // State
     var _cpSelectedDomain = null;
@@ -1090,15 +1111,8 @@ window.ColdbaseWidget = (function () {
             coldbase_find_state:   { domain: company, firstName: firstName, lastName: lastName },
             coldbase_find_results: { results: res.results },
           });
-          // Refresh usage counter after a successful lookup
-          chrome.runtime.sendMessage({ type: 'GET_USER_PROFILE' }, function(profileRes) {
-            if (!profileRes?.ok) return;
-            var usageEl = shadow.getElementById('cp-lookup-usage');
-            if (!usageEl) return;
-            var used  = profileRes.lookupsUsed ?? 0;
-            var limit = profileRes.lookupsLimit ?? 3;
-            usageEl.textContent = used + ' of ' + limit + ' lookups used this month';
-          });
+          // Update counter only — gate stays hidden until user actively tries another lookup
+          _cpRefreshCounter();
         } else if (res && res.error === 'quota_exceeded') {
           shadow.getElementById('cp-find-quota-sub').textContent =
             `You've used all ${res.limit} of your monthly lookups. Pro gives you 30 per month.`;
@@ -1117,6 +1131,14 @@ window.ColdbaseWidget = (function () {
           resultsEl.innerHTML = '<div class="status-msg">No results found.</div>';
         }
       });
+    });
+
+    // Refresh quota from server whenever this browser tab regains focus — but only
+    // if the Find Contacts tab is currently the active panel.
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState !== 'visible') return;
+      if (!shadow.getElementById('cp-panel-find').classList.contains('active')) return;
+      _cpRefreshQuota();
     });
 
     // Restore last session state

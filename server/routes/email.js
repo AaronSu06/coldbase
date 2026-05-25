@@ -269,7 +269,7 @@ router.post('/find-email', async (req, res, next) => {
 
   try {
     const result = await snovFindEmail({ domain, firstName, lastName });
-    if (result.ok) await req.incrementQuota();
+    await req.incrementQuota();
     return res.json(result);
   } catch (e) {
     next(e);
