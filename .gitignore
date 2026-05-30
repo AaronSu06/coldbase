@@ -22,3 +22,12 @@ extension/config.js
 **/config.local.js
 .worktrees/
 .vercel
+
+# Extension build artifacts
+*.crx
+*.zip
+
+# GSD planning artifacts
+.planning/
+.impeccable.md
+.continue-here.md
