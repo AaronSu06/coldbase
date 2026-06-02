@@ -192,64 +192,38 @@ ${sharedRules}
 Return ONLY the email body. No subject line, no preamble.`;
 }
 
-// ─── Snov.io API helper ───────────────────────────────────────────────────────
+// ─── Hunter.io API helper ─────────────────────────────────────────────────────
 
-let _snovToken = null;
-let _snovTokenExpiry = 0;
-
-async function getSnovToken() {
-  if (_snovToken && Date.now() < _snovTokenExpiry) return _snovToken;
-  const res = await fetch('https://api.snov.io/v1/oauth/access_token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      grant_type:    'client_credentials',
-      client_id:     process.env.SNOV_CLIENT_ID,
-      client_secret: process.env.SNOV_CLIENT_SECRET,
-    }),
-  });
-  const data = await res.json();
-  _snovToken = data.access_token;
-  _snovTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
-  return _snovToken;
-}
-
-async function snovFindEmail({ domain, firstName, lastName }) {
-  const token = await getSnovToken();
+async function hunterFindEmail({ domain, firstName, lastName }) {
+  const apiKey = process.env.HUNTER_KEY;
   const hasName = firstName && lastName;
 
   if (hasName) {
-    // Email finder mode: name + domain → best matching email(s) for that person
-    const res  = await fetch('https://api.snov.io/v1/get-emails-from-names', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ domain, firstName, lastName, access_token: token }),
-    });
+    // Email finder mode: name + domain → best matching email for that person
+    const url = `https://api.hunter.io/v2/email-finder?domain=${encodeURIComponent(domain)}&first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}&api_key=${apiKey}`;
+    const res  = await fetch(url);
     const data = await res.json();
-    console.log('[snov] email-finder raw response:', JSON.stringify(data));
-    const emails = data?.data?.emails ?? [];
-    if (emails.length === 0) return { ok: false, reason: 'no_candidates' };
-    return { ok: true, results: emails.map(e => ({ email: e.email })) };
+    console.log('[hunter] email-finder raw response:', JSON.stringify(data));
+    const email = data?.data?.email;
+    if (!email) return { ok: false, reason: 'no_candidates' };
+    return { ok: true, results: [{ email, confidence: data?.data?.score }] };
   }
 
   // Domain search mode: domain only → multiple contacts at the company
-  const res  = await fetch('https://api.snov.io/v1/get-domain-emails', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ domain, access_token: token, type: 'personal', limit: 5 }),
-  });
+  const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${apiKey}&limit=5&type=personal`;
+  const res  = await fetch(url);
   const data = await res.json();
-  const emails = data?.emails ?? [];
+  const emails = data?.data?.emails ?? [];
   if (emails.length === 0) return { ok: false, reason: 'no_candidates' };
-  return { ok: true, results: emails.map(e => ({ email: e.email })) };
+  return { ok: true, results: emails.map(e => ({ email: e.value, confidence: e.confidence })) };
 }
 
 // ─── Route handlers ───────────────────────────────────────────────────────────
 
 // POST /find-email (expensiveRateLimit + checkQuota applied at mount time in app.js)
 router.post('/find-email', async (req, res, next) => {
-  if (!process.env.SNOV_CLIENT_ID || !process.env.SNOV_CLIENT_SECRET) {
-    return res.status(500).json({ ok: false, error: 'Snov.io API credentials not configured on server.' });
+  if (!process.env.HUNTER_KEY) {
+    return res.status(500).json({ ok: false, error: 'Hunter.io API key not configured on server.' });
   }
 
   const parsed = FindEmailSchema.safeParse(req.body);
@@ -268,7 +242,7 @@ router.post('/find-email', async (req, res, next) => {
   }
 
   try {
-    const result = await snovFindEmail({ domain, firstName, lastName });
+    const result = await hunterFindEmail({ domain, firstName, lastName });
     await req.incrementQuota();
     return res.json(result);
   } catch (e) {

@@ -953,20 +953,39 @@ window.ColdbaseWidget = (function () {
     _cpPlaceholderImg.src = chrome.runtime.getURL('Placeholder.png');
     searchFavicon.appendChild(_cpPlaceholderImg);
 
-    // Set favicon img in a slot element; fallback to colored initial on error
+    // Set favicon img in a slot element; tries Clearbit logo → DuckDuckGo → Google,
+    // then falls back to a colored letter avatar.
+    // Google returns a valid 16x16 blank globe for unknown domains (no onerror),
+    // so we detect it via naturalWidth to avoid showing a generic placeholder.
     function _cpSetFavicon(el, domain, label) {
+      var sources = [
+        'https://logo.clearbit.com/' + domain,
+        'https://icons.duckduckgo.com/ip3/' + domain + '.ico',
+        'https://www.google.com/s2/favicons?domain=' + domain + '&sz=64',
+      ];
       var img = document.createElement('img');
-      img.src = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=64';
-      img.onerror = function() {
+      var idx = 0;
+
+      function showAvatar() {
         el.innerHTML = '';
         el.style.background = _cpAvatarColor(label || domain);
         el.textContent = (label || domain).charAt(0).toUpperCase();
-      };
+      }
+
+      function tryNext() {
+        if (idx >= sources.length) { showAvatar(); return; }
+        img.src = sources[idx++];
+      }
+
+      img.onerror = tryNext;
       img.onload = function() {
+        if (img.naturalWidth <= 1 || img.naturalHeight <= 1) { tryNext(); return; }
         el.innerHTML = '';
         el.style.background = 'transparent';
         el.appendChild(img);
       };
+
+      tryNext();
     }
 
     function _cpHideDropdown() {
@@ -1104,6 +1123,15 @@ window.ColdbaseWidget = (function () {
           resultsEl.innerHTML = '<div class="status-msg">Error \u2014 check extension console.</div>';
           return;
         }
+        if (res && res.error === 'quota_exceeded') {
+          shadow.getElementById('cp-find-quota-sub').textContent =
+            `You've used all ${res.limit} of your monthly lookups. Pro gives you 30 per month.`;
+          shadow.getElementById('cp-find-quota-gate').style.display = '';
+          shadow.getElementById('cp-find-form').style.display = 'none';
+          return;
+        }
+        // Refresh counter after every API hit — quota is consumed regardless of results
+        _cpRefreshCounter();
         if (res && res.ok && res.results && res.results.length) {
           _cpRenderResults(shadow, res.results);
           // Persist results and inputs for session restore
@@ -1111,13 +1139,6 @@ window.ColdbaseWidget = (function () {
             coldbase_find_state:   { domain: company, firstName: firstName, lastName: lastName },
             coldbase_find_results: { results: res.results },
           });
-          // Update counter only — gate stays hidden until user actively tries another lookup
-          _cpRefreshCounter();
-        } else if (res && res.error === 'quota_exceeded') {
-          shadow.getElementById('cp-find-quota-sub').textContent =
-            `You've used all ${res.limit} of your monthly lookups. Pro gives you 30 per month.`;
-          shadow.getElementById('cp-find-quota-gate').style.display = '';
-          shadow.getElementById('cp-find-form').style.display = 'none';
         } else if (!res || !res.ok) {
           var msgs = {
             no_domain:     'Could not resolve a domain for this company.',

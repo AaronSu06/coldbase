@@ -1,11 +1,10 @@
 // server/email.test.js
-process.env.DATABASE_URL      = process.env.TEST_DATABASE_URL;
-process.env.DIRECT_URL        = process.env.TEST_DIRECT_URL;
-process.env.JWT_SECRET        = 'test-jwt-secret';
-process.env.BCRYPT_ROUNDS     = '1';
-process.env.SNOV_CLIENT_ID     = 'test-snov-id';
-process.env.SNOV_CLIENT_SECRET = 'test-snov-secret';
-process.env.NODE_ENV           = 'test';
+process.env.DATABASE_URL  = process.env.TEST_DATABASE_URL;
+process.env.DIRECT_URL    = process.env.TEST_DIRECT_URL;
+process.env.JWT_SECRET    = 'test-jwt-secret';
+process.env.BCRYPT_ROUNDS = '1';
+process.env.HUNTER_KEY    = 'test-hunter-key';
+process.env.NODE_ENV      = 'test';
 
 import { describe, it, before, after, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,12 +17,9 @@ import jwt from 'jsonwebtoken';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ─── Mock fetch ───────────────────────────────────────────────────────────────
-// Default: handles Snov.io token endpoint + returns empty emails for API calls
-let mockFetchImpl = async (url) => {
-  if (url === 'https://api.snov.io/v1/oauth/access_token') {
-    return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
-  }
-  return { ok: true, json: async () => ({ emails: [] }) };
+// Default: returns empty emails for Hunter.io API calls
+let mockFetchImpl = async (_url) => {
+  return { ok: true, json: async () => ({ data: { emails: [] } }) };
 };
 const mockFetch = mock.fn((...args) => mockFetchImpl(...args));
 global.fetch = mockFetch;
@@ -92,23 +88,20 @@ describe('POST /api/find-email', () => {
     assert.equal(res.status, 400);
   });
 
-  it('returns 500 when SNOV_CLIENT_ID is not set', async () => {
-    const savedId = process.env.SNOV_CLIENT_ID;
-    delete process.env.SNOV_CLIENT_ID;
+  it('returns 500 when HUNTER_KEY is not set', async () => {
+    const saved = process.env.HUNTER_KEY;
+    delete process.env.HUNTER_KEY;
     const res = await request('POST', '/api/find-email',
       { company: 'Stripe', domain: 'stripe.com' },
       { Authorization: authHeader }
     );
-    process.env.SNOV_CLIENT_ID = savedId;
+    process.env.HUNTER_KEY = saved;
     assert.equal(res.status, 500);
   });
 
-  it('Mode B: returns email result from Snov.io email-finder', async () => {
-    mockFetchImpl = async (url) => {
-      if (url === 'https://api.snov.io/v1/oauth/access_token') {
-        return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
-      }
-      return { ok: true, json: async () => ({ data: { emails: [{ email: 'patrick@stripe.com' }] } }) };
+  it('Mode B: returns email result from Hunter.io email-finder', async () => {
+    mockFetchImpl = async (_url) => {
+      return { ok: true, json: async () => ({ data: { email: 'patrick@stripe.com', score: 91 } }) };
     };
 
     const res = await request('POST', '/api/find-email',
@@ -120,22 +113,20 @@ describe('POST /api/find-email', () => {
     assert.equal(res.body.ok, true);
     assert.equal(res.body.results.length, 1);
     assert.equal(res.body.results[0].email, 'patrick@stripe.com');
-    // No confidence field — Snov.io doesn't return confidence scores
-    assert.equal(res.body.results[0].confidence, undefined);
+    assert.equal(res.body.results[0].confidence, 91);
   });
 
-  it('Mode A: returns emails from Snov.io domain search', async () => {
-    mockFetchImpl = async (url) => {
-      if (url === 'https://api.snov.io/v1/oauth/access_token') {
-        return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
-      }
+  it('Mode A: returns emails from Hunter.io domain search', async () => {
+    mockFetchImpl = async (_url) => {
       return {
         ok: true,
         json: async () => ({
-          emails: [
-            { email: 'press@stripe.com' },
-            { email: 'support@stripe.com' },
-          ],
+          data: {
+            emails: [
+              { value: 'press@stripe.com', confidence: 90 },
+              { value: 'support@stripe.com', confidence: 72 },
+            ],
+          },
         }),
       };
     };
@@ -149,15 +140,12 @@ describe('POST /api/find-email', () => {
     assert.equal(res.body.ok, true);
     assert.equal(res.body.results.length, 2);
     assert.equal(res.body.results[0].email, 'press@stripe.com');
-    assert.equal(res.body.results[0].confidence, undefined);
+    assert.equal(res.body.results[0].confidence, 90);
   });
 
-  it('returns no_candidates when Snov.io finds nothing', async () => {
-    mockFetchImpl = async (url) => {
-      if (url === 'https://api.snov.io/v1/oauth/access_token') {
-        return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
-      }
-      return { ok: true, json: async () => ({ emails: [] }) };
+  it('returns no_candidates when Hunter.io finds nothing', async () => {
+    mockFetchImpl = async (_url) => {
+      return { ok: true, json: async () => ({ data: { emails: [] } }) };
     };
 
     const res = await request('POST', '/api/find-email',
@@ -170,12 +158,9 @@ describe('POST /api/find-email', () => {
     assert.equal(res.body.reason, 'no_candidates');
   });
 
-  it('calls Snov.io email-finder (not domain-search) when name is provided', async () => {
-    mockFetchImpl = async (url) => {
-      if (url === 'https://api.snov.io/v1/oauth/access_token') {
-        return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
-      }
-      return { ok: true, json: async () => ({ data: { emails: [{ email: 'a@b.com' }] } }) };
+  it('calls Hunter.io email-finder (not domain-search) when name is provided', async () => {
+    mockFetchImpl = async (_url) => {
+      return { ok: true, json: async () => ({ data: { email: 'a@b.com', score: 80 } }) };
     };
 
     await request('POST', '/api/find-email',
@@ -184,16 +169,13 @@ describe('POST /api/find-email', () => {
     );
 
     const allUrls = mockFetch.mock.calls.map(c => c.arguments[0]);
-    assert.ok(allUrls.some(u => u.includes('get-emails-from-names')), `Expected get-emails-from-names URL, got: ${allUrls}`);
-    assert.ok(!allUrls.some(u => u.includes('get-domain-emails')), 'Should not call domain-search when name is provided');
+    assert.ok(allUrls.some(u => u.includes('email-finder')), `Expected email-finder URL, got: ${allUrls}`);
+    assert.ok(!allUrls.some(u => u.includes('domain-search')), 'Should not call domain-search when name is provided');
   });
 
-  it('calls Snov.io domain search when no name provided', async () => {
-    mockFetchImpl = async (url) => {
-      if (url === 'https://api.snov.io/v1/oauth/access_token') {
-        return { ok: true, json: async () => ({ access_token: 'test-token', expires_in: 3600 }) };
-      }
-      return { ok: true, json: async () => ({ emails: [] }) };
+  it('calls Hunter.io domain-search when no name provided', async () => {
+    mockFetchImpl = async (_url) => {
+      return { ok: true, json: async () => ({ data: { emails: [] } }) };
     };
 
     await request('POST', '/api/find-email',
@@ -202,8 +184,8 @@ describe('POST /api/find-email', () => {
     );
 
     const allUrls = mockFetch.mock.calls.map(c => c.arguments[0]);
-    assert.ok(allUrls.some(u => u.includes('get-domain-emails')), `Expected get-domain-emails URL, got: ${allUrls}`);
-    assert.ok(!allUrls.some(u => u.includes('get-emails-from-names')), 'Should not call email-finder when no name provided');
+    assert.ok(allUrls.some(u => u.includes('domain-search')), `Expected domain-search URL, got: ${allUrls}`);
+    assert.ok(!allUrls.some(u => u.includes('email-finder')), 'Should not call email-finder when no name provided');
   });
 });
 
