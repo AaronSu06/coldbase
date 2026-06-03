@@ -957,9 +957,9 @@ window.ColdbaseWidget = (function () {
     // then falls back to a colored letter avatar.
     // Google returns a valid 16x16 blank globe for unknown domains (no onerror),
     // so we detect it via naturalWidth to avoid showing a generic placeholder.
-    function _cpSetFavicon(el, domain, label) {
+    function _cpSetFavicon(el, domain, label, logoUrl) {
       var sources = [
-        'https://logo.clearbit.com/' + domain,
+        logoUrl || ('https://logo.clearbit.com/' + domain),
         'https://icons.duckduckgo.com/ip3/' + domain + '.ico',
         'https://www.google.com/s2/favicons?domain=' + domain + '&sz=64',
       ];
@@ -1002,12 +1002,12 @@ window.ColdbaseWidget = (function () {
 
         var favEl = document.createElement('div');
         favEl.className = 'cp-domain-favicon';
-        _cpSetFavicon(favEl, item.domain, query);
+        _cpSetFavicon(favEl, item.domain, query, item.logo || null);
         row.appendChild(favEl);
 
         var nameEl = document.createElement('span');
         nameEl.className = 'cp-domain-name';
-        nameEl.textContent = _cpTitleCase(item.domain.replace(/\.[^.]+$/, ''));
+        nameEl.textContent = item.name || _cpTitleCase(item.domain.replace(/\.[^.]+$/, ''));
         row.appendChild(nameEl);
 
         var tldEl = document.createElement('span');

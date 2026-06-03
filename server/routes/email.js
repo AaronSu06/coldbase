@@ -256,12 +256,47 @@ router.post('/suggest-domains', async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: 'Validation Error', message: parsed.error.issues.map(i => i.message).join('; '), statusCode: 400 });
   const { company } = parsed.data;
 
+  // Stage 1: direct domain input (e.g. "stripe.com") — validate via DNS and return immediately
+  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(company.trim())) {
+    const domain = company.trim().toLowerCase();
+    const [mx, a] = await Promise.allSettled([
+      dns.promises.resolveMx(domain),
+      dns.promises.resolve4(domain),
+    ]);
+    const hasMX = mx.status === 'fulfilled' && mx.value.length > 0;
+    const hasA  = a.status  === 'fulfilled' && a.value.length  > 0;
+    return res.json({ ok: true, domains: [{ domain, hasMX, hasA }] });
+  }
+
+  // Stage 2: Clearbit Autocomplete — free, no key, covers most startups including recent YC batches
+  // Normalize dashes/underscores to spaces so "confident-ai" finds "Confident AI"
+  const clearbitQuery = company.replace(/[-_]/g, ' ').trim();
+  try {
+    const cbRes = await fetch(
+      `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(clearbitQuery)}`,
+      { signal: AbortSignal.timeout(2000) }
+    );
+    if (cbRes.ok) {
+      const data = await cbRes.json();
+      const domains = data
+        .filter(c => c.domain)
+        .slice(0, 5)
+        .map(c => ({ domain: c.domain, name: c.name, logo: c.logo, hasMX: null, hasA: null }));
+      if (domains.length > 0) return res.json({ ok: true, domains, source: 'clearbit' });
+    }
+  } catch (_) { /* fall through to DNS */ }
+
+  // Stage 3: DNS slug fallback — for companies not in Clearbit
   const slug = company.toLowerCase().replace(/[^a-z0-9]/g, '');
   if (!slug) return res.status(400).json({ error: 'Validation Error', message: 'company resolves to empty slug', statusCode: 400 });
+  // Also try hyphenated variant (e.g. "Confident AI" → "confident-ai") since many startups use dashed domains
+  const hyphenSlug = company.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const slugs = hyphenSlug && hyphenSlug !== slug ? [slug, hyphenSlug] : [slug];
 
   const TLDS = ['.com', '.io', '.ai', '.co', '.net', '.org', '.app', '.dev', '.so', '.gg'];
+  const candidates = [...new Set(slugs.flatMap(s => TLDS.map(tld => s + tld)))];
   const results = await Promise.allSettled(
-    TLDS.map(tld => slug + tld).map(async (domain) => {
+    candidates.map(async (domain) => {
       const [mx, a] = await Promise.allSettled([
         dns.promises.resolveMx(domain),
         dns.promises.resolve4(domain),
