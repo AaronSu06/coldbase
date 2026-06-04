@@ -99,9 +99,16 @@ window.ColdbaseTracking = (function () {
         cursor:pointer; white-space:nowrap; font-family:inherit; letter-spacing:0.01em;">
         Reload
       </button>
+      <button id="coldbase-reload-dismiss" style="
+        flex-shrink:0; background:none; border:none; color:#78716c;
+        cursor:pointer; font-size:16px; line-height:1; padding:0 2px;
+        font-family:inherit;">
+        &times;
+      </button>
     `;
     document.body.appendChild(banner);
     document.getElementById('coldbase-reload-btn').addEventListener('click', () => location.reload());
+    document.getElementById('coldbase-reload-dismiss').addEventListener('click', () => banner.remove());
     setTimeout(() => banner.remove(), 30_000);
   }
 
