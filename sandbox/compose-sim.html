@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  compose-sim.html — DEV-ONLY sandbox (not shipped).
+
+  Reproduces a Gmail-like compose dialog WITH a realistic bottom toolbar (Send
+  button + formatting icons) so we can verify the Coldbase launcher mounts itself
+  as an inline child of the compose toolbar — the Mailsuite/InboxSDK approach —
+  rather than floating with pixel math. It loads the REAL extension/compose-widget.js
+  so the mount logic under test is identical to production.
+
+  Open this file directly in Chrome, or drive it headless:
+    ?auto=1&fill=filled            open a pre-filled (existing) draft
+    ?auto=1&fill=empty             open a new (empty) draft
+    ?auto=1&fill=filled&action=minimize | close | missedclose
+  The verdict is written into <pre id="sim-results"> (read via --dump-dom).
+-->
+<head>
+  <meta charset="utf-8" />
+  <title>Coldbase compose-widget sandbox</title>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; margin: 0; background: #f6f8fc; }
+    #controls {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
+      background: #fff; border-bottom: 1px solid #e0e3e7; padding: 10px 16px;
+      display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 13px;
+    }
+    #controls label { display: flex; gap: 4px; align-items: center; }
+    #controls button { padding: 6px 12px; border-radius: 6px; border: 1px solid #c4c8cd; background: #fff; cursor: pointer; }
+    #controls button:hover { background: #f0f2f5; }
+    #note { color: #5f6368; font-size: 12px; }
+
+    /* Gmail-ish compose dialog */
+    .sim-dialog {
+      position: fixed; bottom: 0; right: 72px; width: 520px; height: 460px;
+      background: #fff; border-radius: 8px 8px 0 0; box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sim-dialog.minimized { height: 40px; }
+    .sim-header { background: #f2f6fc; padding: 10px 14px; font-weight: 600; color: #202124; font-size: 14px; }
+    .sim-row { padding: 8px 14px; border-bottom: 1px solid #f1f3f4; color: #5f6368; font-size: 13px; }
+    .sim-body { position: relative; flex: 1; padding: 14px; }
+    .sim-editor { width: 100%; height: 100%; outline: none; font-size: 14px; color: #202124; overflow: auto; }
+
+    /* Gmail-ish bottom toolbar — the Send button is the anchor we mount next to. */
+    .sim-toolbar { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-top: 1px solid #f1f3f4; }
+    .send-wrap { display: flex; align-items: center; }
+    .sim-send { background: #0b57d0; color: #fff; border-radius: 18px; padding: 8px 22px; font-weight: 600; font-size: 14px; cursor: pointer; }
+    .sim-caret { width: 26px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #444; }
+    .sim-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #5f6368; }
+    .sim-trash { margin-left: auto; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+
+    /* Make the real .oiq-w widget visible in the sandbox (production injects its own styles). */
+    .oiq-w { background: #e8643c; border: 2px solid #1a1a1a; box-sizing: border-box; }
+    .oiq-w::after { content: 'CB'; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+    .oiq-w img { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <strong>Coldbase sandbox</strong>
+    <label>Draft:
+      <select id="fill">
+        <option value="empty">new (empty)</option>
+        <option value="filled">existing (pre-filled)</option>
+      </select>
+    </label>
+    <button id="open">Open compose</button>
+    <button id="minimize">Minimize</button>
+    <button id="close">Close compose</button>
+    <span id="note">Orange <b>CB</b> box should appear inline in the bottom toolbar, next to <b>Send</b>.</span>
+  </div>
+
+  <!-- Stubs so the real compose-widget.js loads outside an extension context. -->
+  <script>
+    // In a real browser window.chrome exists but has no .runtime (no extension
+    // context), so patch piecewise rather than replacing the whole object.
+    window.chrome = window.chrome || {};
+    window.chrome.runtime = window.chrome.runtime || {};
+    if (!window.chrome.runtime.getURL) window.chrome.runtime.getURL = (p) => p;
+    if (!window.chrome.runtime.id) window.chrome.runtime.id = 'sandbox';
+    window.chrome.storage = window.chrome.storage || { local: { get: (k, cb) => cb && cb({}), set: () => {} } };
+  </script>
+  <script src="../extension/logger.js"></script>
+  <script src="../extension/compose-widget.js"></script>
+
+  <script>
+    // Drive the REAL widget lifecycle: build the shared state (mirrors content.js),
+    // init ColdbaseWidget, then use update() to mount/remove the widget as production does.
+    const W = window.ColdbaseWidget;
+    let dialog = null, editor = null;
+    let _lastActiveEditor = null;
+
+    const state = {
+      editorWidgets: new WeakMap(),
+      editorManualModes: new WeakMap(),
+      editorAutoScores: new WeakMap(),
+      editorScoreSeq: new WeakMap(),
+      observedEditors: new WeakSet(),
+      liveEditors: new Set(),
+      savedTrackingDefault: 'force_track',
+      get lastActiveEditor() { return _lastActiveEditor; },
+      set lastActiveEditor(v) { _lastActiveEditor = v; },
+    };
+    W.init(state);
+
+    // Two toolbar shapes so we exercise BOTH branches of findComposeToolbarCell:
+    //   flex  → send button's parent is a <div> → closest('td') is null → parentElement branch
+    //   table → send button sits in a <td> (like real Gmail's tr.btC) → closest('td') branch
+    const sendControls = `
+      <div class="sim-send" role="button" data-tooltip="Send ‪(⌘Enter)‬" aria-label="Send ‪(⌘Enter)‬">Send</div>
+      <div class="sim-caret" role="button" aria-label="More send options">▾</div>`;
+    function toolbarHTML(layout) {
+      if (layout === 'table') {
+        return `<table class="sim-toolbar" cellspacing="0"><tbody><tr>
+            <td class="send-td">${sendControls}</td>
+            <td class="sim-icon">Aa</td><td class="sim-icon">📎</td><td class="sim-icon">🔗</td>
+            <td class="sim-trash" role="button" aria-label="Discard draft">🗑</td>
+          </tr></tbody></table>`;
+      }
+      return `<div class="sim-toolbar">
+          <div class="send-wrap">${sendControls}</div>
+          <div class="sim-icon">Aa</div><div class="sim-icon">📎</div>
+          <div class="sim-icon">🔗</div><div class="sim-icon">😀</div>
+          <div class="sim-trash" role="button" aria-label="Discard draft">🗑</div>
+        </div>`;
+    }
+
+    function openCompose() {
+      closeCompose();
+      const fill = document.getElementById('fill').value;
+      const layout = new URLSearchParams(location.search).get('layout') || 'flex';
+
+      dialog = document.createElement('div');
+      dialog.className = 'sim-dialog';
+      dialog.setAttribute('role', 'dialog'); // real Gmail compose is role="dialog" (getComposeContainer anchor)
+      dialog.innerHTML = `
+        <div class="sim-header">${fill === 'filled' ? 'Re: project update' : 'New Message'}</div>
+        <div class="sim-row">To</div>
+        <div class="sim-row">Subject</div>
+        <div class="sim-body">
+          <div class="sim-editor Am" contenteditable="true" aria-multiline="true"></div>
+        </div>
+        ${toolbarHTML(layout)}`;
+      document.body.appendChild(dialog);
+      editor = dialog.querySelector('.sim-editor');
+      if (fill === 'filled') {
+        editor.innerHTML = 'Hi there,<br><br>Following up on the draft we started last week. '
+          + 'Wanted to check whether the timeline still works on your end.<br><br>Thanks,<br>Aaron';
+      }
+
+      // Real attach path: register the editor and let update() create + mount the widget.
+      state.liveEditors.add(editor);
+      state.editorManualModes.set(editor, 'force_track');
+      state.lastActiveEditor = editor;
+      W.update(editor);
+    }
+
+    function minimizeCompose() {
+      if (!dialog) return;
+      dialog.classList.toggle('minimized');
+      // In real Gmail minimize collapses the body + toolbar (display:none); our widget
+      // lives in the toolbar, so it hides automatically as a child.
+      const collapsed = dialog.classList.contains('minimized');
+      dialog.querySelector('.sim-body').style.display = collapsed ? 'none' : '';
+      dialog.querySelector('.sim-toolbar').style.display = collapsed ? 'none' : '';
+      if (editor) W.update(editor);
+    }
+
+    function closeCompose() {
+      if (dialog) { dialog.remove(); dialog = null; }
+      if (editor) { W.update(editor); editor = null; } // editor detached → state cleanup
+    }
+
+    // Write an objective verdict into the DOM so a headless --dump-dom run can read it.
+    function report() {
+      const w = editor && state.editorWidgets.get(editor);
+      const out = { oiqWidgetsInDom: document.querySelectorAll('.oiq-w').length };
+      if (w && w.isConnected) {
+        const toolbar = dialog && dialog.querySelector('.sim-toolbar');
+        out.mounted = true;
+        out.parentIsToolbar = !!w.closest('.sim-toolbar');
+        out.parentInBody = w.parentElement === document.body;
+        out.positionFixed = getComputedStyle(w).position === 'fixed';
+        out.visible = w.offsetParent !== null;          // false when minimized (ancestor display:none)
+        out.nextToSend = !!(w.closest('.sim-toolbar') && dialog && dialog.querySelector('.sim-send'));
+        if (toolbar && w.offsetParent !== null) {
+          const wr = w.getBoundingClientRect(), tr = toolbar.getBoundingClientRect();
+          // Centered within the toolbar row to within a few px = not top-anchored.
+          out.vCentered = Math.abs((wr.top + wr.bottom) / 2 - (tr.top + tr.bottom) / 2) <= 4;
+        }
+      } else {
+        out.mounted = false;
+      }
+      let el = document.getElementById('sim-results');
+      if (!el) { el = document.createElement('pre'); el.id = 'sim-results'; document.body.appendChild(el); }
+      el.textContent = 'RESULTS:' + JSON.stringify(out);
+    }
+
+    document.getElementById('open').addEventListener('click', openCompose);
+    document.getElementById('minimize').addEventListener('click', minimizeCompose);
+    document.getElementById('close').addEventListener('click', closeCompose);
+
+    // Headless / auto mode: ?auto=1&fill=filled&action=minimize|close|missedclose
+    (function applyQuery() {
+      const q = new URLSearchParams(location.search);
+      if (q.has('fill')) { const el = document.getElementById('fill'); if (el) el.value = q.get('fill'); }
+      if (q.get('auto') === '1') openCompose();
+
+      const action = q.get('action');
+      if (action === 'minimize') minimizeCompose();
+      if (action === 'close') closeCompose();
+      // missedclose: detach the dialog WITHOUT calling update() (orphan check), then
+      // run the exact reap sweep the email-detector.js interval performs.
+      if (action === 'missedclose') {
+        if (dialog) { dialog.remove(); dialog = null; }
+        for (const e of [...state.liveEditors]) W.update(e);
+      }
+      report();
+      setTimeout(report, 1800); // re-report after any mount retries settle
+    })();
+  </script>
+</body>
+</html>

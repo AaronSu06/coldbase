@@ -141,7 +141,8 @@ window.ColdbaseDetector = (function () {
     // Update widget visibility for all live editors — cleans up removed editors and
     // promotes the next active one (UI-SYNC-01 widget promotion)
     if (shouldUpdateLive && _isEmailClient) {
-      for (const e of _state.liveEditors) window.ColdbaseWidget.update(e);
+      // Copy the Set — update() mutates liveEditors via clearEditorState.
+      for (const e of [..._state.liveEditors]) window.ColdbaseWidget.update(e);
     }
   });
 
@@ -171,16 +172,14 @@ window.ColdbaseDetector = (function () {
     if (_scanInterval) { clearInterval(_scanInterval); _scanInterval = null; }
     if (_healthInterval) { clearInterval(_healthInterval); _healthInterval = null; }
 
-    if (_isEmailClient) _scanInterval = setInterval(() => scanForEditors(state), 1500);
-
-    window.addEventListener('resize', () => {
-      for (const editorEl of state.liveEditors) {
-        if (!document.body.contains(editorEl)) continue;
-        const w = state.editorWidgets.get(editorEl);
-        if (!w) continue;
-        window.ColdbaseWidget.placeWidget(editorEl, null, w);
-      }
-    });
+    if (_isEmailClient) _scanInterval = setInterval(() => {
+      scanForEditors(state);
+      // Reap orphaned widgets: if a compose closed in a way the removedNodes
+      // observer missed, its editor is gone from the DOM but the position:fixed
+      // widget lingers. update() removes the widget when the editor is detached.
+      // Copy the Set because update() mutates liveEditors via clearEditorState.
+      for (const e of [...state.liveEditors]) window.ColdbaseWidget.update(e);
+    }, 1500);
 
     if (_isEmailClient) {
       scanForEditors(state);

@@ -100,7 +100,7 @@ window.ColdbaseTracking = (function () {
         Reload
       </button>
       <button id="coldbase-reload-dismiss" style="
-        flex-shrink:0; background:none; border:none; color:#78716c;
+        flex-shrink:0; background:none; border:none; color:#ffffff;
         cursor:pointer; font-size:16px; line-height:1; padding:0 2px;
         font-family:inherit;">
         &times;

@@ -47,26 +47,31 @@ window.ColdbaseWidget = (function () {
     s.id = 'oiq-w-style';
     s.textContent = `
       .oiq-w {
-        position: fixed !important;
-        width: 24px !important;
-        height: 24px !important;
-        border-radius: 6px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        vertical-align: middle !important;
+        box-sizing: border-box !important;
+        width: 36px !important;
+        height: 36px !important;
+        margin: 0 2px !important;
+        padding: 3px !important;
+        border-radius: 8px !important;
         overflow: hidden !important;
-        z-index: 999 !important;
-        opacity: 0.35 !important;
+        opacity: 1 !important;
         pointer-events: auto !important;
         cursor: pointer !important;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.22) !important;
-        transition: opacity 0.2s ease, box-shadow 0.25s ease !important;
+        transition: background-color 0.15s ease !important;
+        flex: 0 0 auto !important;
       }
-      .oiq-w.oiq-tracking-on {
-        opacity: 1 !important;
+      .oiq-w:hover {
+        background-color: rgba(32, 33, 36, 0.06) !important;
       }
       .oiq-w img.oiq-icon {
-        width: 26px !important;
-        height: 26px !important;
+        width: 100% !important;
+        height: 100% !important;
         display: block !important;
-        object-fit: cover !important;
+        object-fit: contain !important;
       }
     `;
     document.head.appendChild(s);
@@ -102,53 +107,47 @@ window.ColdbaseWidget = (function () {
     };
   }
 
-  // Detect if a neighboring extension widget occupies the default top-right position.
-  function detectNeighborRect(editorEl, widgetEl) {
-    const editorRect = editorEl.getBoundingClientRect();
-    const HALF = 14;
-    const probeX = editorRect.right - 4 - HALF;
+  // Selector for Gmail's compose Send button. Case-sensitive "Send" matches the
+  // button's aria-label/data-tooltip ("Send ‪(⌘Enter)‬") but NOT the lowercase
+  // "More send options" dropdown. Mirrors the selector in tracking.js.
+  const SEND_BTN_SELECTOR =
+    '[role="button"][data-tooltip*="Send"], [role="button"][aria-label*="Send"]';
 
-    widgetEl.style.visibility = 'hidden';
+  // Mount (or re-mount, if Gmail re-rendered the toolbar and detached us) the widget
+  // into the compose toolbar, vertically centered like the native tools. Returns true
+  // once mounted, false if the toolbar isn't available yet (caller retries).
+  function mountWidget(editorEl, w) {
+    const container = getComposeContainer(editorEl);
+    if (!container) return false;
+    const sendBtn = container.querySelector(SEND_BTN_SELECTOR);
+    if (!sendBtn) return false;
 
-    let neighborRect = null;
-    const probeYs = [
-      editorRect.top + 8,
-      editorRect.top + 14,
-      editorRect.top + 4,
-    ];
-
-    for (const testY of probeYs) {
-      const el = document.elementFromPoint(probeX, testY);
-      if (!el || el === document.body || editorEl.contains(el) || el.contains(editorEl)) continue;
-      if (el.classList.contains('oiq-w')) continue; // skip other Coldbase widgets
-      neighborRect = el.getBoundingClientRect();
-      break;
+    const sendCell = sendBtn.closest('td');
+    if (sendCell && sendCell.parentElement) {
+      // Gmail's compose footer is a table (tr.btC). Give our launcher its own <td>
+      // right after the Send cell so the row centers it vertically like the native
+      // icon cells — appending it *inside* the Send cell left it top-aligned.
+      let host = w.closest('td.oiq-w-cell');
+      if (!host) {
+        host = document.createElement('td');
+        host.className = 'oiq-w-cell';
+        // Reserve a real width so the cell can't collapse (a 1% shrink cell let our
+        // icon overflow and overlap Mailsuite's adjacent icon in Gmail's table).
+        host.style.cssText = 'vertical-align:middle;text-align:center;width:44px;min-width:44px;padding:0;';
+        host.appendChild(w);
+      }
+      if (host.previousSibling !== sendCell) {
+        sendCell.parentElement.insertBefore(host, sendCell.nextSibling);
+      }
+      return true;
     }
 
-    widgetEl.style.visibility = '';
-    return neighborRect;
-  }
-
-  // Widget is position:fixed, so all coordinates are viewport-relative.
-  // container param is kept for API compatibility with email-detector.js resize handler.
-  function placeWidget(editorEl, _container, w) {
-    const HORIZONTAL_NUDGE_PX = 1;
-    const VERTICAL_GAP_PX = 8;
-    const editorRect = editorEl.getBoundingClientRect();
-    const neighborRect = detectNeighborRect(editorEl, w);
-    let topPx, rightPx;
-    if (neighborRect) {
-      topPx   = neighborRect.bottom + VERTICAL_GAP_PX;
-      rightPx = window.innerWidth - neighborRect.right - HORIZONTAL_NUDGE_PX;
-    } else {
-      topPx   = editorRect.top - 6;
-      rightPx = window.innerWidth - editorRect.right + 4;
-    }
-    w.style.bottom = '';
-    w.style.left   = '';
-    w.style.top    = topPx + 'px';
-    w.style.right  = rightPx + 'px';
-    w.style.border = '';
+    // Non-table (flex/inline) toolbar: append next to the Send button; a flex row
+    // centers it via align-items, so no wrapper cell is needed.
+    const parent = sendBtn.parentElement;
+    if (!parent) return false;
+    if (!parent.contains(w)) parent.appendChild(w);
+    return true;
   }
 
   // Clears per-editor state from all shared WeakMaps — delegates to content.js via state
@@ -160,37 +159,42 @@ window.ColdbaseWidget = (function () {
     _state.liveEditors.delete(el);
   }
 
-  // Widget is always appended to document.body and uses position:fixed so that it renders
-  // on top of any extension (e.g. Mailtrack) that wraps the compose dialog with
-  // overflow:hidden or otherwise acts as a clipping containing block.
+  // The widget is mounted as an inline child of the compose toolbar (next to the
+  // Send button), so it flows with Gmail's native buttons and is removed/hidden
+  // automatically when the compose closes or minimizes — no viewport positioning.
   function getOrCreateWidget(editorEl) {
     // Guard: _state is null if ColdbaseWidget.init() hasn't run yet (can happen if
     // ColdbaseDetector.init() calls scanForEditors synchronously before ColdbaseWidget.init()).
     if (!_state) {
       return null;
     }
-    if (_state.editorWidgets.has(editorEl)) return _state.editorWidgets.get(editorEl);
     injectStyles();
 
-    const w = document.createElement('div');
-    w.className = 'oiq-w';
-    w.innerHTML = ICON_IMG;
-    w.addEventListener('click', () => {
-      _state.lastActiveEditor = editorEl;
-      openComposePanel(editorEl);
-    });
-    document.body.appendChild(w);
-    _state.editorWidgets.set(editorEl, w);
-    _state.liveEditors.add(editorEl);
+    let w = _state.editorWidgets.get(editorEl);
+    if (!w) {
+      w = document.createElement('div');
+      w.className = 'oiq-w';
+      w.innerHTML = ICON_IMG;
+      w.addEventListener('click', () => {
+        _state.lastActiveEditor = editorEl;
+        openComposePanel(editorEl);
+      });
+      _state.editorWidgets.set(editorEl, w);
+      _state.liveEditors.add(editorEl);
+    }
 
-    placeWidget(editorEl, null, w);
-
-    // Re-probe at 300ms — other extensions may inject widgets a few ms after ours.
-    setTimeout(() => {
-      if (document.body.contains(w) && document.body.contains(editorEl)) {
-        placeWidget(editorEl, null, w);
+    // Mount into the toolbar (re-mounts if Gmail re-rendered and detached us). If the
+    // toolbar isn't rendered yet, retry briefly; the 1500ms scan interval also re-drives
+    // this, so it self-heals.
+    if (!mountWidget(editorEl, w)) {
+      for (const delay of [100, 300, 700, 1500]) {
+        setTimeout(() => {
+          if (_state && _state.editorWidgets.get(editorEl) === w && document.body.contains(editorEl)) {
+            mountWidget(editorEl, w);
+          }
+        }, delay);
       }
-    }, 300);
+    }
 
     return w;
   }
@@ -201,11 +205,13 @@ window.ColdbaseWidget = (function () {
       return;
     }
     if (!document.body.contains(editorEl)) {
+      // Compose closed: the toolbar (and our child widget) is already gone with it;
+      // just clean up the per-editor state maps.
       if (_state.editorWidgets.has(editorEl)) {
         _state.editorWidgets.get(editorEl).remove();
         clearEditorState(editorEl);
       }
-      // If the active editor was removed, promote the next live editor (UI-SYNC-01)
+      // If the active editor was removed, promote the next live editor for panel targeting.
       if (_state.lastActiveEditor === editorEl) {
         _state.lastActiveEditor = null;
         for (const e of _state.liveEditors) {
@@ -214,15 +220,17 @@ window.ColdbaseWidget = (function () {
             break;
           }
         }
-        if (_state.lastActiveEditor) updateWidget(_state.lastActiveEditor);
       }
       syncTrackMode();
       return;
     }
 
     const w = getOrCreateWidget(editorEl);
+    if (!w) return;
     const manualMode = _state.editorManualModes.get(editorEl) || 'force_track';
 
+    // Each compose owns its own inline toolbar icon — no show/hide juggling. The
+    // icon's opacity reflects this editor's tracking mode.
     if (manualMode === 'force_track') {
       w.classList.add('oiq-tracking-on');
       w.title = 'Coldbase: tracking ON';
@@ -230,10 +238,6 @@ window.ColdbaseWidget = (function () {
       w.classList.remove('oiq-tracking-on');
       w.title = 'Coldbase: tracking OFF';
     }
-
-    // Show widget ONLY on the most-recently-focused editor (UI-SYNC-01)
-    const isActive = (_state.lastActiveEditor === editorEl);
-    w.style.display = isActive ? '' : 'none';
   }
 
   // ─── Compose panel styles ────────────────────────────────────────────────────
@@ -1704,6 +1708,5 @@ window.ColdbaseWidget = (function () {
     clearEditorState,
     getComposeContainer,
     getComposeMetadata,
-    placeWidget,
   };
 })();
