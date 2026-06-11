@@ -68,6 +68,15 @@ export async function getAuthTokenForEmail(targetEmail, interactive = false) {
     }
   }
 
+  // chrome.identity.getAccounts is dev-channel only — on stable Chrome (every real
+  // user) it's undefined. Without it we can't enumerate accounts, so fall back to the
+  // standard default-account token path. The caller's account-match guard then verifies
+  // the resulting token actually belongs to targetEmail.
+  if (typeof chrome.identity.getAccounts !== 'function') {
+    log.warn('getAuthTokenForEmail: chrome.identity.getAccounts unavailable (stable Chrome) — using default account.');
+    return getAuthToken(interactive);
+  }
+
   // Iterate all accounts Chrome knows about and match by email.
   const accounts = await new Promise((resolve) => {
     chrome.identity.getAccounts((accts) => resolve(accts || []));
