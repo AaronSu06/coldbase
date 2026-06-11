@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "prisma generate && prisma migrate deploy",
+    "build": "prisma generate",
     "dev": "node --watch index.js",
-    "start": "node index.js",
+    "start": "prisma migrate deploy && node index.js",
     "test": "node --env-file=.env.test --test *.test.js",
     "db:migrate": "prisma migrate dev",
     "postinstall": "prisma generate"
